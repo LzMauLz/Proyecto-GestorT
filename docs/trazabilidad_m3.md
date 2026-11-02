@@ -13,6 +13,6 @@
 | API documentada | OpenAPI 3.1 en `/api/openapi.json`, guía en `docs/api.md` | probado: especificación y rutas principales |
 | Configuración segura | secret env, `.env.example`, `.gitignore`, CSRF, cookies y headers | tests de configuración/sesión |
 | Docker y demo reproducible | Dockerfile, Compose y pasos README | No ejecutado: Docker no disponible |
-| Colaboración Git/PR | Git local en `main`; remoto, segundo integrante y PR pendientes | No simular commits, PR o revisión |
+| Colaboración Git/PR | Repositorio GitHub con `main` y `develop`; trabajo individual | No atribuir una revisión o contribución de otra persona |
 
-Verificación registrada: `python -B -m compileall -q app tests` y `python -B -m unittest discover -s tests -v` (30 pruebas aprobadas, ejecución del 2026-11-01). La revisión visual del rediseño se realizó en navegador integrado sobre seguimiento público y login, con comprobación de overflow en 390/660/1440 px y foco inicial por teclado. Pytest no está instalado. Docker/Compose no están disponibles y no se instalaron paquetes.
+Verificación registrada: `python -B -m compileall -q app tests` y `python -B -m unittest discover -s tests -v` (32 pruebas aprobadas, ejecución del 2026-11-01). La revisión visual del rediseño se realizó en navegador integrado sobre seguimiento público y login, con comprobación de overflow en 390/660/1440 px y foco inicial por teclado. Docker/Compose no fueron ejecutados en este entorno.

@@ -1,5 +1,9 @@
 # API de GestorTech
 
+La API fue verificada con la suite automatizada del proyecto: **32 pruebas
+aprobadas**. Las solicitudes mutables requieren autenticación, sesión y
+protección CSRF; las respuestas de error se devuelven como JSON.
+
 Base local: `/api`. Autenticación mediante sesión Flask; las operaciones privadas requieren iniciar sesión. Solicitudes mutables requieren `X-CSRF-Token`, obtenido de `GET /api/csrf` en la misma sesión. Content-Type JSON salvo donde se indica. Los errores se devuelven como `{ "error": "…" }`, sin trazas internas.
 
 ## Endpoints

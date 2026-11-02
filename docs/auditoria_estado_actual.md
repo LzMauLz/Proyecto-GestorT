@@ -53,7 +53,7 @@ La suite `unittest` y `compileall` pasaron en la última ejecución. El proyecto
 ## Pruebas y verificaciones
 
 - `python -B -m compileall -q app tests`: aprobado.
-- `python -B -m unittest discover -s tests -v`: **30 pruebas aprobadas** en la última ejecución.
+- `python -B -m unittest discover -s tests -v`: **32 pruebas aprobadas** en la última ejecución.
 - Rediseño frontend verificado en navegador integrado para seguimiento público y login: render correcto, sin overflow horizontal en 390/660/1440 px y foco por teclado alcanzable. No se usaron datos reales ni se validó dashboard autenticado en navegador.
 - Cobertura relevante: auth/CSRF, roles y acceso a órdenes, privacidad del seguimiento, stock transaccional, importación manual, mocks IA, fallos/timeouts y aprobación humana.
 - Pytest no está instalado; no se instaló.
@@ -76,4 +76,4 @@ La suite `unittest` y `compileall` pasaron en la última ejecución. El proyecto
 
 ## Conclusión
 
-El MVP ofrece los flujos centrales de taller y una identidad visual consistente para evaluación local. Groq está preparado pero no activo. La evidencia automatizada disponible es positiva (26/26 pruebas y compilación), aunque no equivale a validación visual completa ni aprobación de producción. No desplegar públicamente hasta completar los pendientes de seguridad y operación.
+El MVP ofrece los flujos centrales de taller y una identidad visual consistente para evaluación local. Groq está integrado y fue probado localmente; la clave permanece fuera del repositorio. La evidencia automatizada disponible es positiva (32 pruebas y compilación), aunque no equivale a aprobación de producción. No desplegar públicamente hasta completar los pendientes de seguridad y operación.

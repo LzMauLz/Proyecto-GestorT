@@ -1,6 +1,6 @@
 # Estado de GestorTech
 
-**Estado:** MVP local en modernización para revisión académica. Actualizado: 2026-10-31.
+**Estado:** MVP local en modernización para revisión académica. Actualizado: 2026-11-02.
 
 ## Implementado
 
@@ -15,8 +15,8 @@
 - Dashboard con estado activo de navegación, región de tabla accesible por teclado y estilos de estado semánticos.
 - Rediseño integral frontend aplicado con metodología `frontend-design`: shell lateral para personal, shell público separado, jerarquía editorial, superficies oscuras de alto contraste, acentos violeta/cian, formularios, tablas, estados, seguimiento, login e inventario coherentes en móvil y escritorio. La mascota/logo local se conserva sin reemplazo.
 - Adaptador Groq continúa opt-in. Petición limitada a 50 filas y 128 KiB; salida a 256 KiB; prompts tratan campos importados como datos no confiables. Fallback manual sin reintentos.
-- Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas; Groq sigue desactivado por defecto y no se realizaron llamadas externas.
-- Suite `unittest`: 30 pruebas aprobadas en última ejecución; `compileall` aprobado.
+- Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas. Groq fue probado localmente con una credencial fuera del repositorio.
+- Suite `unittest`: 32 pruebas aprobadas en última ejecución; `compileall` aprobado.
 - Dockerfile y Compose revisados estáticamente: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. No construidos ni iniciados porque Docker/Compose no están disponibles.
 
 ## Pendiente
@@ -24,10 +24,9 @@
 - Pytest no está instalado en el Python activo. No se instaló ninguna dependencia ni se creó un entorno virtual.
 - El usuario debe aprobar el entorno virtual y la instalación antes de instalar `requirements.txt`.
 - Dockerfile/Compose recibieron revisión estática; Docker no está disponible, por lo que construcción y ejecución están pendientes.
-- Groq no está activado por defecto: no se instaló SDK, no se añadieron credenciales y no se hicieron solicitudes externas. La activación y transmisión requieren autorización humana y configuración local explícita.
-- Selección de modelo pendiente de revisión de documentación/modelos oficiales cuando el usuario autorice investigar disponibilidad; no se fijó un identificador que no haya sido verificado.
+- Groq requiere configuración local en `.env`; la credencial no está en Git. La aplicación no realiza llamadas si falta la configuración válida.
 - Falta mitigación de intentos repetidos en login/seguimiento y revisión de seguridad antes de desplegar en Internet.
-- La carpeta actual no contiene `.git` y `git status` no la reconoce como worktree. No se inicializó ni reparó Git; confirmar si el repositorio está en otra ubicación antes de usar control de versiones.
+- El repositorio GitHub es `LzMauLz/Proyecto-GestorT`, con ramas `main` y `develop`, dos commits publicados y un único integrante. No se atribuyen revisiones o contribuciones a personas que no hayan participado.
 - Validación visual local realizada en navegador integrado sobre seguimiento público y login: sin overflow a 390, 660 y 1440 px; foco inicial y navegación por teclado comprobados. No se validó dashboard autenticado con navegador para no usar datos de la base local; sus vistas siguen cubiertas por pruebas Flask.
 - La auditoría actualizada está en `docs/auditoria_estado_actual.md`; el estado del repositorio Git sigue por confirmar porque el directorio inspeccionado no muestra metadatos `.git`.
 
