@@ -16,7 +16,7 @@ Revisa [PROJECT_STATUS.md](PROJECT_STATUS.md). La arquitectura y el modelo parte
 
 ## Arquitectura
 
-`app/domain` conserva estados y errores de dominio; `app/application` implementa reglas y servicios; `app/infrastructure` encapsula SQLite y adaptadores externos; `app/web` contiene controladores Flask para páginas y API. El asistente usa `app/application/ai_assistant.py` para coordinar consultas y propuestas, y el adaptador Groq para respuestas JSON. Permanece desactivado por defecto; para activarlo localmente se requieren `GROQ_ENABLED=true`, `GROQ_API_KEY`, `GROQ_MODEL` y opcionalmente `GROQ_TIMEOUT` (1–60 segundos). El modelo recomendado es `openai/gpt-oss-20b`, sujeto a verificación antes de producción.
+`app/domain` conserva estados y errores de dominio; `app/application` implementa reglas y servicios; `app/infrastructure` encapsula SQLite y adaptadores externos; `app/web` contiene controladores Flask para páginas y API. El asistente usa `app/application/ai_assistant.py` para coordinar consultas y propuestas, y el adaptador Groq para respuestas JSON. Está desactivado por defecto en el código; en desarrollo local se habilita mediante `.env` con `GROQ_ENABLED=true`, `GROQ_API_KEY`, `GROQ_MODEL` y opcionalmente `GROQ_TIMEOUT` (1–60 segundos). El modelo validado en este entorno es `openai/gpt-oss-20b`.
 
 ## Identidad visual
 
@@ -24,7 +24,9 @@ La interfaz usa una paleta violeta propia, navegación y tarjetas organizadas pa
 
 ## Requisitos y preparación local
 
-El entorno observado ya dispone de Flask 3.1.3 y openpyxl 3.1.5. Pytest no está disponible en el Python activo. No se instalaron paquetes durante esta fase. Las versiones propuestas quedan fijadas en `requirements.txt`; prepara un entorno virtual y aprueba su instalación antes de ejecutarla.
+El entorno virtual local dispone de Flask, openpyxl y Pytest según
+`requirements.txt`. Las versiones quedan fijadas en ese archivo; usa un
+entorno virtual para instalar y ejecutar el proyecto.
 
 ```powershell
 cd D:\Escritorio\GestorTech
@@ -50,6 +52,11 @@ docker compose up --build
 
 Luego crea el administrador dentro del contenedor (`docker compose exec gestortech python -m flask --app wsgi:app auth create-admin`). Docker no estaba disponible para validar la construcción en este entorno.
 
+Docker mantiene Groq desactivado aunque exista un `.env` local. Para habilitarlo
+de forma explícita en el contenedor, define `DOCKER_GROQ_ENABLED=true`,
+`DOCKER_GROQ_MODEL` y `DOCKER_GROQ_API_KEY` en el entorno de ejecución. No
+guardes esas variables en archivos versionados.
+
 ## Funcionalidades
 
 - **Implementadas:** acceso con roles administrador/técnico; creación de usuarios administrativos; registro y seguimiento de reparaciones; asignación a técnicos; transiciones validadas e historial; separación de notas internas y avances públicos; consulta pública de código de alta entropía; productos, movimientos de stock atómicos y bajas lógicas; revisión y aprobación manual de CSV/XLSX; API OpenAPI JSON.
@@ -64,9 +71,9 @@ Luego crea el administrador dentro del contenedor (`docker compose exec gestorte
 - La consulta pública no revela dispositivo, descripción del problema, notas internas, identidad del usuario ni código incremental.
 - Cambios de estado usan allowlist y transición; código de seguimiento usa 128 bits aleatorios.
 - Importación limitada a 5 MB, 1.000 filas, 30 columnas y 20 MB descomprimidos; no se ejecutan fórmulas ni contenido importado. Toda fila requiere revisión humana.
-- Groq está preparado mediante adaptador HTTP de biblioteca estándar, sin SDK. No se activó ni se hicieron llamadas durante esta misión. Cuando se active, solo se enviarán nombre, descripción y categoría de filas válidas (máximo 50); precio y stock se conservan del archivo. Errores regresan al modo manual. La previsualización no persiste productos y las filas requieren selección y aprobación humana explícitas.
+- Groq usa un adaptador HTTP de biblioteca estándar, sin SDK. En la configuración local validada se realizó una prueba controlada con datos ficticios. Solo se envían nombre, descripción y categoría de filas válidas (máximo 50); precio y stock se conservan del archivo. Errores regresan al modo manual. La previsualización no persiste productos y las filas requieren selección y aprobación humana explícitas.
 - El asistente IA usa solicitudes JSON limitadas a 128 KiB y respuestas a 256 KiB, timeout configurable, sin herramientas ni SQL. Las consultas reciben contexto factual del inventario; la IA no inventa existencias. Las propuestas pendientes se pueden confirmar o cancelar desde el panel y quedan registradas sin claves ni contenido sensible.
-- La clave local, cuando el usuario autorice activar el proveedor, se configura en la variable `GROQ_API_KEY` del entorno local. `.env.example` solo muestra nombres vacíos; no pongas secretos en README, Git o archivos compartidos. Mantén `GROQ_ENABLED=false` hasta aprobar el envío externo.
+- La clave local se configura únicamente en `.env` o en el gestor de secretos del entorno. `.env.example` solo muestra nombres sin credenciales; no pongas secretos en README, Git o archivos compartidos. Mantén `GROQ_ENABLED=false` si no deseas transmitir datos al proveedor.
 - El servidor integrado de Flask es solo para demo local. No desplegar este MVP en Internet sin completar revisión de seguridad, límites de intentos, HTTPS, logging protegido, copias de seguridad y un servidor WSGI apropiado.
 - Datos ficticios únicamente. No enviar datos de clientes a servicios externos.
 
