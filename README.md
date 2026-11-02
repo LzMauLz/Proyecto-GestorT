@@ -100,4 +100,8 @@ Para volver al modo manual usa `GROQ_ENABLED=false`. La aplicación permanece si
 
 ## Trabajo colaborativo
 
-La inspección actual de `D:\Escritorio\GestorTech` no encontró metadatos `.git`, por lo que Git no reconoce este directorio como worktree. No inicialices ni reemplaces repositorios hasta confirmar la ubicación correcta. No se creó remoto ni se fabricaron contribuciones, ramas o Pull Requests.
+El repositorio remoto es [Proyecto-GestorT](https://github.com/LzMauLz/Proyecto-GestorT).
+El flujo de entrega usa `develop` para desarrollo y `main` como rama base. Los
+secretos, la base SQLite local y el entorno virtual están excluidos por
+`.gitignore`. La entrega actual corresponde a un único integrante; no se
+atribuyen revisiones ni contribuciones a personas que no hayan participado.
