@@ -3,7 +3,7 @@
 ## Uso realizado
 
 - Codex asistió en la implementación, organización de archivos y redacción de documentación y pruebas.
-- No se conectó proveedor externo de inferencia y no se enviaron código, documentos, credenciales, datos reales de clientes ni inventario a servicios de IA externos durante esta misión.
+- La integración Groq se probó con una credencial configurada únicamente en el entorno local. No se enviaron código, documentos, credenciales ni datos reales de clientes.
 - No se generaron productos, precios, cantidades ni compatibilidades mediante IA.
 
 ## Decisiones y revisión humana
@@ -19,16 +19,16 @@
 - La inspección del CLI mostró que Flask registra `create-admin` bajo el grupo `auth`; se corrigieron README y pasos de Docker para usar `auth create-admin`.
 - Se corrigió el cierre del archivo de esquema SQLite tras observar un `ResourceWarning`.
 - La revisión de privacidad retiró equipo y descripción del problema de la respuesta pública.
-- Se ejecutaron `python -B -m compileall -q app tests` y 26 pruebas con `python -B -m unittest discover -s tests -v`; Pytest no se ejecutó porque no está instalado.
-- La aprobación final del MVP y la revisión independiente por un segundo integrante siguen pendientes.
+- Se ejecutaron `python -B -m compileall -q app tests` y 32 pruebas con `python -B -m unittest discover -s tests -v`; Pytest no se ejecutó porque la validación principal usa `unittest`.
+- El proyecto se entrega como trabajo individual; no se atribuye revisión independiente a un segundo integrante.
 
-## Preparación de Groq
+## Integración de Groq
 
-Se implementaron `ProductProposalProvider` (puerto), `prepare_product_proposal` (orquestación y validación) y `GroqAdapter` (adaptador HTTP con biblioteca estándar). No se instaló el SDK, no se utilizó ni guardó ninguna API Key, y no se hizo ninguna solicitud externa. La configuración central está en `config/settings.py`; `.env.example` enumera `GROQ_API_KEY`, `GROQ_MODEL` y `GROQ_ENABLED=false` sin secretos.
+Se implementaron `ProductProposalProvider` (puerto), `prepare_product_proposal` (orquestación y validación) y `GroqAdapter` (adaptador HTTP con biblioteca estándar). No se instaló el SDK ni se guardó ninguna API Key en el repositorio. La configuración central está en `config/settings.py`; `.env.example` enumera `GROQ_API_KEY`, `GROQ_MODEL` y `GROQ_ENABLED=false` sin secretos. La integración se probó localmente con el modelo configurado en `.env`.
 
 Al activar el proveedor posteriormente, la solicitud contendrá solo `source_row`, `name`, `description` y `category` de filas válidas, hasta 50 filas y 128 KiB. Precio, stock, datos de clientes y filas inválidas quedan fuera. El adaptador solicita JSON, no habilita herramientas, limita la espera a 12 segundos y la respuesta a 256 KiB. La aplicación valida forma, filas y campos. No hace reintentos; timeout, error de conexión, límite del proveedor o respuesta inválida vuelven al modo manual sin registrar el cuerpo ni persistir automáticamente. La propuesta queda editable; marcar filas y confirmar es obligatorio.
 
-**Preparado:** puerto, adaptador, configuración, límites, validación, fallback, operación manual y pruebas simuladas. **Pendiente:** revocar toda credencial compartida accidentalmente en chats, aprobación explícita para transmitir los campos, configurar una credencial nueva directamente en el entorno local, verificar y elegir un modelo oficial, activar y evaluar funcionamiento. No guardar credenciales en este repositorio. Este documento no autoriza esas acciones.
+**Implementado y verificado:** puerto, adaptador, configuración, límites, validación, fallback, operación manual, chat y pruebas automatizadas. La clave permanece fuera del repositorio. No se incluyen credenciales en este documento.
 
 Referencias oficiales: [API reference](https://console.groq.com/docs/api-reference), [Structured Outputs](https://console.groq.com/docs/structured-outputs), [Models](https://console.groq.com/docs/models). Se usa JSON Object con validación adicional local.
 

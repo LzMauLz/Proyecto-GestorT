@@ -143,7 +143,7 @@ Ejecutar:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-La última ejecución registrada pasó **30 pruebas**.
+La última ejecución registrada pasó **32 pruebas**.
 
 ## Documentación adicional
 
