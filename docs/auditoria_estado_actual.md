@@ -1,13 +1,13 @@
 # Auditoría del estado actual de GestorTech
 
-**Fecha:** 2026-10-31  
-**Alcance:** estado posterior a las Misiones 08–12. Revisión de código, configuración de ejemplo, documentación, pruebas disponibles, interfaz, integración Groq y contenedor. No se leyeron `.env`, credenciales locales ni bases SQLite. No se hicieron llamadas externas.
+**Fecha:** 2026-11-02
+**Alcance:** revisión de código, configuración de ejemplo, documentación, pruebas, interfaz, integración Groq, contenedor y estado Git. No se registran claves ni datos de la base local. Se realizó una prueba controlada de Groq con configuración local y datos ficticios.
 
 ## Resumen ejecutivo
 
-GestorTech cuenta con un MVP web Flask/Jinja y SQLite para personal de taller y consulta pública de reparaciones. Tiene autenticación por roles, inventario con movimientos, flujo de reparaciones e historial, seguimiento público restringido e importación CSV/XLSX con revisión y aprobación humana. La identidad Gaming Premium violeta y la mascota local están integradas. Groq está preparado tras un puerto/adaptador, pero desactivado y sin SDK.
+GestorTech cuenta con un MVP web Flask/Jinja y SQLite para personal de taller y consulta pública de reparaciones. Tiene autenticación por roles, inventario con movimientos, flujo de reparaciones e historial, seguimiento público restringido e importación CSV/XLSX con revisión y aprobación humana. La identidad Gaming Premium violeta y la mascota local están integradas. Groq está integrado mediante un adaptador HTTP sin SDK y fue validado localmente.
 
-La suite `unittest` y `compileall` pasaron en la última ejecución. El proyecto permanece como demo local: faltan validaciones visuales interactivas, Docker en ejecución, medidas contra intentos repetidos y revisión de seguridad antes de cualquier despliegue público.
+La suite `unittest` y `compileall` pasaron en la última ejecución. Groq está integrado y validado localmente. El proyecto permanece como demo local: faltan validaciones visuales interactivas completas, Docker en ejecución y medidas contra intentos repetidos antes de cualquier despliegue público.
 
 ## Qué se auditó
 
@@ -38,7 +38,7 @@ La suite `unittest` y `compileall` pasaron en la última ejecución. El proyecto
 | Seguimiento público | Código, estado, progreso e historial público; salida limitada y no-cache | Confirmar visualmente layouts y accesibilidad; mantener minimización de información. |
 | Inventario | Catálogo, edición, baja lógica y movimientos trazables | Búsqueda/filtros no están implementados; no inventar controles hasta aprobar funcionalidad/backend. |
 | Importación CSV/XLSX | Límites, normalización, vista previa editable, selección y aprobación humana | Probar visualmente archivos largos/errores en navegador; la vía IA permanece apagada. |
-| Groq | Puerto/adaptador HTTP estándar, validación, límites y fallback manual | Revocar la credencial expuesta en el chat; crear nueva solo localmente cuando se autorice; verificar y seleccionar modelo oficial; autorizar transmisión y eventual prueba por separado. |
+| Groq | Adaptador HTTP estándar, validación, límites, chat y fallback manual; prueba local controlada realizada | Mantener la credencial fuera de Git y revisar el proveedor antes de producción. |
 | Documentación | README, estado, API, uso IA y decisiones existentes | Mantener trazabilidad sincronizada con futuras pruebas y cambios. |
 
 ## Seguridad y privacidad
@@ -47,8 +47,7 @@ La suite `unittest` y `compileall` pasaron en la última ejecución. El proyecto
 - Las rutas mantienen login/roles; ocultar acciones en la interfaz nunca sustituye autorización en backend.
 - Los formularios mutables deben conservar CSRF y validación de servidor.
 - Las propuestas de IA no escriben por sí mismas en SQLite; el flujo manual permanece disponible ante desactivación o error.
-- No se instaló SDK, paquete, plugin o herramienta. No se usó la credencial compartida ni se hizo ninguna solicitud a Groq.
-- La credencial que el usuario pegó en el chat debe tratarse como comprometida y revocarse desde Groq. No se copió a archivos ni se reproduce en este informe.
+- No se instaló SDK adicional. La clave activa se mantiene fuera de Git y no se reproduce en este informe.
 
 ## Pruebas y verificaciones
 
@@ -56,23 +55,20 @@ La suite `unittest` y `compileall` pasaron en la última ejecución. El proyecto
 - `python -B -m unittest discover -s tests -v`: **32 pruebas aprobadas** en la última ejecución.
 - Rediseño frontend verificado en navegador integrado para seguimiento público y login: render correcto, sin overflow horizontal en 390/660/1440 px y foco por teclado alcanzable. No se usaron datos reales ni se validó dashboard autenticado en navegador.
 - Cobertura relevante: auth/CSRF, roles y acceso a órdenes, privacidad del seguimiento, stock transaccional, importación manual, mocks IA, fallos/timeouts y aprobación humana.
-- Pytest no está instalado; no se instaló.
+- Pytest está declarado en `requirements.txt`; la validación registrada se ejecutó principalmente con `unittest`.
 - No se realizó comprobación visual interactiva ni pruebas con lector de pantalla/dispositivos reales. Las pruebas Flask verifican render y comportamiento HTTP, no el aspecto renderizado.
 
 ## Docker y Git
 
-- Docker/Compose no están disponibles en el entorno; Dockerfile y Compose solo tienen revisión estática previa. Build, inicio, login y persistencia SQLite dentro del contenedor siguen sin comprobar.
-- El directorio `D:\Escritorio\GestorTech` aparece como repositorio Git, pero todos los archivos se reportan no rastreados (`??`), sin una base versionada que permita un diff de cambios confiable. No hay cambios remotos ni publicación.
+- Docker/Compose no están disponibles en el entorno; Dockerfile y Compose tienen revisión estática. Build, inicio, login y persistencia SQLite dentro del contenedor siguen sin comprobar.
+- El repositorio GitHub `LzMauLz/Proyecto-GestorT` tiene `main` y `develop`; el Pull Request #1 fue fusionado.
 
 ## Pendientes priorizados
 
 1. **Seguridad previa a Internet:** control de intentos en login y seguimiento, revisión de manejo de sesiones, HTTPS, backups, logging y servidor WSGI de producción.
-2. **Credencial Groq:** revocar la credencial divulgada; no volver a compartir claves por chat. Cuando proceda, almacenar la nueva en el entorno local con `GROQ_ENABLED=false` hasta autorización explícita.
-3. **Modelo IA:** verificar documentación y modelos oficiales disponibles cuando se autorice investigar; no fijar un ID sin comprobación.
-4. **Pruebas visuales:** revisar los roles admin/técnico y el cliente en escritorio, tablet y anchos 320/375/768/1024; evaluar contraste, teclado, zoom y movimiento reducido.
-5. **Docker:** validar build, usuario no-root, filesystem read-only, inicio, sesión y persistencia en un entorno que tenga Docker.
-6. **Pytest:** ejecutar en entorno virtual aprobado si el usuario lo autoriza instalar.
-7. **Funciones no existentes:** búsqueda/filtros de inventario y recuperación/baja de cuentas requieren definición funcional y aprobación antes de programarlas.
+2. **Pruebas visuales:** revisar los roles admin/técnico y el cliente en escritorio, tablet y anchos 320/375/768/1024; evaluar contraste, teclado, zoom y movimiento reducido.
+3. **Docker:** validar build, usuario no-root, filesystem read-only, inicio, sesión y persistencia en un entorno que tenga Docker.
+4. **Funciones no existentes:** búsqueda/filtros de inventario y recuperación/baja de cuentas requieren definición funcional y aprobación antes de programarlas.
 
 ## Conclusión
 
