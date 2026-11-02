@@ -1,0 +1,136 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="Modelo_Datos_GestorTech" name="Modelo de datos - GestorTech">
+    <mxGraphModel dx="1636" dy="892" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;" value="&lt;b&gt;Modelo de datos (entidad-relación, SQLite)&amp;nbsp;&lt;/b&gt;" vertex="1">
+          <mxGeometry height="36" width="1220" x="40" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;strokeWidth=1.5;" value="PRODUCTO" vertex="1">
+          <mxGeometry height="214" width="360" x="40" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO_r0" parent="PRODUCTO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#B85450&quot;&gt;PK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_producto : INTEGER" vertex="1">
+          <mxGeometry height="26" width="360" y="32" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO_r1" parent="PRODUCTO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;nombre : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO_r2" parent="PRODUCTO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;descripcion : TEXT" vertex="1">
+          <mxGeometry height="26" width="360" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO_r3" parent="PRODUCTO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;categoria : TEXT" vertex="1">
+          <mxGeometry height="26" width="360" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO_r4" parent="PRODUCTO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;precio : NUMERIC  CHECK (≥ 0)" vertex="1">
+          <mxGeometry height="26" width="360" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO_r5" parent="PRODUCTO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;cantidad_stock : INTEGER  CHECK (≥ 0)" vertex="1">
+          <mxGeometry height="26" width="360" y="162" as="geometry" />
+        </mxCell>
+        <mxCell id="PRODUCTO_r6" parent="PRODUCTO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;activo : INTEGER  (0/1, baja lógica)" vertex="1">
+          <mxGeometry height="26" width="360" y="188" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;strokeWidth=1.5;" value="MOVIMIENTO_INVENTARIO" vertex="1">
+          <mxGeometry height="214" width="360" x="540" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO_r0" parent="MOVIMIENTO_INVENTARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#B85450&quot;&gt;PK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_movimiento : INTEGER" vertex="1">
+          <mxGeometry height="26" width="360" y="32" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO_r1" parent="MOVIMIENTO_INVENTARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#6C8EBF&quot;&gt;FK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_producto : INTEGER  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO_r2" parent="MOVIMIENTO_INVENTARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#6C8EBF&quot;&gt;FK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_usuario : INTEGER  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO_r3" parent="MOVIMIENTO_INVENTARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;tipo : TEXT  (&#39;entrada&#39; | &#39;salida&#39;)" vertex="1">
+          <mxGeometry height="26" width="360" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO_r4" parent="MOVIMIENTO_INVENTARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;cantidad : INTEGER  CHECK (&amp;gt; 0)" vertex="1">
+          <mxGeometry height="26" width="360" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO_r5" parent="MOVIMIENTO_INVENTARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;fecha : TEXT  (ISO 8601)" vertex="1">
+          <mxGeometry height="26" width="360" y="162" as="geometry" />
+        </mxCell>
+        <mxCell id="MOVIMIENTO_INVENTARIO_r6" parent="MOVIMIENTO_INVENTARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;observacion : TEXT" vertex="1">
+          <mxGeometry height="26" width="360" y="188" as="geometry" />
+        </mxCell>
+        <mxCell id="USUARIO" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;strokeWidth=1.5;" value="USUARIO" vertex="1">
+          <mxGeometry height="188" width="360" x="1010" y="93" as="geometry" />
+        </mxCell>
+        <mxCell id="USUARIO_r0" parent="USUARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#B85450&quot;&gt;PK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_usuario : INTEGER" vertex="1">
+          <mxGeometry height="26" width="360" y="32" as="geometry" />
+        </mxCell>
+        <mxCell id="USUARIO_r1" parent="USUARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;nombre : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="USUARIO_r2" parent="USUARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#82B366&quot;&gt;UK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;correo : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="USUARIO_r3" parent="USUARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;hash_contrasena : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="USUARIO_r4" parent="USUARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;rol : TEXT  (valores propuestos*)" vertex="1">
+          <mxGeometry height="26" width="360" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="USUARIO_r5" parent="USUARIO" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;activo : INTEGER  (0/1)" vertex="1">
+          <mxGeometry height="26" width="360" y="162" as="geometry" />
+        </mxCell>
+        <mxCell id="REPARACION" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;strokeWidth=1.5;" value="REPARACION" vertex="1">
+          <mxGeometry height="188" width="360" x="40" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="REPARACION_r0" parent="REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#B85450&quot;&gt;PK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_reparacion : INTEGER" vertex="1">
+          <mxGeometry height="26" width="360" y="32" as="geometry" />
+        </mxCell>
+        <mxCell id="REPARACION_r1" parent="REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#82B366&quot;&gt;UK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;codigo_seguimiento : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="REPARACION_r2" parent="REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;equipo : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="REPARACION_r3" parent="REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;descripcion_problema : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="REPARACION_r4" parent="REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;estado : TEXT  (valores propuestos*)" vertex="1">
+          <mxGeometry height="26" width="360" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="REPARACION_r5" parent="REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;fecha_creacion : TEXT  (ISO 8601)" vertex="1">
+          <mxGeometry height="26" width="360" y="162" as="geometry" />
+        </mxCell>
+        <mxCell id="HISTORIAL_REPARACION" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=32;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;strokeWidth=1.5;" value="HISTORIAL_REPARACION" vertex="1">
+          <mxGeometry height="188" width="360" x="1010" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="HISTORIAL_REPARACION_r0" parent="HISTORIAL_REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#B85450&quot;&gt;PK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_historial : INTEGER" vertex="1">
+          <mxGeometry height="26" width="360" y="32" as="geometry" />
+        </mxCell>
+        <mxCell id="HISTORIAL_REPARACION_r1" parent="HISTORIAL_REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#6C8EBF&quot;&gt;FK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_reparacion : INTEGER  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="HISTORIAL_REPARACION_r2" parent="HISTORIAL_REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&lt;b&gt;&lt;font color=&quot;#6C8EBF&quot;&gt;FK&lt;/font&gt;&lt;/b&gt;&amp;nbsp;&amp;nbsp;id_usuario : INTEGER  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="HISTORIAL_REPARACION_r3" parent="HISTORIAL_REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;estado : TEXT  NOT NULL" vertex="1">
+          <mxGeometry height="26" width="360" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="HISTORIAL_REPARACION_r4" parent="HISTORIAL_REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;comentario : TEXT  (observación)" vertex="1">
+          <mxGeometry height="26" width="360" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="HISTORIAL_REPARACION_r5" parent="HISTORIAL_REPARACION" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontSize=12;" value="&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;fecha : TEXT  (ISO 8601)" vertex="1">
+          <mxGeometry height="26" width="360" y="162" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" edge="1" parent="1" source="PRODUCTO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;startFill=0;endFill=0;startSize=12;endSize=12;startArrow=ERmandOne;endArrow=ERzeroToMany;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="MOVIMIENTO_INVENTARIO" value="1 : 0..N  «tiene»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" edge="1" parent="1" source="USUARIO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;startFill=0;endFill=0;startSize=12;endSize=12;startArrow=ERmandOne;endArrow=ERzeroToMany;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="MOVIMIENTO_INVENTARIO" value="1 : 0..N  «registra»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" edge="1" parent="1" source="USUARIO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;startFill=0;endFill=0;startSize=12;endSize=12;startArrow=ERmandOne;endArrow=ERzeroToMany;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="HISTORIAL_REPARACION" value="1 : 0..N  «registra cambios»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" edge="1" parent="1" source="REPARACION" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=1.5;fontSize=11;labelBackgroundColor=#ffffff;startFill=0;endFill=0;startSize=12;endSize=12;startArrow=ERmandOne;endArrow=ERoneToMany;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="HISTORIAL_REPARACION" value="1 : 1..N  «tiene»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

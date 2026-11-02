@@ -1,0 +1,21 @@
+services:
+  gestortech:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      GESTORTECH_SECRET_KEY: ${GESTORTECH_SECRET_KEY:?Define GESTORTECH_SECRET_KEY en el entorno}
+      GESTORTECH_DATABASE: /app/instance/gestortech.sqlite3
+      GESTORTECH_COOKIE_SECURE: "0"
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-}
+      GROQ_ENABLED: ${GROQ_ENABLED:-false}
+    volumes:
+      - gestortech_data:/app/instance
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
+volumes:
+  gestortech_data:

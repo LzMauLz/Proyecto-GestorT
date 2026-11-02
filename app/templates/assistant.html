@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Asistente IA · GestorTech{% endblock %}
+{% block content %}
+<section class="page-heading assistant-heading">
+  <div><p class="eyebrow">Copiloto de operaciones</p><h1>Asistente IA</h1><p>Pregunta por el inventario o prepara una operación. Nada se guarda sin tu confirmación.</p></div>
+  <span class="assistant-status {% if assistant_available %}is-ready{% endif %}"><span aria-hidden="true"></span>{% if assistant_available %}Conectado{% else %}Desactivado{% endif %}</span>
+</section>
+<section class="assistant-shell" data-assistant data-available="{{ 'true' if assistant_available else 'false' }}">
+  <div class="assistant-chat">
+    <div class="assistant-messages" data-messages aria-live="polite">
+      <div class="assistant-message assistant-message-ai"><strong>GestorTech IA</strong><p>Puedo ayudarte a consultar existencias, preparar productos y proponer movimientos. Las operaciones siempre pasan por revisión.</p></div>
+    </div>
+    <form class="assistant-composer" data-composer>
+      <label class="sr-only" for="assistant-message">Solicitud para el asistente</label>
+      <textarea id="assistant-message" data-input rows="3" maxlength="2000" placeholder="Ej. ¿Qué productos tienen stock bajo?" {% if not assistant_available %}disabled{% endif %}></textarea>
+      <div class="assistant-composer-footer"><small>Enter envía · Shift+Enter agrega una línea</small><button class="button primary" type="submit" {% if not assistant_available %}disabled{% endif %}>Enviar</button></div>
+    </form>
+  </div>
+  <aside class="assistant-side">
+    <div class="assistant-panel"><p class="eyebrow">Cómo funciona</p><h2>Una propuesta, una decisión.</h2><ol><li>Describe lo que necesitas.</li><li>Revisa los datos y el cambio.</li><li>Confirma solo si todo coincide.</li></ol></div>
+    <div class="assistant-panel assistant-safety"><strong>Protección activa</strong><p>La IA no puede ejecutar SQL ni cambiar existencias directamente. El backend valida permisos, cantidades y stock.</p></div>
+  </aside>
+</section>
+{% endblock %}

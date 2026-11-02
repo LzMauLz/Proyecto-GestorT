@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="01_Diagrama_Contexto_C4" name="Contexto C4 - GestorTech">
+    <mxGraphModel dx="3139" dy="948" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="960" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;" value="&lt;b&gt;Diagrama de contexto del sistema (C4, nivel 1)&amp;nbsp;&lt;/b&gt;" vertex="1">
+          <mxGeometry height="40" width="1320" x="-60" y="15" as="geometry" />
+        </mxCell>
+        <mxCell id="sys" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Helvetica;rounded=1;arcSize=6;fillColor=#1168BD;strokeColor=#0B4884;fontColor=#ffffff;fontSize=13;strokeWidth=2;" value="&lt;b&gt;GestorTech&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;[Sistema de software]&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;Aplicación web para talleres de servicio técnico: inventario de repuestos y accesorios, órdenes de reparación con historial de estados, seguimiento público por código e importación de productos asistida por IA (opcional).&lt;/span&gt;" vertex="1">
+          <mxGeometry height="260" width="380" x="520" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="ia" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Helvetica;rounded=1;arcSize=10;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;fontSize=12;dashed=1;dashPattern=8 4;" value="&lt;b&gt;Proveedor de IA&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;[Sistema externo · opcional]&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;API de inferencia (Groq como candidato inicial, OpenRouter como alternativa). Devuelve una propuesta estructurada de datos de producto.&lt;/span&gt;" vertex="1">
+          <mxGeometry height="190" width="300" x="1160" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="arch" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Helvetica;rounded=1;arcSize=10;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;fontSize=12;" value="&lt;b&gt;Archivos de productos&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;[CSV / Excel]&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;Listados de repuestos y accesorios que el negocio recibe de sus proveedores.&lt;/span&gt;" vertex="1">
+          <mxGeometry height="160" width="300" x="1170" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="wa" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Helvetica;rounded=1;arcSize=10;fillColor=#999999;strokeColor=#6B6B6B;fontColor=#ffffff;fontSize=12;dashed=1;dashPattern=8 4;" value="&lt;b&gt;WhatsApp&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;[Canal externo · sin integración]&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:11px&quot;&gt;Canal actual de consulta. El personal comparte el código de seguimiento de forma manual.&lt;/span&gt;" vertex="1">
+          <mxGeometry height="160" width="300" x="1180" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="OoWA7OqqgqMvO7RlRx76-1" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#444444;fontColor=#222222;entryX=0;entryY=0.2;" value="Administra inventario y usuarios; importa y aprueba catálogos [HTTPS]">
+          <mxGeometry relative="1" x="-0.2736" y="2" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="230" y="190" as="sourcePoint" />
+            <mxPoint x="520" y="412" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="OoWA7OqqgqMvO7RlRx76-2" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#444444;fontColor=#222222;exitX=1.009;exitY=0.692;entryX=0;entryY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" target="sys" value="Registra reparaciones y actualiza estados [HTTPS]">
+          <mxGeometry relative="1" x="0.0376" y="-4" as="geometry">
+            <mxPoint as="offset" />
+            <mxPoint x="230" y="440" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#444444;fontColor=#222222;exitX=1;exitY=0.25;entryX=0;entryY=0.85;" target="sys" value="Consulta estado y observaciones con el código [HTTPS]">
+          <mxGeometry relative="1" x="-0.0404" y="-2" as="geometry">
+            <mxPoint y="1" as="offset" />
+            <mxPoint x="230" y="670" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="sys" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#444444;fontColor=#222222;dashed=1;exitX=1;exitY=0.2;entryX=0;entryY=0.5;" target="ia" value="Envía solo campos mínimos del catálogo y recibe propuesta JSON [HTTPS/JSON · opcional]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="arch" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#444444;fontColor=#222222;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" target="sys" value="Aporta datos de productos [carga de archivo]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="OoWA7OqqgqMvO7RlRx76-3" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#444444;fontColor=#222222;dashed=1;exitX=1.009;exitY=0.807;entryX=0;entryY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;" target="wa" value="Pregunta por su equipo y recibe el código (manual, fuera del alcance)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="758.0000000000002" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <object placeholders="1" c4Name="Mostrador / Recepción" c4Type="Person" c4Description="Gestiona productos, inventario y usuarios. Importa catálogos y aprueba las propuestas de la IA." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="OoWA7OqqgqMvO7RlRx76-1">
+          <mxCell parent="1" style="html=1;fontSize=11;dashed=0;whiteSpace=wrap;fillColor=#083F75;strokeColor=#06315C;fontColor=#ffffff;shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];resizable=0;" vertex="1">
+            <mxGeometry height="180" width="200" x="20" y="70" as="geometry" />
+          </mxCell>
+        </object>
+        <object placeholders="1" c4Name="Técnico" c4Type="Person" c4Description="Registra equipos recibidos, actualiza el estado de cada reparación y deja observaciones." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="OoWA7OqqgqMvO7RlRx76-2">
+          <mxCell parent="1" style="html=1;fontSize=11;dashed=0;whiteSpace=wrap;fillColor=#083F75;strokeColor=#06315C;fontColor=#ffffff;shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];resizable=0;" vertex="1">
+            <mxGeometry height="180" width="200" x="20" y="330" as="geometry" />
+          </mxCell>
+        </object>
+        <object placeholders="1" c4Name="Cliente" c4Type="Person" c4Description="Consulta el avance de su reparación con un código de seguimiento. No inicia sesión." label="&lt;font style=&quot;font-size: 16px&quot;&gt;&lt;b&gt;%c4Name%&lt;/b&gt;&lt;/font&gt;&lt;div&gt;[%c4Type%]&lt;/div&gt;&lt;br&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px&quot;&gt;&lt;font color=&quot;#cccccc&quot;&gt;%c4Description%&lt;/font&gt;&lt;/div&gt;" id="OoWA7OqqgqMvO7RlRx76-3">
+          <mxCell parent="1" style="html=1;fontSize=11;dashed=0;whiteSpace=wrap;fillColor=#083F75;strokeColor=#06315C;fontColor=#ffffff;shape=mxgraph.c4.person2;align=center;metaEdit=1;points=[[0.5,0,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0]];resizable=0;" vertex="1">
+            <mxGeometry height="180" width="200" x="30" y="570" as="geometry" />
+          </mxCell>
+        </object>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
