@@ -18,13 +18,13 @@
 - Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas. Groq fue probado localmente con una credencial fuera del repositorio.
 - El chat del asistente acepta propuestas de un producto o de hasta 20 productos por solicitud; la confirmación administrativa crea el lote de forma atómica.
 - Suite `unittest`: 32 pruebas aprobadas en última ejecución; `compileall` aprobado.
-- Dockerfile y Compose revisados estáticamente: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. Docker Desktop ya está instalado, pero su daemon Linux devuelve HTTP 500 y la ejecución real queda pendiente.
+- Dockerfile y Compose verificados: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. La imagen se construyó, el contenedor inició y `http://127.0.0.1:8000` respondió `HTTP 200`; falta probar persistencia tras reinicio.
 - Repositorio GitHub publicado en `LzMauLz/Proyecto-GestorT`, con ramas `main` y `develop`, commits descriptivos y Pull Request #1 fusionado.
 
 ## Pendiente
 
 - La validación principal se ejecutó con `unittest`; Pytest está declarado en `requirements.txt`, pero no se utilizó para el resultado registrado.
-- Dockerfile/Compose requieren resolver el daemon Linux y ejecutar una validación para confirmar construcción, arranque, puerto y persistencia del volumen; la revisión estática ya fue completada.
+- Dockerfile/Compose requieren una prueba de reinicio para confirmar la persistencia del volumen SQLite; build, arranque, puerto y creación del volumen ya fueron verificados.
 - Groq está configurado y habilitado en el `.env` local (`GROQ_ENABLED=true`, modelo `openai/gpt-oss-20b`, timeout de 12 segundos). La API key está presente y fue validada con una solicitud real; permanece fuera de Git.
 - Falta mitigación de intentos repetidos en login/seguimiento y revisión de seguridad antes de desplegar en Internet.
 - Validación visual local realizada en navegador integrado sobre seguimiento público y login: sin overflow a 390, 660 y 1440 px; foco inicial y navegación por teclado comprobados. No se validó dashboard autenticado con navegador.
