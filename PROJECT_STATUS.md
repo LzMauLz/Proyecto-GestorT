@@ -17,13 +17,13 @@
 - Adaptador Groq opt-in mediante `.env`. Las peticiones están limitadas a 50 filas y 128 KiB; las respuestas a 256 KiB; los prompts tratan campos importados como datos no confiables y existe fallback manual sin reintentos.
 - Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas. Groq fue probado localmente con una credencial fuera del repositorio.
 - Suite `unittest`: 32 pruebas aprobadas en última ejecución; `compileall` aprobado.
-- Dockerfile y Compose revisados estáticamente: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. Docker/Compose no están instalados en este entorno, por lo que la ejecución real queda pendiente.
+- Dockerfile y Compose revisados estáticamente: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. Docker Desktop ya está instalado, pero su daemon Linux devuelve HTTP 500 y la ejecución real queda pendiente.
 - Repositorio GitHub publicado en `LzMauLz/Proyecto-GestorT`, con ramas `main` y `develop`, commits descriptivos y Pull Request #1 fusionado.
 
 ## Pendiente
 
 - La validación principal se ejecutó con `unittest`; Pytest está declarado en `requirements.txt`, pero no se utilizó para el resultado registrado.
-- Dockerfile/Compose requieren una ejecución en un equipo con Docker para confirmar construcción, arranque, puerto y persistencia del volumen; la revisión estática ya fue completada.
+- Dockerfile/Compose requieren resolver el daemon Linux y ejecutar una validación para confirmar construcción, arranque, puerto y persistencia del volumen; la revisión estática ya fue completada.
 - Groq está configurado y habilitado en el `.env` local (`GROQ_ENABLED=true`, modelo `openai/gpt-oss-20b`, timeout de 12 segundos). La API key está presente y fue validada con una solicitud real; permanece fuera de Git.
 - Falta mitigación de intentos repetidos en login/seguimiento y revisión de seguridad antes de desplegar en Internet.
 - Validación visual local realizada en navegador integrado sobre seguimiento público y login: sin overflow a 390, 660 y 1440 px; foco inicial y navegación por teclado comprobados. No se validó dashboard autenticado con navegador.
