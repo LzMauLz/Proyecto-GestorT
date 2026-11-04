@@ -36,8 +36,8 @@ El endpoint `/api/ia/importacion/propuesta` requiere administrador, informa `mod
 
 ## Asistente conversacional de inventario
 
-El panel `/assistant` y los endpoints `/api/asistente/mensaje` permiten a administradores consultar el inventario, redactar o mejorar descripciones y preparar propuestas de productos o movimientos. Los técnicos solo pueden realizar consultas; no pueden preparar ni confirmar cambios.
+El panel `/assistant` y los endpoints `/api/asistente/mensaje` permiten a administradores consultar el inventario, redactar o mejorar descripciones y preparar propuestas de uno o varios productos (hasta 20 por solicitud) o movimientos. Los técnicos solo pueden realizar consultas; no pueden preparar ni confirmar cambios.
 
 El asistente recibe un contexto factual limitado generado por servicios de consulta SQLite. No recibe permiso para ejecutar SQL, código, herramientas ni solicitudes arbitrarias. El modelo devuelve JSON validado localmente; cualquier propuesta se guarda temporalmente en `ai_proposals` y requiere confirmación explícita de un administrador. La confirmación vuelve a validar el usuario, producto, tipo, cantidad y stock y ejecuta `create_product` o `move_stock`; cancelar no modifica inventario.
 
-La auditoría mínima se almacena en `ai_operations` con usuario, tipo de operación, producto cuando aplica, resultado y estado de aprobación. No se almacenan claves, tokens ni el contenido completo del proveedor. Groq no se consulta mientras `GROQ_ENABLED=false` o falte clave, modelo o configuración válida.
+La auditoría mínima se almacena en `ai_operations` con usuario, tipo de operación, producto cuando aplica, resultado y estado de aprobación. La confirmación de una propuesta múltiple crea todos los productos en una sola transacción: si un elemento falla, no se guarda ninguno. No se almacenan claves, tokens ni el contenido completo del proveedor. Groq no se consulta mientras `GROQ_ENABLED=false` o falte clave, modelo o configuración válida.

@@ -8,7 +8,7 @@
 <section class="assistant-shell" data-assistant data-available="{{ 'true' if assistant_available else 'false' }}">
   <div class="assistant-chat">
     <div class="assistant-messages" data-messages aria-live="polite">
-      <div class="assistant-message assistant-message-ai"><strong>GestorTech IA</strong><p>Puedo ayudarte a consultar existencias, preparar productos y proponer movimientos. Las operaciones siempre pasan por revisión.</p></div>
+      <div class="assistant-message assistant-message-ai"><strong>GestorTech IA</strong><p>Puedo consultar existencias y preparar uno o varios productos, además de proponer movimientos. Las operaciones siempre pasan por revisión.</p></div>
     </div>
     <form class="assistant-composer" data-composer>
       <label class="sr-only" for="assistant-message">Solicitud para el asistente</label>
@@ -17,7 +17,7 @@
     </form>
   </div>
   <aside class="assistant-side">
-    <div class="assistant-panel"><p class="eyebrow">Cómo funciona</p><h2>Una propuesta, una decisión.</h2><ol><li>Describe lo que necesitas.</li><li>Revisa los datos y el cambio.</li><li>Confirma solo si todo coincide.</li></ol></div>
+    <div class="assistant-panel"><p class="eyebrow">Cómo funciona</p><h2>Una propuesta, una decisión.</h2><ol><li>Describe uno o varios productos.</li><li>Revisa los datos y el cambio.</li><li>Confirma solo si todo coincide.</li></ol></div>
     <div class="assistant-panel assistant-safety"><strong>Protección activa</strong><p>La IA no puede ejecutar SQL ni cambiar existencias directamente. El backend valida permisos, cantidades y stock.</p></div>
   </aside>
 </section>

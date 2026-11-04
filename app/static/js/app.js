@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirm = document.createElement('button');
         confirm.className = 'button primary small';
         confirm.type = 'button';
-        confirm.textContent = 'Confirmar propuesta';
+        confirm.textContent = Array.isArray(proposal.products)
+          ? `Confirmar ${proposal.products.length} productos`
+          : 'Confirmar propuesta';
         confirm.dataset.proposal = proposal.id;
         const cancel = document.createElement('button');
         cancel.className = 'button quiet small';

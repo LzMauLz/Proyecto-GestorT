@@ -328,6 +328,32 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()['proposal']['stock'], 5)
 
+    def test_assistant_accepts_and_atomically_confirms_multiple_products(self):
+        class MockAssistant:
+            def chat(self, messages):
+                return {'message': 'Preparé dos productos para revisar.', 'action': 'product_proposal',
+                        'proposal': {'products': [
+                            {'name': 'Hub USB', 'description': 'Hub de cuatro puertos', 'category': 'Accesorios', 'price': 45000, 'stock': 3},
+                            {'name': 'Base portátil', 'description': 'Base ajustable', 'category': 'Accesorios', 'price': 70000, 'stock': 2},
+                        ]}}
+        self.app.extensions['gestortech_ai_provider'] = MockAssistant()
+        headers = self.session_as(1)
+        response = self.client.post(
+            '/api/asistente/mensaje',
+            json={'mensaje': 'Agrega Hub USB y Base portátil al inventario'},
+            headers=headers,
+        )
+        self.assertEqual(response.status_code, 200)
+        proposal = response.get_json()['proposal']
+        self.assertEqual(len(proposal['products']), 2)
+        confirmed = self.client.post(
+            '/api/asistente/propuestas/' + proposal['id'] + '/confirmar',
+            headers=headers,
+        )
+        self.assertEqual(confirmed.status_code, 200)
+        self.assertEqual(len(confirmed.get_json()['product_ids']), 2)
+        self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM products').fetchone()['n'], 2)
+
     def test_technician_cannot_prepare_mutation_from_assistant(self):
         class MockAssistant:
             def chat(self, messages):
