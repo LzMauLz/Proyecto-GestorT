@@ -12,7 +12,7 @@
 | IA desacoplada y opcional; continuidad manual | Puerto/adaptador Groq opt-in; validado localmente con datos ficticios; manual como fallback y aprobación humana | 32 pruebas, pruebas simuladas, modo manual y aprobación humana |
 | API documentada | OpenAPI 3.1 en `/api/openapi.json`, guía en `docs/api.md` | probado: especificación y rutas principales |
 | Configuración segura | secret env, `.env.example`, `.gitignore`, CSRF, cookies y headers | tests de configuración/sesión |
-| Docker y demo reproducible | Dockerfile, Compose y pasos README | No ejecutado: Docker no disponible |
+| Docker y demo reproducible | Dockerfile, Compose y pasos README; usuario sin privilegios, volumen SQLite y filesystem raíz de solo lectura | Revisión estática completada; ejecución bloqueada el 2026-11-03 porque Docker/Compose no están instalados ni disponibles en el entorno |
 | Colaboración Git/PR | Repositorio GitHub con `main` y `develop`; PR #1 y PR #2 fusionados; trabajo individual | No atribuir una revisión o contribución de otra persona |
 
-Verificación registrada: `python -B -m compileall -q app tests` y `python -B -m unittest discover -s tests -v` (32 pruebas aprobadas, ejecución del 2026-11-02). La revisión visual del rediseño se realizó en navegador integrado sobre seguimiento público y login, con comprobación de overflow en 390/660/1440 px y foco inicial por teclado. Docker/Compose no fueron ejecutados en este entorno.
+Verificación registrada: `python -B -m compileall -q app config tests` y `python -B -m unittest discover -s tests -v` (32 pruebas aprobadas, ejecución del 2026-11-03). La revisión visual del rediseño se realizó en navegador integrado sobre seguimiento público y login, con comprobación de overflow en 390/660/1440 px y foco inicial por teclado. Docker/Compose no fueron ejecutados porque el runtime no está instalado en este entorno.
