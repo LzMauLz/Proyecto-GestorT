@@ -19,7 +19,7 @@
 - La inspección del CLI mostró que Flask registra `create-admin` bajo el grupo `auth`; se corrigieron README y pasos de Docker para usar `auth create-admin`.
 - Se corrigió el cierre del archivo de esquema SQLite tras observar un `ResourceWarning`.
 - La revisión de privacidad retiró equipo y descripción del problema de la respuesta pública.
-- Se ejecutaron `python -B -m compileall -q app tests` y 32 pruebas con `python -B -m unittest discover -s tests -v`; Pytest no se ejecutó porque la validación principal usa `unittest`.
+- Se ejecutaron `python -B -m compileall -q app config tests` y 33 pruebas con `python -B -m unittest discover -s tests -v`; Pytest no se ejecutó porque la validación principal usa `unittest`.
 - El proyecto se entrega como trabajo individual; no se atribuye revisión independiente a un segundo integrante.
 
 ## Integración de Groq

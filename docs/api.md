@@ -1,6 +1,6 @@
 # API de GestorTech
 
-La API fue verificada con la suite automatizada del proyecto: **32 pruebas
+La API fue verificada con la suite automatizada del proyecto: **33 pruebas
 aprobadas**. Las solicitudes mutables requieren autenticación, sesión y
 protección CSRF; las respuestas de error se devuelven como JSON.
 
