@@ -50,7 +50,7 @@ $env:GESTORTECH_SECRET_KEY = (python -c "import secrets; print(secrets.token_hex
 docker compose up --build
 ```
 
-Luego crea el administrador dentro del contenedor (`docker compose exec gestortech python -m flask --app wsgi:app auth create-admin`). Docker no estaba disponible para validar la construcción en este entorno.
+Luego crea el administrador dentro del contenedor (`docker compose exec gestortech python -m flask --app wsgi:app auth create-admin`). La imagen, el arranque, el puerto y la persistencia SQLite fueron verificados localmente.
 
 Docker mantiene Groq desactivado aunque exista un `.env` local. Para habilitarlo
 de forma explícita en el contenedor, define `DOCKER_GROQ_ENABLED=true`,

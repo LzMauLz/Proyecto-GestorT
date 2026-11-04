@@ -14,7 +14,7 @@ Estas decisiones traducen la arquitectura de Módulo 2 a un MVP ejecutable. No a
 | Importación | Parser CSV/XLSX local, previsualización en base temporal, selección y edición humana; puerto/adaptador Groq preparado y apagado por defecto. | Solo tras habilitación aprobada se podrían enviar campos de catálogo limitados; existe continuidad manual y no hay llamadas ni credenciales incorporadas. |
 | Seguridad CSRF | Token de sesión para métodos mutables en páginas y API. | Protege solicitudes autenticadas basadas en cookie. |
 | API | Rutas en español alineadas con la especificación inicial, sesión web y documento OpenAPI 3.1 servido en `/api/openapi.json`. | La propuesta de importación devuelve modo manual o sugerencia validada; siempre requiere revisión humana y no persiste por sí sola. |
-| Servidor | Flask integrado para demo local; no para despliegue público. | Docker no está disponible para validación local y no se añadió servidor de producción. |
+| Servidor | Flask integrado para demo local; no para despliegue público. | Docker fue validado para la demostración local; no se añadió servidor de producción. |
 
 ## Pendientes de decisión/validación
 
