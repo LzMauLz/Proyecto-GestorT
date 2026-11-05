@@ -11,6 +11,20 @@ MAX_PRODUCT_PROPOSALS = 20
 ALLOWED_ACTIONS = {'answer', 'product_description', 'product_proposal', 'stock_proposal'}
 
 
+def _creation_value(product, field, default):
+    value = product.get(field, default)
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return default
+        if field == 'price':
+            if ',' in value:
+                value = value.replace('.', '').replace(',', '.')
+            elif value.count('.') and len(value.rsplit('.', 1)[-1]) == 3:
+                value = value.replace('.', '')
+    return value
+
+
 def _validate_product_proposal(proposal):
     product_fields = {'name', 'description', 'category', 'price', 'stock'}
     if not isinstance(proposal, dict) or set(proposal) - product_fields:
@@ -170,8 +184,10 @@ def resolve_proposal(db, user, proposal_id, approve):
         for product in products:
             product_ids.append(create_product(db, {
                 'name': product.get('name', ''), 'description': product.get('description', ''),
-                'category': product.get('category', ''), 'price': product.get('price', ''),
-                'stock': product.get('stock', 0), 'user_id': user['id']
+                'category': product.get('category', ''),
+                'price': _creation_value(product, 'price', 0),
+                'stock': _creation_value(product, 'stock', 0),
+                'user_id': user['id']
             }, commit=False))
         result = {'status': 'approved', 'product_id': product_ids[0], 'product_ids': product_ids}
     else:

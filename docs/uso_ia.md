@@ -36,7 +36,7 @@ El endpoint `/api/ia/importacion/propuesta` requiere administrador, informa `mod
 
 ## Asistente conversacional de inventario
 
-El panel `/assistant` y los endpoints `/api/asistente/mensaje` permiten a administradores consultar el inventario, redactar o mejorar descripciones y preparar propuestas de uno o varios productos (hasta 20 por solicitud) o movimientos. Los técnicos solo pueden realizar consultas; no pueden preparar ni confirmar cambios.
+El panel `/assistant` y los endpoints `/api/asistente/mensaje` permiten a administradores consultar el inventario, redactar o mejorar descripciones y preparar propuestas de uno o varios productos (hasta 20 por solicitud) o movimientos. Al confirmar, un stock omitido se interpreta como cero y los precios con separador de miles local, como `5.000`, se normalizan antes de persistir. Los técnicos solo pueden realizar consultas; no pueden preparar ni confirmar cambios.
 
 El asistente recibe un contexto factual limitado generado por servicios de consulta SQLite. No recibe permiso para ejecutar SQL, código, herramientas ni solicitudes arbitrarias. El modelo devuelve JSON validado localmente; cualquier propuesta se guarda temporalmente en `ai_proposals` y requiere confirmación explícita de un administrador. La confirmación vuelve a validar el usuario, producto, tipo, cantidad y stock y ejecuta `create_product` o `move_stock`; cancelar no modifica inventario.
 
