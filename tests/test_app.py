@@ -125,6 +125,17 @@ class GestorTechTests(unittest.TestCase):
         invalid=parse_product_upload(missing)
         self.assertIn('faltante',invalid[0]['error'])
 
+    def test_csv_import_accepts_inventory_template_with_sale_price(self):
+        content = (
+            'codigo,nombre,marca,descripcion,categoria,precio_compra,precio_venta,stock,stock_minimo\n'
+            'REP-001,Pantalla LCD,Samsung,Pantalla Samsung A12,Pantallas,85000,125000,5,2\n'
+        ).encode()
+        rows = parse_product_upload(FileStorage(stream=io.BytesIO(content), filename='repuestos.csv'))
+        self.assertEqual(rows[0]['name'], 'Pantalla LCD')
+        self.assertEqual(rows[0]['price'], '125000')
+        self.assertEqual(rows[0]['stock'], '5')
+        self.assertEqual(rows[0]['category'], 'Pantallas')
+
     def test_staff_pages_render(self):
         self.session_as(1)
         for path in ['/dashboard','/products','/products/new','/products/import','/repairs/new','/users/new','/assistant']:

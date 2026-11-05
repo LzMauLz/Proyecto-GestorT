@@ -29,7 +29,7 @@ def _normalize_rows(headers, rows):
         'name': {'nombre','name','producto','product'},
         'description': {'descripcion','descripción','description','detalle'},
         'category': {'categoria','categoría','category'},
-        'price': {'precio','price','valor'},
+        'price': {'precio','precio venta','precio de venta','price','valor'},
         'stock': {'cantidad stock','stock','existencias','cantidad'},
     }
     indexes = {}

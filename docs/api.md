@@ -65,6 +65,8 @@ El seguimiento público nunca devuelve el equipo, descripción del problema, dat
 
 La pantalla `/assistant` usa el endpoint `/api/asistente/mensaje`. Un administrador puede pedir por chat un producto individual o varios productos en una misma solicitud; el backend devuelve una única propuesta pendiente y la confirmación los crea en una transacción. Groq solo se consulta cuando `GROQ_ENABLED=true`, `GROQ_API_KEY` y `GROQ_MODEL` están configurados. El valor recomendado en `.env.example` es `openai/gpt-oss-20b`, documentado por Groq para Chat Completions; debe verificarse nuevamente antes de producción.
 
+La importación de inventario acepta `nombre`, `descripcion`, `categoria`, `precio` o `precio_venta`, y `stock`. En plantillas con `precio_compra` y `precio_venta`, usa `precio_venta` como precio del catálogo. Columnas adicionales como código, marca, precio de compra y stock mínimo se ignoran durante la normalización y no se persisten porque no forman parte del modelo actual.
+
 Las consultas de inventario se acompañan de datos obtenidos por SQLite; el modelo no puede consultar SQL, herramientas ni servicios arbitrarios. Las propuestas de producto y movimientos se guardan como pendientes en `ai_proposals` y requieren confirmación administrativa. El servicio vuelve a validar rol, producto, tipo, cantidad y stock antes de ejecutar. Técnicos solo reciben respuestas de consulta. No se almacenan claves, prompts completos ni respuestas del proveedor en el historial de auditoría.
 
 Las transiciones de reparación están documentadas en [decisiones_mvp.md](decisiones_mvp.md). La muestra `GT-000123` del documento académico es ilustrativa; GestorTech genera códigos aleatorios con 128 bits de entropía.
