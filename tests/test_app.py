@@ -73,6 +73,14 @@ class GestorTechTests(unittest.TestCase):
         db=get_db(); db.execute('UPDATE repairs SET assigned_to=2 WHERE id=?',(repair_id,)); db.commit()
         update_repair_status(db,repair_id,2,'technician','En diagnóstico')
 
+    def test_inventory_snapshot_omits_free_text_movement_notes(self):
+        product_id=create_product(get_db(),{'name':'Cable de prueba','price':'1000','stock':1,'user_id':1})
+        move_stock(get_db(),product_id,1,'entrada',1,'Dato personal ficticio que no debe enviarse al proveedor IA')
+        snapshot=inventory_snapshot(get_db(),'últimos movimientos')
+        self.assertEqual(len(snapshot['movements']),2)
+        self.assertTrue(all('note' not in movement for movement in snapshot['movements']))
+        self.assertTrue(all('Dato personal ficticio' not in str(movement) for movement in snapshot['movements']))
+
     def test_stock_movement_is_atomic_and_never_negative(self):
         product_id=create_product(get_db(),{'name':'Cable','price':'18000','stock':3,'user_id':1})
         self.assertEqual(move_stock(get_db(),product_id,1,'salida',2),1)

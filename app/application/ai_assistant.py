@@ -96,7 +96,7 @@ def inventory_snapshot(db, question):
     movements = []
     if any(term in lowered for term in ('movimiento', 'entrada', 'salida', 'últimos')):
         rows = db.execute(
-            'SELECT m.product_id,p.name,m.kind,m.quantity,m.note,m.created_at '
+            'SELECT m.product_id,p.name,m.kind,m.quantity,m.created_at '
             'FROM inventory_movements m JOIN products p ON p.id=m.product_id '
             'ORDER BY m.id DESC LIMIT 20'
         ).fetchall()
