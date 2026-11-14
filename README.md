@@ -16,6 +16,10 @@ Revisa [PROJECT_STATUS.md](PROJECT_STATUS.md). La arquitectura y el modelo parte
 
 ## Arquitectura
 
+La documentación de los diagramas C4 y las decisiones de arquitectura está en [docs/arquitectura.md](docs/arquitectura.md). Desde allí se consultan los registros:
+- [ADR-001: mantener Python 3.11 y Flask](docs/adr/ADR-001.md).
+- [ADR-002: mantener SQLite para el MVP](docs/adr/ADR-002.md).
+
 `app/domain` conserva estados y errores de dominio; `app/application` implementa reglas y servicios; `app/infrastructure` encapsula SQLite y adaptadores externos; `app/web` contiene controladores Flask para páginas y API. El asistente usa `app/application/ai_assistant.py` para coordinar consultas y propuestas, y el adaptador Groq para respuestas JSON. Está desactivado por defecto en el código; en desarrollo local se habilita mediante `.env` con `GROQ_ENABLED=true`, `GROQ_API_KEY`, `GROQ_MODEL` y opcionalmente `GROQ_TIMEOUT` (1–60 segundos). El modelo validado en este entorno es `openai/gpt-oss-20b`.
 
 ## Identidad visual
