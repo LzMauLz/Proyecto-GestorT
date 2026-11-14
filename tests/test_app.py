@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage
 
 from app import create_app
 from app.application.ai_import import prepare_product_proposal
-from app.application.ai_assistant import inventory_snapshot, request_assistant, _validate_product_proposal
+from app.application.ai_assistant import inventory_snapshot, request_assistant, _validate_product_proposal, _validate_response
 from app.application.ports import AIProviderError
 from app.infrastructure.ai.groq_adapter import GroqAdapter
 from app.application.services import create_product, create_repair, move_stock, update_repair_status
@@ -82,6 +82,24 @@ class GestorTechTests(unittest.TestCase):
         for valid in (0,3,'3',3.0,''):
             with self.subTest(valid_stock=valid):
                 self.assertEqual(_validate_product_proposal({**base,'stock':valid})['stock'],valid)
+
+    def test_ai_product_proposal_rejects_boolean_values(self):
+        base = {'name': 'Cable', 'description': '', 'category': 'Accesorios', 'price': '1000', 'stock': 1}
+        for field in base:
+            with self.subTest(field=field), self.assertRaises(AIProviderError):
+                _validate_product_proposal({**base, field: True})
+
+    def test_ai_stock_proposal_rejects_boolean_ids_and_quantities(self):
+        base = {'action': 'stock_proposal', 'proposal': {'product_id': 1, 'kind': 'entrada', 'quantity': 1}}
+        self.assertEqual(_validate_response(base)['proposal']['quantity'], 1)
+        invalid = (
+            {'product_id': True, 'kind': 'entrada', 'quantity': 1},
+            {'product_id': 1, 'kind': 'entrada', 'quantity': True},
+            {'product_id': 0, 'kind': 'entrada', 'quantity': 1},
+        )
+        for proposal in invalid:
+            with self.subTest(proposal=proposal), self.assertRaises(AIProviderError):
+                _validate_response({'action': 'stock_proposal', 'proposal': proposal})
 
     def test_inventory_snapshot_omits_free_text_movement_notes(self):
         product_id=create_product(get_db(),{'name':'Cable de prueba','price':'1000','stock':1,'user_id':1})

@@ -98,9 +98,14 @@ def _validate_response(value):
     if action == 'stock_proposal' and proposal is not None:
         if set(proposal) - {'product_id', 'kind', 'quantity', 'note'}:
             raise AIProviderError('La propuesta de inventario no tiene un formato válido.')
-        if proposal.get('kind') not in ('entrada', 'salida') or not isinstance(proposal.get('product_id'), int):
+        if (proposal.get('kind') not in ('entrada', 'salida')
+                or not isinstance(proposal.get('product_id'), int)
+                or isinstance(proposal.get('product_id'), bool)
+                or proposal['product_id'] <= 0):
             raise AIProviderError('La propuesta de inventario no tiene un formato válido.')
-        if not isinstance(proposal.get('quantity'), int) or proposal['quantity'] <= 0 or proposal['quantity'] > 2147483647:
+        if (not isinstance(proposal.get('quantity'), int)
+                or isinstance(proposal.get('quantity'), bool)
+                or proposal['quantity'] <= 0 or proposal['quantity'] > 2147483647):
             raise AIProviderError('La cantidad propuesta no es válida.')
         if not isinstance(proposal.get('note', ''), str) or len(proposal.get('note', '')) > 500:
             raise AIProviderError('La nota propuesta no es válida.')
