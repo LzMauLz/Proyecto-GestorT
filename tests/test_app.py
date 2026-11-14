@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage
 
 from app import create_app
 from app.application.ai_import import prepare_product_proposal
-from app.application.ai_assistant import inventory_snapshot, request_assistant, _validate_product_proposal
+from app.application.ai_assistant import inventory_snapshot, request_assistant, _validate_product_proposal, _validate_response
 from app.application.ports import AIProviderError
 from app.infrastructure.ai.groq_adapter import GroqAdapter
 from app.application.services import create_product, create_repair, move_stock, update_repair_status
@@ -83,6 +83,24 @@ class GestorTechTests(unittest.TestCase):
             with self.subTest(valid_stock=valid):
                 self.assertEqual(_validate_product_proposal({**base,'stock':valid})['stock'],valid)
 
+    def test_ai_product_proposal_rejects_boolean_values(self):
+        base = {'name': 'Cable', 'description': '', 'category': 'Accesorios', 'price': '1000', 'stock': 1}
+        for field in base:
+            with self.subTest(field=field), self.assertRaises(AIProviderError):
+                _validate_product_proposal({**base, field: True})
+
+    def test_ai_stock_proposal_rejects_boolean_ids_and_quantities(self):
+        base = {'action': 'stock_proposal', 'proposal': {'product_id': 1, 'kind': 'entrada', 'quantity': 1}}
+        self.assertEqual(_validate_response(base)['proposal']['quantity'], 1)
+        invalid = (
+            {'product_id': True, 'kind': 'entrada', 'quantity': 1},
+            {'product_id': 1, 'kind': 'entrada', 'quantity': True},
+            {'product_id': 0, 'kind': 'entrada', 'quantity': 1},
+        )
+        for proposal in invalid:
+            with self.subTest(proposal=proposal), self.assertRaises(AIProviderError):
+                _validate_response({'action': 'stock_proposal', 'proposal': proposal})
+
     def test_inventory_snapshot_omits_free_text_movement_notes(self):
         product_id=create_product(get_db(),{'name':'Cable de prueba','price':'1000','stock':1,'user_id':1})
         move_stock(get_db(),product_id,1,'entrada',1,'Dato personal ficticio que no debe enviarse al proveedor IA')
@@ -99,6 +117,17 @@ class GestorTechTests(unittest.TestCase):
         row=get_db().execute('SELECT stock FROM products WHERE id=?',(product_id,)).fetchone()
         self.assertEqual(row['stock'],1)
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM inventory_movements WHERE product_id=?',(product_id,)).fetchone()['n'],2)
+
+    def test_product_stock_and_movement_quantity_require_integers(self):
+        db = get_db()
+        for value in (True, 1.5, '1.5', '١'):
+            with self.subTest(value=value), self.assertRaises(DomainError):
+                create_product(db, {'name': 'Invalid stock', 'price': '10', 'stock': value, 'user_id': 1})
+
+        product_id = create_product(db, {'name': 'Cable', 'price': '10', 'stock': 1, 'user_id': 1})
+        for value in (True, 1.5, '1.5', '١'):
+            with self.subTest(value=value), self.assertRaises(DomainError):
+                move_stock(db, product_id, 1, 'entrada', value)
 
     def test_api_requires_auth_and_csrf(self):
         self.assertEqual(self.client.get('/api/productos').status_code,401)

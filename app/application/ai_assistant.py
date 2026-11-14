@@ -30,7 +30,11 @@ def _validate_product_proposal(proposal):
     product_fields = {'name', 'description', 'category', 'price', 'stock'}
     if not isinstance(proposal, dict) or set(proposal) - product_fields:
         raise AIProviderError('La propuesta de producto no tiene un formato válido.')
-    if any(not isinstance(proposal.get(key, ''), (str, int, float)) for key in product_fields):
+    if any(
+        not isinstance(proposal.get(key, ''), (str, int, float))
+        or isinstance(proposal.get(key, ''), bool)
+        for key in product_fields
+    ):
         raise AIProviderError('La propuesta de producto no tiene un formato válido.')
     if len(str(proposal.get('name', ''))) > 160 or len(str(proposal.get('description', ''))) > 2000 or len(str(proposal.get('category', ''))) > 100:
         raise AIProviderError('La propuesta de producto supera los límites permitidos.')
@@ -94,9 +98,14 @@ def _validate_response(value):
     if action == 'stock_proposal' and proposal is not None:
         if set(proposal) - {'product_id', 'kind', 'quantity', 'note'}:
             raise AIProviderError('La propuesta de inventario no tiene un formato válido.')
-        if proposal.get('kind') not in ('entrada', 'salida') or not isinstance(proposal.get('product_id'), int):
+        if (proposal.get('kind') not in ('entrada', 'salida')
+                or not isinstance(proposal.get('product_id'), int)
+                or isinstance(proposal.get('product_id'), bool)
+                or proposal['product_id'] <= 0):
             raise AIProviderError('La propuesta de inventario no tiene un formato válido.')
-        if not isinstance(proposal.get('quantity'), int) or proposal['quantity'] <= 0 or proposal['quantity'] > 2147483647:
+        if (not isinstance(proposal.get('quantity'), int)
+                or isinstance(proposal.get('quantity'), bool)
+                or proposal['quantity'] <= 0 or proposal['quantity'] > 2147483647):
             raise AIProviderError('La cantidad propuesta no es válida.')
         if not isinstance(proposal.get('note', ''), str) or len(proposal.get('note', '')) > 500:
             raise AIProviderError('La nota propuesta no es válida.')
