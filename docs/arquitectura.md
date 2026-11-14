@@ -98,7 +98,7 @@ La aplicación obtiene la ubicación de la base de datos mediante la variable `G
 
 ## 7. Decisiones de arquitectura
 
-Las decisiones formales se documentarán en los siguientes registros, que se incorporarán durante el taller de ADR:
+Las decisiones de arquitectura solicitadas para esta sesión ya están documentadas en los siguientes registros:
 
 - [ADR-001 – Justificación del lenguaje y framework](adr/ADR-001.md).
 - [ADR-002 – Justificación de la base de datos o plataforma de despliegue](adr/ADR-002.md).
