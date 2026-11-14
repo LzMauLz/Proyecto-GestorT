@@ -21,12 +21,20 @@ def to_cents(value):
         raise DomainError('El precio debe ser un número igual o mayor que cero.')
 
 
+def _to_integer(value):
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.isascii() and value.isdecimal() and len(value) <= 10:
+        return int(value)
+    raise ValueError
+
+
 def create_product(db, data, commit=True):
     name = str(data.get('name', '')).strip()
     if not name or len(name) > 160:
         raise DomainError('El nombre del producto es obligatorio y admite hasta 160 caracteres.')
     try:
-        stock = int(data.get('stock', 0))
+        stock = _to_integer(data.get('stock', 0))
         if stock < 0 or stock > 2_147_483_647:
             raise ValueError
     except (TypeError, ValueError):
@@ -58,7 +66,7 @@ def move_stock(db, product_id, user_id, kind, quantity, note=''):
     if kind not in ('entrada','salida'):
         raise DomainError('Tipo de movimiento no válido.')
     try:
-        quantity = int(quantity)
+        quantity = _to_integer(quantity)
         if quantity <= 0 or quantity > 2_147_483_647:
             raise ValueError
     except (TypeError, ValueError):

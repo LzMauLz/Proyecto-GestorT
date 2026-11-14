@@ -100,6 +100,17 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(row['stock'],1)
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM inventory_movements WHERE product_id=?',(product_id,)).fetchone()['n'],2)
 
+    def test_product_stock_and_movement_quantity_require_integers(self):
+        db = get_db()
+        for value in (True, 1.5, '1.5', '١'):
+            with self.subTest(value=value), self.assertRaises(DomainError):
+                create_product(db, {'name': 'Invalid stock', 'price': '10', 'stock': value, 'user_id': 1})
+
+        product_id = create_product(db, {'name': 'Cable', 'price': '10', 'stock': 1, 'user_id': 1})
+        for value in (True, 1.5, '1.5', '١'):
+            with self.subTest(value=value), self.assertRaises(DomainError):
+                move_stock(db, product_id, 1, 'entrada', value)
+
     def test_api_requires_auth_and_csrf(self):
         self.assertEqual(self.client.get('/api/productos').status_code,401)
         headers=self.session_as(1)
