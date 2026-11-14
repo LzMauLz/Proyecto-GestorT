@@ -32,6 +32,10 @@ La integración de WhatsApp para responder consultas y recibir pedidos queda reg
 
 El carrusel automático de productos destacados se registra como mejora opcional. Solo se realizará si están terminadas las tareas Must y Should y queda tiempo disponible.
 
+### Mejora Should: evolución de la base de datos
+
+La aplicación utiliza SQLite actualmente. Se registra como mejora importante evaluar y preparar la migración a PostgreSQL o MySQL, comparando ambas alternativas según las necesidades reales de GestorTech y el entorno de despliegue. Esta tarea no implica cambiar el motor durante la entrega obligatoria: SQLite se mantendrá hasta que exista una decisión justificada, un plan de migración y pruebas de integridad y funcionamiento.
+
 ## 3. Historias de usuario
 
 Cada historia incluye criterios verificables. El estado refleja el estado documentado del proyecto y el trabajo pendiente para alcanzar el alcance de esta entrega.
@@ -159,6 +163,7 @@ Los issues se organizaron por bloques de trabajo. Cuando varias tareas correspon
 | [#10](https://github.com/LzMauLz/Proyecto-GestorT/issues/10) | Crear catálogo comercial y administrar publicación de productos | HU-03, HU-04 | Must |
 | [#12](https://github.com/LzMauLz/Proyecto-GestorT/issues/12) | Auditar, reforzar y probar la seguridad | HU-07, HU-08 y transversal | Must |
 | [#14](https://github.com/LzMauLz/Proyecto-GestorT/issues/14) | Mejorar y validar experiencia de los paneles | HU-03, HU-04 y transversal | Should |
+| [#20](https://github.com/LzMauLz/Proyecto-GestorT/issues/20) | Evaluar y migrar la persistencia desde SQLite a PostgreSQL o MySQL; comparar motores, documentar la decisión y probar la migración | HU-01 a HU-08, transversal de persistencia | Should |
 | [#15](https://github.com/LzMauLz/Proyecto-GestorT/issues/15) | Ampliar pruebas automatizadas y verificar CI | HU-01 a HU-08 | Must |
 | [#16](https://github.com/LzMauLz/Proyecto-GestorT/issues/16) | Completar documentación funcional, manual y entrega/despliegue | HU-01 a HU-08 | Must |
 | [#17](https://github.com/LzMauLz/Proyecto-GestorT/issues/17) | Elaborar/actualizar diagramas C4 y documentar decisiones mediante ADR | HU-01 a HU-08, transversal | Must |
@@ -181,6 +186,7 @@ Antes de implementar los cambios relacionados, deben quedar acordadas estas deci
 - **Disponibilidad en catálogo:** definir si se mostrará una indicación general de disponibilidad. No se recomienda exponer existencias exactas.
 - **Campos obligatorios de inventario:** confirmar qué datos deben ser obligatorios para registrar un producto y cómo se manejarán valores ausentes.
 - **Integración IA:** mantener Groq opcional, la alternativa manual y la aprobación explícita antes de persistir cambios.
+- **Motor de base de datos:** comparar PostgreSQL y MySQL considerando compatibilidad, concurrencia, transacciones, despliegue, mantenimiento, respaldos y costos. Registrar la opción seleccionada en un ADR. La migración deberá conservar los datos y restricciones, contar con respaldo y reversión, y superar pruebas antes de retirar SQLite.
 
 ## 8. Referencias internas del proyecto
 
