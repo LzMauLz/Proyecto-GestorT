@@ -1,5 +1,6 @@
 """Safe orchestration for the administrative inventory assistant."""
 import json
+import math
 import secrets
 
 from app.application.ports import AIProviderError
@@ -33,6 +34,24 @@ def _validate_product_proposal(proposal):
         raise AIProviderError('La propuesta de producto no tiene un formato válido.')
     if len(str(proposal.get('name', ''))) > 160 or len(str(proposal.get('description', ''))) > 2000 or len(str(proposal.get('category', ''))) > 100:
         raise AIProviderError('La propuesta de producto supera los límites permitidos.')
+    stock = proposal.get('stock', '')
+    valid_stock = False
+    if isinstance(stock, int) and not isinstance(stock, bool):
+        valid_stock = 0 <= stock <= 2_147_483_647
+    elif isinstance(stock, float):
+        valid_stock = math.isfinite(stock) and stock.is_integer() and 0 <= stock <= 2_147_483_647
+    elif isinstance(stock, str):
+        normalized_stock = stock.strip()
+        valid_stock = not normalized_stock
+        if normalized_stock:
+            valid_stock = (
+                normalized_stock.isascii()
+                and normalized_stock.isdecimal()
+                and len(normalized_stock) <= 10
+                and int(normalized_stock) <= 2_147_483_647
+            )
+    if not valid_stock:
+        raise AIProviderError('La cantidad propuesta debe ser un entero entre 0 y 2147483647.')
     return proposal
 
 
@@ -96,7 +115,7 @@ def inventory_snapshot(db, question):
     movements = []
     if any(term in lowered for term in ('movimiento', 'entrada', 'salida', 'últimos')):
         rows = db.execute(
-            'SELECT m.product_id,p.name,m.kind,m.quantity,m.note,m.created_at '
+            'SELECT m.product_id,p.name,m.kind,m.quantity,m.created_at '
             'FROM inventory_movements m JOIN products p ON p.id=m.product_id '
             'ORDER BY m.id DESC LIMIT 20'
         ).fetchall()
