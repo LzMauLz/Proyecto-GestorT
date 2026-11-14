@@ -164,6 +164,7 @@ Los issues se organizaron por bloques de trabajo. Cuando varias tareas correspon
 | [#12](https://github.com/LzMauLz/Proyecto-GestorT/issues/12) | Auditar, reforzar y probar la seguridad | HU-07, HU-08 y transversal | Must |
 | [#14](https://github.com/LzMauLz/Proyecto-GestorT/issues/14) | Mejorar y validar experiencia de los paneles | HU-03, HU-04 y transversal | Should |
 | [#20](https://github.com/LzMauLz/Proyecto-GestorT/issues/20) | Evaluar y migrar la persistencia desde SQLite a PostgreSQL o MySQL; comparar motores, documentar la decisión y probar la migración | HU-01 a HU-08, transversal de persistencia | Should |
+| [#21](https://github.com/LzMauLz/Proyecto-GestorT/issues/21) | Crear y versionar el documento de requisitos de la Sesión 1 en `docs/requisitos.md` | HU-01 a HU-08, trazabilidad documental | Must (S1) |
 | [#15](https://github.com/LzMauLz/Proyecto-GestorT/issues/15) | Ampliar pruebas automatizadas y verificar CI | HU-01 a HU-08 | Must |
 | [#16](https://github.com/LzMauLz/Proyecto-GestorT/issues/16) | Completar documentación funcional, manual y entrega/despliegue | HU-01 a HU-08 | Must |
 | [#17](https://github.com/LzMauLz/Proyecto-GestorT/issues/17) | Elaborar/actualizar diagramas C4 y documentar decisiones mediante ADR | HU-01 a HU-08, transversal | Must |
