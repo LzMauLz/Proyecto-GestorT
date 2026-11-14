@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage
 
 from app import create_app
 from app.application.ai_import import prepare_product_proposal
-from app.application.ai_assistant import inventory_snapshot, request_assistant
+from app.application.ai_assistant import inventory_snapshot, request_assistant, _validate_product_proposal
 from app.application.ports import AIProviderError
 from app.infrastructure.ai.groq_adapter import GroqAdapter
 from app.application.services import create_product, create_repair, move_stock, update_repair_status
@@ -72,6 +72,16 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(err.exception.status_code,403)
         db=get_db(); db.execute('UPDATE repairs SET assigned_to=2 WHERE id=?',(repair_id,)); db.commit()
         update_repair_status(db,repair_id,2,'technician','En diagnóstico')
+
+    def test_ai_product_proposal_rejects_non_integer_stock(self):
+        base={'name':'Cable','description':'','category':'Accesorios','price':'1000'}
+        for invalid in (1.5,'1.5',True,-1,2_147_483_648,float('nan'),float('inf')):
+            with self.subTest(stock=invalid):
+                with self.assertRaises(AIProviderError):
+                    _validate_product_proposal({**base,'stock':invalid})
+        for valid in (0,3,'3',3.0,''):
+            with self.subTest(valid_stock=valid):
+                self.assertEqual(_validate_product_proposal({**base,'stock':valid})['stock'],valid)
 
     def test_inventory_snapshot_omits_free_text_movement_notes(self):
         product_id=create_product(get_db(),{'name':'Cable de prueba','price':'1000','stock':1,'user_id':1})
