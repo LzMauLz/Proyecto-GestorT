@@ -30,7 +30,11 @@ def _validate_product_proposal(proposal):
     product_fields = {'name', 'description', 'category', 'price', 'stock'}
     if not isinstance(proposal, dict) or set(proposal) - product_fields:
         raise AIProviderError('La propuesta de producto no tiene un formato válido.')
-    if any(not isinstance(proposal.get(key, ''), (str, int, float)) for key in product_fields):
+    if any(
+        not isinstance(proposal.get(key, ''), (str, int, float))
+        or isinstance(proposal.get(key, ''), bool)
+        for key in product_fields
+    ):
         raise AIProviderError('La propuesta de producto no tiene un formato válido.')
     if len(str(proposal.get('name', ''))) > 160 or len(str(proposal.get('description', ''))) > 2000 or len(str(proposal.get('category', ''))) > 100:
         raise AIProviderError('La propuesta de producto supera los límites permitidos.')
