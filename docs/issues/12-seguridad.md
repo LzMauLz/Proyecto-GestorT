@@ -1,5 +1,7 @@
 # Issue 12 · Controles de seguridad del MVP
 
+Validación integrada con #5 y #10: **85 passed, 70 subtests passed en 54,58 s** (Python 3.12 local). CI Python 3.11 aprobado para `ef0cccc`: [run 43777324592](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324592). Los límites de producción descritos al final siguen vigentes; la evidencia cubre el MVP local.
+
 Fecha: 2026-11-15. Alcance: código y pruebas locales con Flask y SQLite reales sobre datos ficticios. La configuración y las bases de datos del taller no se leen ni migran durante estas verificaciones.
 
 ## Controles incorporados
