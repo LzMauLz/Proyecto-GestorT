@@ -39,3 +39,5 @@ Revisión adicional: límites de IDs SQLite y rechazo de IDs booleanos/estructur
 Comando de verificación completa ejecutado: `python -B -m pytest tests/test_integrity.py tests/test_app.py -q -p no:cacheprovider`.
 
 La verificación local utilizó Python 3.12.14 incluido con el entorno de herramientas y las dependencias existentes del proyecto: el intérprete original del entorno virtual Python 3.11 no estaba disponible. Python 3.11 sigue siendo el stack aprobado; su validación en CI queda pendiente. No se instalaron dependencias ni se hicieron llamadas a Groq.
+
+Validación del stack aprobado completada posteriormente: GitHub Actions Python 3.11 pasó para el commit `df2a83d` ([run 43776061344](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43776061344)). El PR y la integración en `develop` continúan pendientes.
