@@ -92,8 +92,6 @@ def _validate_response(value):
         proposal = {'products': value['products']}
     if action == 'product_proposal' and proposal is not None and not message:
         message = 'Propuesta de producto preparada para revisión.'
-    if action == 'answer' and proposal is not None:
-        raise AIProviderError('Una respuesta de consulta no puede incluir una operación.')
     if proposal is not None and not isinstance(proposal, dict):
         raise AIProviderError('La propuesta de IA no tiene un formato válido.')
     if action == 'product_proposal' and proposal is not None:

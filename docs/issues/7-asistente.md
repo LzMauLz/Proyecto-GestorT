@@ -21,6 +21,8 @@ Se aplicaron las guías `frontend-design` y `ui-ux-pro-max` (secciones web de ac
 
 ## Validación y límites
 
+Integración posterior con #5, #10 y #12: **102 passed, 77 subtests passed en 66,62 s**, Python 3.12.14 complementario. Se conserva el resolver transaccional y la auditoría por propuesta del #12; la revisión estática confirmó los controles después de resolver conflictos. Se retiró una guardia duplicada idéntica de consulta sin cambiar su comportamiento. CI Python 3.11 y revisión visual integrada siguen pendientes.
+
 Pruebas locales con Flask/SQLite reales y datos ficticios. Los proveedores son dobles explícitos; no se realizaron llamadas externas. El Python 3.11 del entorno virtual original no se encuentra en su ruta. Se utilizó Python 3.12.14 bundled de Codex con las dependencias ya existentes del entorno virtual; esto es validación complementaria y no reemplaza CI con Python 3.11.
 
 La comprensión de lenguaje natural de Groq real y una auditoría visual interactiva de navegador siguen sin verificarse en esta entrega. Los mensajes escritos al chat, historial permitido y contexto limitado de inventario se transmiten solo cuando el proveedor está habilitado; deben contener únicamente datos de catálogo y no datos personales. No se afirma detección perfecta de información sensible en texto libre.
