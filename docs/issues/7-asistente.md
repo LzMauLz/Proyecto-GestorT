@@ -1,5 +1,7 @@
 # Issue #7 — Asistente y revisión de inventario
 
+CI Python 3.11 aprobado para la integración de esta entrega (`f7cc486`): [run 43777324295](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324295). La comprensión con Groq real sigue fuera de la verificación por decisión del usuario de hacer solo pruebas locales.
+
 ## Implementado
 
 - Conversación libre conserva puerto/adaptador de IA. Las instrucciones piden aclaración ante ambigüedad; el backend comprueba nombre, precio y cantidad explícitos antes de guardar una propuesta de producto. Cero explícito es válido; un campo vacío no se convierte en cero.
