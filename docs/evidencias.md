@@ -18,6 +18,12 @@ El 15 de noviembre de 2026 se modificó temporalmente `_to_integer` para aceptar
 
 ![La prueba pasa después de restaurar el código](evidencias/sesion-3-mutacion-restaurada.png)
 
+### Revisión de una prueba sugerida por IA
+
+En un ejercicio de revisión, el primer borrador de IA para el endpoint `POST /api/productos` esperaba HTTP 422 ante un precio inválido. La ejecución dirigida mostró HTTP 400 (`400 != 422`), que es el código que usa el controlador Flask al convertir el error de dominio. Se corrigió la prueba a `test_invalid_product_price_returns_400`; el usuario ejecutó la prueba corregida y obtuvo **1 passed en 1,19 s**.
+
+Esta comprobación documenta un error real del borrador generado durante el ejercicio; no se cambió la regla del endpoint. La salida de terminal quedó compartida en la conversación; una captura visual de este ejercicio se añadirá si se adjunta.
+
 ### Integración continua
 
 - Workflow: `.github/workflows/ci.yml`.

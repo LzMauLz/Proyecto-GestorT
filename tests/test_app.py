@@ -460,6 +460,18 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(get_db().execute('SELECT stock FROM products WHERE id=?',(product_id,)).fetchone()['stock'],2)
         self.assertEqual(get_db().execute('SELECT approval_status FROM ai_operations').fetchone()['approval_status'],'cancelled')
 
+    def test_invalid_product_price_returns_400(self):
+        headers = self.session_as(1)
+        response = self.client.post(
+            '/api/productos',
+            json={
+                'nombre': 'Cable de prueba',
+                'precio': 'no-es-numero',
+                'cantidad_stock': 0,
+            },
+            headers=headers,
+        )
+        self.assertEqual(response.status_code, 400)
 
 if __name__=='__main__':
     unittest.main()
