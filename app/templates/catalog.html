@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Catálogo · GestorTech{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">Productos y repuestos</p><h1>Catálogo del taller</h1><p>Consulta los productos que ofrecemos. Confirma la disponibilidad con el taller antes de comprar.</p></div>
+  <a class="button secondary" href="{{ url_for('web.track') }}">Consultar una reparación</a>
+</section>
+{% if catalog_error %}
+<section class="empty-state" role="alert"><h2>No pudimos cargar el catálogo</h2><p>Inténtalo de nuevo en unos momentos o consulta al taller.</p><a class="button secondary" href="{{ url_for('web.catalog') }}">Volver a intentar</a></section>
+{% elif products %}
+<ul class="catalog-grid" aria-label="Productos publicados">
+  {% for product in products %}
+  <li class="catalog-card">
+    <span class="catalog-category">{{ product.category or 'General' }}</span>
+    <h2>{{ product.name }}</h2>
+    <p>{{ product.description or 'Consulta los detalles de este producto con el taller.' }}</p>
+    <p class="catalog-price">COP ${{ '{:,}'.format(product.price_cents // 100) }}.{{ '%02d'|format(product.price_cents % 100) }}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<section class="empty-state"><h2>Estamos preparando el catálogo</h2><p>El taller todavía no ha publicado productos. Puedes consultar el estado de tu reparación con su código.</p><a class="button primary" href="{{ url_for('web.track') }}">Consultar reparación</a></section>
+{% endif %}
+{% endblock %}

@@ -3,6 +3,7 @@ import io
 import json
 import secrets
 import zipfile
+import sqlite3
 from decimal import Decimal, InvalidOperation
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from openpyxl import load_workbook
@@ -10,6 +11,7 @@ from werkzeug.security import generate_password_hash
 
 from app.application.services import create_product, create_repair, move_stock, now_iso, update_product, update_repair_status
 from app.application.ai_import import prepare_product_proposal
+from app.application.catalog import public_catalog, set_publication
 from app.domain.models import DomainError, REPAIR_STATUSES, TRANSITIONS
 from app.infrastructure.database import get_db
 from app.web.auth import current_user, login_required, roles_required
@@ -197,6 +199,33 @@ def products():
     db=get_db()
     items=db.execute('SELECT p.*,u.name AS last_user FROM products p LEFT JOIN inventory_movements m ON m.product_id=p.id LEFT JOIN users u ON u.id=m.user_id WHERE p.active=1 GROUP BY p.id ORDER BY p.name').fetchall()
     return render_template('products.html',products=items)
+
+
+@web_bp.get('/catalog')
+def catalog():
+    try:
+        products = public_catalog(get_db())
+    except sqlite3.Error:
+        current_app.logger.warning('El catálogo no pudo consultar la base de datos.')
+        response = current_app.make_response((render_template('catalog.html', products=[], catalog_error=True), 503))
+    else:
+        response = current_app.make_response(render_template('catalog.html', products=products))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@web_bp.post('/products/<int:product_id>/publication')
+@roles_required('admin')
+def product_publication(product_id):
+    value = request.form.get('published')
+    if value not in ('0', '1'):
+        abort(400, description='Selecciona publicar o retirar del catálogo.')
+    try:
+        set_publication(get_db(), product_id, value == '1')
+    except DomainError as exc:
+        abort(exc.status_code, description=exc.message)
+    flash('Producto publicado en el catálogo.' if value == '1' else 'Producto retirado del catálogo.', 'success')
+    return redirect(url_for('web.products'))
 
 @web_bp.route('/products/new',methods=['GET','POST'])
 @roles_required('admin')

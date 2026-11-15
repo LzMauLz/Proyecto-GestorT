@@ -65,6 +65,8 @@ guardes esas variables en archivos versionados.
 
 ## Funcionalidades
 
+El catálogo público está en `/catalog`. Administración controla su publicación desde Inventario; los productos nuevos e importados permanecen ocultos hasta publicarlos. Solo se muestran campos comerciales, sin existencias exactas ni movimientos. Consulta [la decisión y verificación del catálogo](docs/issues/10-catalogo.md).
+
 - **Implementadas:** acceso con roles administrador/técnico; creación de usuarios administrativos; registro y seguimiento de reparaciones; asignación a técnicos; transiciones validadas e historial; separación de notas internas y avances públicos; consulta pública de código de alta entropía; productos, movimientos de stock atómicos y bajas lógicas; revisión y aprobación manual de CSV/XLSX; API OpenAPI JSON.
 - **Parciales:** la autorización del técnico se basa en la reparación asignada. Los estados son el flujo acordado para el MVP. La publicación de cada nota es decisión explícita del personal.
 - **Futuras:** integración automatizada de canales; despliegue externo; endurecimiento y pruebas de carga para producción.

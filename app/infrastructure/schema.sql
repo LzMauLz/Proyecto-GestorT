@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS products (
     category TEXT NOT NULL DEFAULT '',
     price_cents INTEGER NOT NULL CHECK(price_cents >= 0),
     stock INTEGER NOT NULL DEFAULT 0 CHECK(stock >= 0),
+    published INTEGER NOT NULL DEFAULT 0 CHECK(published IN (0,1)),
     active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)),
     created_at TEXT NOT NULL
 );

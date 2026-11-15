@@ -89,6 +89,9 @@ def init_db():
             if sqlite3.complete_statement(statement):
                 db.execute(statement)
                 statement = ''
+        columns = {row['name'] for row in db.execute('PRAGMA table_info(products)')}
+        if 'published' not in columns:
+            db.execute('ALTER TABLE products ADD COLUMN published INTEGER NOT NULL DEFAULT 0 CHECK(published IN (0,1))')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise DatabaseMigrationError('Hay referencias inválidas en la base. No se aplicó la migración.')
         db.commit()
