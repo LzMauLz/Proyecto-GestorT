@@ -1,3 +1,10 @@
+{% macro workspace_links() %}
+  <a href="{{ url_for('web.dashboard') }}" {% if request.endpoint == 'web.dashboard' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">⌂</span>Panel</a>
+  <a href="{{ url_for('web.repair_new') }}" {% if request.endpoint == 'web.repair_new' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">＋</span>Nueva reparación</a>
+  <a href="{{ url_for('web.products') }}" {% if request.endpoint in ['web.products','web.product_new','web.product_edit','web.import_form','web.import_preview','web.import_approve'] %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▦</span>Inventario</a>
+  <a href="{{ url_for('web.assistant') }}" {% if request.endpoint == 'web.assistant' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">✦</span>Asistente IA</a>
+  {% if current_user()['role'] == 'admin' %}<a href="{{ url_for('web.user_new') }}" {% if request.endpoint == 'web.user_new' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">♙</span>Usuarios</a>{% endif %}
+{% endmacro %}
 <!doctype html>
 <html lang="es">
 <head>
@@ -9,6 +16,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/gestortech-theme.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/catalog.css') }}">
   <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/ui.js') }}"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -21,11 +29,7 @@
       </a>
       <div class="sidebar-label">Espacio de trabajo</div>
       <nav class="main-nav" aria-label="Navegación principal">
-        <a href="{{ url_for('web.dashboard') }}" {% if request.endpoint == 'web.dashboard' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">⌂</span>Panel</a>
-        <a href="{{ url_for('web.repair_new') }}" {% if request.endpoint == 'web.repair_new' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">＋</span>Nueva reparación</a>
-        <a href="{{ url_for('web.products') }}" {% if request.endpoint in ['web.products','web.product_new','web.product_edit','web.import_form'] %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▦</span>Inventario</a>
-        <a href="{{ url_for('web.assistant') }}" {% if request.endpoint == 'web.assistant' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">✦</span>Asistente IA</a>
-        {% if current_user()['role'] == 'admin' %}<a href="{{ url_for('web.user_new') }}" {% if request.endpoint == 'web.user_new' %}aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">♙</span>Usuarios</a>{% endif %}
+        {{ workspace_links() }}
       </nav>
       <div class="sidebar-bottom">
         <a class="customer-link" href="{{ url_for('web.catalog') }}">Catálogo público</a>
@@ -38,16 +42,24 @@
       <header class="mobile-topbar">
         <a class="brand" href="{{ url_for('web.index') }}" aria-label="GestorTech, inicio"><img src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="GestorTech" class="brand-logo"><span class="brand-copy"><strong>GestorTech</strong><small>operaciones de taller</small></span></a>
         <a class="mobile-track" href="{{ url_for('web.track') }}">Seguimiento</a>
+        <details class="mobile-menu">
+          <summary>Menú del taller</summary>
+          <nav class="main-nav" aria-label="Navegación móvil">
+            {{ workspace_links() }}
+            <a href="{{ url_for('web.catalog') }}">Catálogo público</a>
+            <form action="{{ url_for('auth.logout') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="nav-logout" type="submit">Cerrar sesión</button></form>
+          </nav>
+        </details>
       </header>
-      <main id="main" class="page-shell">
+      <main id="main" class="page-shell" tabindex="-1">
   {% else %}
   <header class="public-topbar">
     <a class="brand" href="{{ url_for('web.index') }}" aria-label="GestorTech, inicio"><img src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="GestorTech" class="brand-logo"><span class="brand-copy"><strong>GestorTech</strong><small>servicio técnico</small></span></a>
-    <nav aria-label="Navegación pública"><a href="{{ url_for('web.catalog') }}" {% if request.endpoint == 'web.catalog' %}aria-current="page"{% endif %}>Catálogo</a><a href="{{ url_for('web.track') }}">Consultar reparación</a><a class="button secondary small" href="{{ url_for('auth.login') }}">Acceso del personal</a></nav>
+    <nav aria-label="Navegación pública"><a href="{{ url_for('web.catalog') }}" {% if request.endpoint == 'web.catalog' %}aria-current="page"{% endif %}>Catálogo</a><a href="{{ url_for('web.track') }}" {% if request.endpoint == 'web.track' %}aria-current="page"{% endif %}>Consultar reparación</a><a class="button secondary small" href="{{ url_for('auth.login') }}" {% if request.endpoint == 'auth.login' %}aria-current="page"{% endif %}>Acceso del personal</a></nav>
   </header>
-  <main id="main" class="page-shell public-shell">
+  <main id="main" class="page-shell public-shell" tabindex="-1">
   {% endif %}
-    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack" aria-live="polite">{% for category,message in messages %}<p class="flash {{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}{% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}<div id="form-feedback" class="flash-stack" role="region" aria-label="Mensajes de la operación" aria-live="polite" tabindex="-1">{% for category,message in messages %}<p class="flash {{ category }}">{{ message }}</p>{% endfor %}</div>{% endwith %}
     {% block content %}{% endblock %}
   {% if current_user() %}
       </main>
