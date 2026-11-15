@@ -10,6 +10,12 @@ El 14 de noviembre de 2026 se ejecutó `python -m pytest -q` desde el entorno vi
 
 ![Ejecución completa de la suite](evidencias/sesion-3-suite-completa.png)
 
+La ejecución de CI en GitHub también muestra el job `tests` en verde y el resumen de Pytest:
+
+![Resumen verde del workflow](evidencias/sesion-3-ci-resumen-success.png)
+
+![Detalle del job de pruebas y resumen de Pytest](evidencias/sesion-3-ci-tests-pytest.png)
+
 ### Comprobación de mutación
 
 El 15 de noviembre de 2026 se modificó temporalmente `_to_integer` para aceptar booleanos como enteros. La prueba `test_product_stock_and_movement_quantity_require_integers` detectó la regresión: fallaron los dos subtests con `True` (uno para existencias iniciales y otro para movimiento de inventario). Después se restauró la condición original y la misma prueba pasó: **1 prueba y 8 subtests aprobados**.
@@ -22,7 +28,11 @@ El 15 de noviembre de 2026 se modificó temporalmente `_to_integer` para aceptar
 
 En un ejercicio de revisión, el primer borrador de IA para el endpoint `POST /api/productos` esperaba HTTP 422 ante un precio inválido. La ejecución dirigida mostró HTTP 400 (`400 != 422`), que es el código que usa el controlador Flask al convertir el error de dominio. Se corrigió la prueba a `test_invalid_product_price_returns_400`; el usuario ejecutó la prueba corregida y obtuvo **1 passed en 1,19 s**.
 
-Esta comprobación documenta un error real del borrador generado durante el ejercicio; no se cambió la regla del endpoint. La salida de terminal quedó compartida en la conversación; una captura visual de este ejercicio se añadirá si se adjunta.
+Esta comprobación documenta el error real del borrador generado durante el ejercicio; no se cambió la regla del endpoint.
+
+![Borrador de IA con expectativa incorrecta de HTTP 422](evidencias/sesion-3-test-ia-422-fallido.png)
+
+![Prueba corregida para HTTP 400 aprobada](evidencias/sesion-3-test-corregido-400.png)
 
 ### Integración continua
 
@@ -32,7 +42,7 @@ Esta comprobación documenta un error real del borrador generado durante el ejer
 - No requiere secretos ni realiza llamadas al proveedor de IA.
 - Ejecución verificada en `push`: [GitHub Actions run 43757548979](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757548979), resultado **success**.
 - Pull Request [#24](https://github.com/LzMauLz/Proyecto-GestorT/pull/24), abierto hacia `develop` para revisión; no fusionado.
-- Ejecución verificada en `pull_request`: [GitHub Actions run 43760927131](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43760927131), resultado **success**.
+- Ejecución verificada en `pull_request`: [GitHub Actions run 43768715477](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43768715477), resultado **success**.
 
 ## Historial
 
