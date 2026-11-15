@@ -70,3 +70,9 @@ La importación de inventario acepta `nombre`, `descripcion`, `categoria`, `prec
 Las consultas de inventario se acompañan de datos obtenidos por SQLite; el modelo no puede consultar SQL, herramientas ni servicios arbitrarios. Las propuestas de producto y movimientos se guardan como pendientes en `ai_proposals` y requieren confirmación administrativa. El servicio vuelve a validar rol, producto, tipo, cantidad y stock antes de ejecutar. Técnicos solo reciben respuestas de consulta. No se almacenan claves, prompts completos ni respuestas del proveedor en el historial de auditoría.
 
 Las transiciones de reparación están documentadas en [decisiones_mvp.md](decisiones_mvp.md). La muestra `GT-000123` del documento académico es ilustrativa; GestorTech genera códigos aleatorios con 128 bits de entropía.
+
+## Revisión de propuestas del asistente (issue #7)
+
+`POST /api/asistente/propuestas/<id>/confirmar` admite opcionalmente un objeto JSON `correcciones` con los campos del producto o movimiento permitido por la propuesta. Las propuestas incompletas no se guardan: el chat solicita los datos faltantes. Solo administración confirma y la propiedad de la propuesta se valida en backend.
+
+`POST /assistant/import` recibe un CSV/XLSX en `archivo`, una lista de `campos` permitidos y `palabras` opcional. Requiere sesión administrativa y CSRF. Extrae localmente y reutiliza la previsualización editable; no envía el archivo a Groq. Véase [issue #7](issues/7-asistente.md).

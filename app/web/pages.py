@@ -38,7 +38,9 @@ def _normalize_rows(headers, rows):
     for idx, header in enumerate(headers):
         key = _header_key(header)
         for field, names in aliases.items():
-            if key in names and field not in indexes:
+            if key in names and field in indexes:
+                raise ValueError(f'Hay varias columnas para {field}. Conserva una columna por campo antes de importar.')
+            if key in names:
                 indexes[field] = idx
     if 'name' not in indexes:
         raise ValueError('No se encontró una columna de nombre/producto.')
@@ -50,8 +52,8 @@ def _normalize_rows(headers, rows):
             raise ValueError(f'La fila {number} supera el límite de {MAX_COLUMNS} columnas.')
         item = {field: (row[indexes[field]] if indexes.get(field) is not None and indexes[field] < len(row) else '') for field in aliases}
         try:
-            item['price'] = str(item['price'] or '').strip().replace('$','').replace(' ','')
-            item['stock'] = str(item['stock'] or '').strip()
+            item['price'] = str('' if item['price'] is None else item['price']).strip().replace('$','').replace(' ','')
+            item['stock'] = str('' if item['stock'] is None else item['stock']).strip()
             if not item['price'] or not item['stock'] or not str(item['name'] or '').strip():
                 raise ValueError
             if ',' in item['price']:
@@ -72,8 +74,9 @@ def _normalize_rows(headers, rows):
                 raise ValueError
             normalized.append(item)
         except (ValueError, InvalidOperation, TypeError):
-            normalized.append({'source_row':number,'name':str(row[indexes['name']] if indexes['name'] < len(row) else '')[:160],
-                               'description':'','category':'','price':'','stock':'','error':'Nombre, precio o cantidad faltante o inválida. Corrige la fuente antes de aprobar.'})
+            limits = {'name': 160, 'description': 2000, 'category': 100, 'price': 64, 'stock': 64}
+            normalized.append({'source_row': number, **{key: str('' if item.get(key) is None else item.get(key, ''))[:limit] for key, limit in limits.items()},
+                               'error':'Nombre, precio o cantidad faltante o inválida. Corrige los campos antes de aprobar.'})
         if len(normalized) > MAX_ROWS:
             raise ValueError(f'El archivo supera el límite de {MAX_ROWS} filas.')
     return normalized
@@ -296,6 +299,39 @@ def import_preview():
         return render_template('import_preview.html',rows=rows,batch=batch,import_mode=import_mode)
     except (ValueError,UnicodeDecodeError) as exc:
         flash(str(exc),'error'); return redirect(url_for('web.import_form'))
+
+@web_bp.post('/assistant/import')
+@roles_required('admin')
+def assistant_import():
+    """Extract only selected product fields locally; files never go to the provider."""
+    try:
+        fields = set(request.form.getlist('campos'))
+        allowed = {'name', 'description', 'category', 'price', 'stock'}
+        if not fields or not fields <= allowed:
+            raise ValueError('Selecciona únicamente los campos de producto disponibles.')
+        keyword = request.form.get('palabras', '').strip()
+        if len(keyword) > 100:
+            raise ValueError('La búsqueda admite hasta 100 caracteres.')
+        rows = parse_product_upload(request.files.get('archivo'))
+        if keyword:
+            words = keyword.casefold().split()
+            rows = [row for row in rows if all(word in ' '.join(str(row.get(key, '')) for key in ('name', 'description', 'category')).casefold() for word in words)]
+        for row in rows:
+            for field in allowed - fields:
+                row[field] = ''
+            if not {'name', 'price', 'stock'} <= fields:
+                row['error'] = 'Completa nombre, precio y cantidad antes de aprobar.'
+        if not rows:
+            raise ValueError('No hay productos que coincidan; revisa el archivo o las palabras clave.')
+        batch = secrets.token_urlsafe(18)
+        db = get_db()
+        db.execute("DELETE FROM import_batches WHERE datetime(created_at) < datetime('now','-1 day')")
+        db.execute('INSERT INTO import_batches(id,user_id,payload_json,created_at) VALUES(?,?,?,?)', (batch, current_user()['id'], json.dumps(rows, ensure_ascii=False), now_iso()))
+        db.commit()
+        return render_template('import_preview.html', rows=rows, batch=batch, import_mode='manual')
+    except (ValueError, UnicodeDecodeError) as exc:
+        flash(str(exc), 'error')
+        return redirect(url_for('web.assistant'))
 
 @web_bp.post('/products/import/<batch>/approve')
 @roles_required('admin')

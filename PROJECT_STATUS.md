@@ -45,3 +45,7 @@ Controles implementados en la propuesta de cambio: límites persistentes para lo
 - No publicar cambios adicionales ni crear remotos sin aprobación.
 - No instalar paquetes, crear conexiones MCP ni enviar código/datos a proveedores externos sin aprobación.
 - No usar datos reales de clientes en demostraciones.
+
+## Trabajo issue #7 — revisión de propuestas y archivos
+
+La conversación pide datos obligatorios faltantes antes de proponer. Las fichas son editables y revalidadas en servidor; la carga local de CSV/XLSX desde el asistente mantiene el flujo manual. Detalles y límites en [docs/issues/7-asistente.md](docs/issues/7-asistente.md). No se validó comprensión real con Groq ni se realizaron llamadas externas.

@@ -415,12 +415,12 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(len(confirmed.get_json()['product_ids']), 2)
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM products').fetchone()['n'], 2)
 
-    def test_assistant_confirms_blank_stock_and_localized_price(self):
+    def test_assistant_requests_missing_stock_before_confirmation(self):
         class MockAssistant:
             def chat(self, messages):
                 return {'message': 'Propuesta preparada.', 'action': 'product_proposal',
                         'proposal': {'name': 'Puerto tipo C', 'description': '', 'category': 'Repuesto',
-                                     'price': '5.000', 'stock': ''}}
+                                     'price': '5.000,00', 'stock': ''}}
         self.app.extensions['gestortech_ai_provider'] = MockAssistant()
         headers = self.session_as(1)
         response = self.client.post(
@@ -429,14 +429,10 @@ class GestorTechTests(unittest.TestCase):
             headers=headers,
         )
         self.assertEqual(response.status_code, 200)
-        proposal_id = response.get_json()['proposal']['id']
-        confirmed = self.client.post(
-            '/api/asistente/propuestas/' + proposal_id + '/confirmar',
-            headers=headers,
-        )
-        self.assertEqual(confirmed.status_code, 200)
-        row = get_db().execute('SELECT price_cents,stock FROM products').fetchone()
-        self.assertEqual((row['price_cents'], row['stock']), (500000, 0))
+        self.assertIsNone(response.get_json()['proposal'])
+        self.assertIn('cantidad', response.get_json()['message'])
+        self.assertEqual(get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0], 0)
+        self.assertEqual(get_db().execute('SELECT COUNT(*) FROM ai_proposals').fetchone()[0], 0)
 
     def test_technician_cannot_prepare_mutation_from_assistant(self):
         class MockAssistant:

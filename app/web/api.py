@@ -163,9 +163,13 @@ def assistant_message():
 def assistant_confirm(proposal_id):
     user = actor(('admin',))
     try:
-        return jsonify(resolve_proposal(get_db(), user, proposal_id, True))
+        edits = body().get('correcciones') if request.is_json else None
+        return jsonify(resolve_proposal(get_db(), user, proposal_id, True, edited_payload=edits))
     except AIProviderError as exc:
         abort(409, description=str(exc))
+    except DomainError as exc:
+        get_db().rollback()
+        api_error(exc)
     except Exception as exc:
         get_db().rollback()
         current_app.logger.warning('No se pudo confirmar propuesta IA (%s).', type(exc).__name__)

@@ -36,8 +36,14 @@ El endpoint `/api/ia/importacion/propuesta` requiere administrador, informa `mod
 
 ## Asistente conversacional de inventario
 
-El panel `/assistant` y los endpoints `/api/asistente/mensaje` permiten a administradores consultar el inventario, redactar o mejorar descripciones y preparar propuestas de uno o varios productos (hasta 20 por solicitud) o movimientos. Al confirmar, un stock omitido se interpreta como cero y los precios con separador de miles local, como `5.000`, se normalizan antes de persistir. Los técnicos solo pueden realizar consultas; no pueden preparar ni confirmar cambios.
+El panel `/assistant` y los endpoints `/api/asistente/mensaje` permiten a administradores consultar el inventario, redactar o mejorar descripciones y preparar propuestas de uno o varios productos (hasta 20 por solicitud) o movimientos. Si falta nombre, precio o stock, se pide aclaración antes de preparar la propuesta. Los precios con separador de miles local, como `5.000,00`, se normalizan; el stock cero debe estar indicado explícitamente. Los técnicos solo pueden realizar consultas; no pueden preparar ni confirmar cambios.
 
 El asistente recibe un contexto factual limitado generado por servicios de consulta SQLite. No recibe permiso para ejecutar SQL, código, herramientas ni solicitudes arbitrarias. El modelo devuelve JSON validado localmente; cualquier propuesta se guarda temporalmente en `ai_proposals` y requiere confirmación explícita de un administrador. La confirmación vuelve a validar el usuario, producto, tipo, cantidad y stock y ejecuta `create_product` o `move_stock`; cancelar no modifica inventario.
 
 La auditoría mínima se almacena en `ai_operations` con usuario, tipo de operación, producto cuando aplica, resultado y estado de aprobación. La confirmación de una propuesta múltiple crea todos los productos en una sola transacción: si un elemento falla, no se guarda ninguno. No se almacenan claves, tokens ni el contenido completo del proveedor. Groq no se consulta mientras `GROQ_ENABLED=false` o falte clave, modelo o configuración válida.
+
+## Revisión explícita del asistente — issue #7
+
+Las propuestas de productos requieren nombre, precio y cantidad explícitos. Si falta un dato, el asistente pregunta antes de crear una propuesta; no se aplican ceros por omisión. Las fichas permiten corregir esos campos antes de confirmar y el servidor los revalida.
+
+Los archivos adjuntos desde `/assistant` se extraen localmente mediante el parser existente, con selección de campos y filtro por palabras clave. No se envían archivos ni columnas desconocidas al proveedor. La previsualización, aprobación y cancelación manual siguen disponibles cuando la IA está desactivada.
