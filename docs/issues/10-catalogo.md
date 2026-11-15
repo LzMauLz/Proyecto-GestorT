@@ -16,6 +16,8 @@ Decisión confirmada por el usuario el 2026-11-15: catálogo público sin cuenta
 
 Suite completa en este worktree: **46 passed, 40 subtests passed**, 33,39 s.
 
+Después se añadieron dos pruebas reales de aprobación de importación y propuesta IA almacenada: ambas dejan `published=0`. La suite dirigida actual del catálogo pasó **7 pruebas en 1,72 s**. La propuesta IA de esta prueba se crea en SQLite sintético, sin contactar al proveedor.
+
 Entorno: Python 3.12.14 empaquetado, usando dependencias ya instaladas del proyecto. El ejecutable del entorno virtual apunta a un Python 3.11 ausente; GitHub Actions con Python 3.11 y la revisión visual real quedan pendientes al integrar.
 
 No se consultó ni migró la base del usuario. Para una base existente, respaldar y ejecutar la migración solo después de revisar los cambios.

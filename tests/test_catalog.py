@@ -1,8 +1,11 @@
+import io
+import json
 import pytest
 
 from app import create_app
 from app.application.catalog import public_catalog
 from app.application.services import create_product
+from app.application.ai_assistant import resolve_proposal
 from app.infrastructure.database import get_db, init_db
 
 
@@ -106,3 +109,30 @@ def test_catalog_database_failure_has_safe_retry_view(catalog_app):
     assert 'Volver a intentar' in html
     assert 'no such table' not in html
     assert response.headers['Cache-Control'] == 'no-store'
+
+
+def test_import_approved_product_is_not_automatically_public(catalog_app):
+    client = catalog_app.test_client()
+    headers = staff(client, 1)
+    response = client.post('/products/import/preview', headers=headers,
+                           data={'file': (io.BytesIO(b'nombre,precio,stock\nImportado,100,2\n'), 'productos.csv')})
+    assert response.status_code == 200
+    with catalog_app.app_context():
+        batch = get_db().execute('SELECT id FROM import_batches').fetchone()[0]
+    assert client.post(f'/products/import/{batch}/approve', headers=headers, data={'row': '0'}).status_code == 302
+    with catalog_app.app_context():
+        assert get_db().execute('SELECT published FROM products').fetchone()[0] == 0
+        assert public_catalog(get_db()) == []
+
+
+def test_ai_approved_product_is_not_automatically_public(catalog_app):
+    with catalog_app.app_context():
+        db = get_db()
+        payload = json.dumps({'name': 'Propuesta ficticia', 'price': '100', 'stock': 2})
+        db.execute('INSERT INTO ai_proposals(id,user_id,operation,payload_json,status,created_at) VALUES(?,?,?,?,?,?)',
+                   ('catalog-proposal', 1, 'product_create', payload, 'pending', '2026-01-01'))
+        db.commit()
+        result = resolve_proposal(db, {'id': 1, 'role': 'admin'}, 'catalog-proposal', True)
+        assert result['status'] == 'approved'
+        assert db.execute('SELECT published FROM products').fetchone()[0] == 0
+        assert public_catalog(db) == []
