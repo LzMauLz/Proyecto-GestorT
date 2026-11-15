@@ -1,5 +1,7 @@
 # Issue #10 — Catálogo público
 
+Verificación integrada con #5: **65 passed, 56 subtests passed en 33,17 s** (Python 3.12 local). CI Python 3.11 aprobado en el commit `3cc4b18`: [run 43777324396](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324396). Comprobación real Edge headless a 375 px sin desbordamiento horizontal; la ampliación de accesibilidad se realiza en el #14.
+
 Decisión confirmada por el usuario el 2026-11-15: catálogo público sin cuentas de cliente. Se conserva Flask/Jinja2 y la identidad local.
 
 ## Implementación
