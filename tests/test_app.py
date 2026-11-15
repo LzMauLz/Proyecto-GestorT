@@ -41,7 +41,7 @@ class GestorTechTests(unittest.TestCase):
         return {'X-CSRF-Token':csrf}
 
     def test_public_tracking_excludes_problem_and_internal_note(self):
-        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Detalle privado'},1,'admin')
+        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Detalle privado','assigned_to':2},1,'admin')
         update_repair_status(get_db(),repair_id,1,'admin','En diagnóstico','No publicar: dato interno','')
         response=self.client.get('/api/seguimiento/'+code)
         self.assertEqual(response.status_code,200)
@@ -52,13 +52,13 @@ class GestorTechTests(unittest.TestCase):
         self.assertNotIn('dato interno',response.get_data(as_text=True))
 
     def test_public_note_is_explicitly_published(self):
-        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Falla'},1,'admin')
+        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Falla','assigned_to':2},1,'admin')
         update_repair_status(get_db(),repair_id,1,'admin','En diagnóstico','','Diagnóstico iniciado')
         data=self.client.get('/api/seguimiento/'+code).get_json()
         self.assertEqual(data['historial_publico'][-1]['comentario'],'Diagnóstico iniciado')
 
     def test_repair_transitions_are_enforced_and_recorded(self):
-        repair_id,_=create_repair(get_db(),{'device':'Laptop','issue':'No inicia'},1,'admin')
+        repair_id,_=create_repair(get_db(),{'device':'Laptop','issue':'No inicia','assigned_to':2},1,'admin')
         update_repair_status(get_db(),repair_id,1,'admin','En diagnóstico')
         with self.assertRaises(DomainError):
             update_repair_status(get_db(),repair_id,1,'admin','Entregado')
@@ -66,7 +66,10 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(count,2)
 
     def test_technician_can_only_change_assigned_repair(self):
-        repair_id,_=create_repair(get_db(),{'device':'Laptop','issue':'Falla'},1,'admin')
+        db=get_db()
+        db.execute("INSERT INTO users(id,name,email,password_hash,role,created_at) SELECT 3,'Otro técnico','other@example.test',password_hash,'technician',created_at FROM users WHERE id=2")
+        db.commit()
+        repair_id,_=create_repair(db,{'device':'Laptop','issue':'Falla','assigned_to':3},1,'admin')
         with self.assertRaises(DomainError) as err:
             update_repair_status(get_db(),repair_id,2,'technician','En diagnóstico')
         self.assertEqual(err.exception.status_code,403)
@@ -191,7 +194,7 @@ class GestorTechTests(unittest.TestCase):
                 self.assertEqual(response.status_code,200,response.get_data(as_text=True)[:500])
 
     def test_dashboard_has_active_navigation_and_keyboard_table_region(self):
-        create_repair(get_db(),{'device':'Tablet','issue':'Pantalla dañada'},1,'admin')
+        create_repair(get_db(),{'device':'Tablet','issue':'Pantalla dañada','assigned_to':2},1,'admin')
         self.session_as(1)
         response=self.client.get('/dashboard')
         html=response.get_data(as_text=True)
@@ -211,7 +214,7 @@ class GestorTechTests(unittest.TestCase):
 
     def test_repair_detail_and_import_preview_render_and_approve(self):
         headers=self.session_as(1)
-        repair_id,code=create_repair(get_db(),{'device':'Consola','issue':'No enciende'},1,'admin')
+        repair_id,code=create_repair(get_db(),{'device':'Consola','issue':'No enciende','assigned_to':2},1,'admin')
         self.assertEqual(self.client.get(f'/repairs/{repair_id}').status_code,200)
         upload=(io.BytesIO(b'nombre,precio,cantidad_stock\nCable,18000,4\n'),'productos.csv')
         preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload},content_type='multipart/form-data')

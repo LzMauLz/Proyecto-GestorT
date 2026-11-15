@@ -1,5 +1,3 @@
-PRAGMA journal_mode = WAL;
-
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL CHECK(length(trim(name)) BETWEEN 1 AND 100),
@@ -37,7 +35,7 @@ CREATE TABLE IF NOT EXISTS repairs (
     device TEXT NOT NULL CHECK(length(trim(device)) BETWEEN 1 AND 160),
     issue TEXT NOT NULL CHECK(length(trim(issue)) BETWEEN 1 AND 2000),
     status TEXT NOT NULL,
-    assigned_to INTEGER REFERENCES users(id),
+    assigned_to INTEGER NOT NULL REFERENCES users(id),
     created_by INTEGER NOT NULL REFERENCES users(id),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -55,6 +53,24 @@ CREATE TABLE IF NOT EXISTS repair_history (
 );
 
 CREATE INDEX IF NOT EXISTS idx_repairs_assigned ON repairs(assigned_to, updated_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_products_name_category_normalized
+    ON products(normalize_inventory_key(name), normalize_inventory_key(category));
+CREATE TRIGGER IF NOT EXISTS repairs_require_active_technician_insert
+BEFORE INSERT ON repairs
+WHEN NEW.assigned_to IS NULL OR NOT EXISTS (
+    SELECT 1 FROM users WHERE id=NEW.assigned_to AND role='technician' AND active=1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'repair_assignment_invalid');
+END;
+CREATE TRIGGER IF NOT EXISTS repairs_require_active_technician_update
+BEFORE UPDATE OF assigned_to ON repairs
+WHEN NEW.assigned_to IS NULL OR NOT EXISTS (
+    SELECT 1 FROM users WHERE id=NEW.assigned_to AND role='technician' AND active=1
+)
+BEGIN
+    SELECT RAISE(ABORT, 'repair_assignment_invalid');
+END;
 CREATE INDEX IF NOT EXISTS idx_history_repair ON repair_history(repair_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_movements_product ON inventory_movements(product_id, created_at DESC);
 CREATE TABLE IF NOT EXISTS import_batches (
