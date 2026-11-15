@@ -18,13 +18,13 @@
 - Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas. Groq fue probado localmente con una credencial fuera del repositorio.
 - El chat del asistente acepta propuestas de un producto o de hasta 20 productos por solicitud; la confirmación administrativa crea el lote de forma atómica.
 - Suite ejecutada por el usuario con Pytest: 40 pruebas y 40 subtests aprobados. La comprobación de mutación temporal en `_to_integer` fue detectada por la prueba específica y pasó después de restaurar el código.
-- Workflow `.github/workflows/ci.yml` preparado para Python 3.11 en `push` y `pull_request`, con instalación desde `requirements.txt`; pendiente de ejecutar en GitHub Actions.
+- Workflow `.github/workflows/ci.yml` ejecutado correctamente en el evento `push` de `ci/sesion3` (run [43757350687](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757350687)); el evento `pull_request` queda pendiente de validar.
 - Dockerfile y Compose verificados: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. La imagen se construyó, el contenedor inició, `http://127.0.0.1:8000` respondió `HTTP 200` y una marca SQLite sobrevivió al reinicio del contenedor.
 - Repositorio GitHub publicado en `LzMauLz/Proyecto-GestorT`, con ramas `main` y `develop`, commits descriptivos y Pull Requests #1, #2 y #3 fusionados.
 
 ## Pendiente
 
-- La ejecución local de Pytest fue reportada por el usuario; el workflow de GitHub Actions y el estado remoto del pipeline todavía no se han verificado.
+- La ejecución local de Pytest fue reportada por el usuario y el workflow pasó en `push`; falta abrir/revisar el PR para confirmar el evento `pull_request` y añadir evidencia de esa ejecución.
 - Dockerfile/Compose: build, arranque, puerto, creación del volumen y persistencia SQLite tras reinicio verificados. No queda pendiente operativo de Docker para el MVP.
 - Groq está configurado y habilitado en el `.env` local (`GROQ_ENABLED=true`, modelo `openai/gpt-oss-20b`, timeout de 12 segundos). La API key está presente y fue validada con una solicitud real; permanece fuera de Git.
 - Falta mitigación de intentos repetidos en login/seguimiento y revisión de seguridad antes de desplegar en Internet.
