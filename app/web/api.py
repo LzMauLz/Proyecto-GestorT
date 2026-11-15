@@ -156,8 +156,8 @@ def assistant_message():
         result = request_assistant(get_db(), provider, user, data.get('mensaje'), data.get('historial', []))
         return jsonify(result)
     except AIProviderError as exc:
-        current_app.logger.warning('Fallo del asistente IA: %s', str(exc)[:300])
-        abort(502, description=str(exc))
+        current_app.logger.warning('El asistente IA no pudo completar la solicitud.')
+        abort(502, description='No fue posible procesar la solicitud del asistente. Revisa los datos o usa el flujo manual.')
 
 @api_bp.post('/asistente/propuestas/<proposal_id>/confirmar')
 def assistant_confirm(proposal_id):

@@ -75,6 +75,8 @@ def _validate_response(value):
     if not isinstance(message, str) or len(message) > 4000 or action not in ALLOWED_ACTIONS:
         raise AIProviderError('La respuesta de IA no tiene un formato válido.')
     proposal = value.get('proposal')
+    if action == 'answer' and proposal is not None:
+        raise AIProviderError('Una consulta no puede incluir una propuesta de cambio.')
     if action == 'product_proposal' and proposal is None:
         for alias in aliases:
             if isinstance(value.get(alias), dict):
@@ -141,6 +143,8 @@ def request_assistant(db, provider, user, message, history=None):
     message = str(message or '').strip()
     if not message or len(message) > MAX_MESSAGE_LENGTH:
         raise AIProviderError('Escribe una solicitud de hasta 2.000 caracteres.')
+    if history is not None and not isinstance(history, list):
+        raise AIProviderError('El historial debe ser una lista de mensajes.')
     facts = inventory_snapshot(db, message)
     system = (
         'Eres el asistente interno de GestorTech. Responde en español y solo con JSON válido. '
@@ -176,55 +180,59 @@ def request_assistant(db, provider, user, message, history=None):
             (proposal_id, user['id'], operation, json.dumps(proposal, ensure_ascii=False), 'pending', now_iso())
         )
         db.execute(
-            'INSERT INTO ai_operations(user_id,operation,result,approval_status,created_at) VALUES(?,?,?,?,?)',
-            (user['id'], operation, 'Propuesta creada', 'proposed', now_iso())
+            'INSERT INTO ai_operations(proposal_id,user_id,operation,result,approval_status,created_at) VALUES(?,?,?,?,?,?)',
+            (proposal_id, user['id'], operation, 'Propuesta creada', 'proposed', now_iso())
         )
         db.commit()
         result['proposal'] = {'id': proposal_id, 'operation': operation, **proposal}
     return result
 
 
-def resolve_proposal(db, user, proposal_id, approve):
-    row = db.execute(
-        'SELECT * FROM ai_proposals WHERE id=? AND user_id=? AND status=?', (proposal_id, user['id'], 'pending')
-    ).fetchone()
-    if not row:
-        raise AIProviderError('La propuesta no existe o ya fue resuelta.')
-    if not approve:
-        db.execute('UPDATE ai_proposals SET status=?,resolved_at=? WHERE id=?', ('cancelled', now_iso(), proposal_id))
-        db.execute(
-            'UPDATE ai_operations SET approval_status=? WHERE user_id=? AND operation=? AND approval_status=? '
-            'AND id=(SELECT MAX(id) FROM ai_operations WHERE user_id=? AND operation=?)',
-            ('cancelled', user['id'], row['operation'], 'proposed', user['id'], row['operation'])
+def resolve_proposal(db, user, proposal_id, approve, edited_payload=None):
+    if user['role'] != 'admin':
+        raise AIProviderError('Solo administración puede resolver propuestas.')
+    try:
+        db.execute('BEGIN IMMEDIATE')
+        row = db.execute(
+            'SELECT * FROM ai_proposals WHERE id=? AND user_id=? AND status=?', (proposal_id, user['id'], 'pending')
+        ).fetchone()
+        if not row:
+            raise AIProviderError('La propuesta no existe o ya fue resuelta.')
+        status = 'approved' if approve else 'cancelled'
+        result = {'status': status}
+        if approve:
+            payload = json.loads(row['payload_json']) if edited_payload is None else edited_payload
+            action = {'stock_move': 'stock_proposal', 'product_create': 'product_proposal', 'description': 'product_description'}[row['operation']]
+            payload = _validate_response({'action': action, 'proposal': payload})['proposal']
+            if not isinstance(payload, dict):
+                raise AIProviderError('La propuesta no tiene datos válidos.')
+            if row['operation'] == 'stock_move':
+                product_id = payload['product_id']
+                new_stock = move_stock(db, product_id, user['id'], payload['kind'], payload['quantity'], payload.get('note', 'Asistente IA'), commit=False)
+                result.update(product_id=product_id, stock=new_stock)
+            elif row['operation'] == 'product_create':
+                products = payload.get('products') if isinstance(payload.get('products'), list) else [payload]
+                product_ids = []
+                for product in products:
+                    product_ids.append(create_product(db, {
+                        'name': product.get('name', ''), 'description': product.get('description', ''),
+                        'category': product.get('category', ''), 'price': _creation_value(product, 'price', 0),
+                        'stock': _creation_value(product, 'stock', 0), 'user_id': user['id']
+                    }, commit=False))
+                result.update(product_id=product_ids[0], product_ids=product_ids)
+            else:
+                result['proposal'] = payload
+        db.execute('UPDATE ai_proposals SET status=?,resolved_at=? WHERE id=?', (status, now_iso(), proposal_id))
+        audit = db.execute(
+            'UPDATE ai_operations SET approval_status=?,product_id=? WHERE proposal_id=? AND user_id=? AND approval_status=?',
+            (status, result.get('product_id'), proposal_id, user['id'], 'proposed')
         )
+        if audit.rowcount == 0:
+            # Legacy proposals lack a reliable audit link; preserve history and append resolution.
+            db.execute('INSERT INTO ai_operations(proposal_id,user_id,operation,product_id,result,approval_status,created_at) VALUES(?,?,?,?,?,?,?)',
+                       (proposal_id,user['id'],row['operation'],result.get('product_id'),'Resolución de propuesta',status,now_iso()))
         db.commit()
-        return {'status': 'cancelled'}
-    payload = json.loads(row['payload_json'])
-    if row['operation'] == 'stock_move':
-        product_id = int(payload.get('product_id', 0))
-        quantity = payload.get('quantity')
-        kind = payload.get('kind')
-        new_stock = move_stock(db, product_id, user['id'], kind, quantity, payload.get('note', 'Asistente IA'))
-        result = {'status': 'approved', 'product_id': product_id, 'stock': new_stock}
-    elif row['operation'] == 'product_create':
-        products = payload.get('products') if isinstance(payload.get('products'), list) else [payload]
-        product_ids = []
-        for product in products:
-            product_ids.append(create_product(db, {
-                'name': product.get('name', ''), 'description': product.get('description', ''),
-                'category': product.get('category', ''),
-                'price': _creation_value(product, 'price', 0),
-                'stock': _creation_value(product, 'stock', 0),
-                'user_id': user['id']
-            }, commit=False))
-        result = {'status': 'approved', 'product_id': product_ids[0], 'product_ids': product_ids}
-    else:
-        result = {'status': 'approved', 'proposal': payload}
-    db.execute('UPDATE ai_proposals SET status=?,resolved_at=? WHERE id=?', ('approved', now_iso(), proposal_id))
-    db.execute(
-        'UPDATE ai_operations SET approval_status=?,product_id=? WHERE user_id=? AND operation=? '
-        'AND approval_status=? AND id=(SELECT MAX(id) FROM ai_operations WHERE user_id=? AND operation=?)',
-        ('approved', result.get('product_id'), user['id'], row['operation'], 'proposed', user['id'], row['operation'])
-    )
-    db.commit()
-    return result
+        return result
+    except Exception:
+        db.rollback()
+        raise

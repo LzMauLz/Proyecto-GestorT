@@ -1,5 +1,9 @@
 # Estado de GestorTech
 
+## Revisión del issue #12 — 2026-11-15
+
+Controles implementados en la propuesta de cambio: límites persistentes para login/seguimiento, resolución y auditoría atómicas de propuestas IA, errores externos sanitizados, rechazo de CSRF Unicode/historial malformado y de XLSX con fórmulas/macros/vínculos externos. Suite local complementaria Python 3.12: 57 pruebas y 44 subtests aprobados. La validación Python 3.11 en CI y los requisitos de producción siguen pendientes. Matriz y límites: [docs/issues/12-seguridad.md](docs/issues/12-seguridad.md). No se consultaron credenciales ni datos reales y no se activó Groq.
+
 **Estado:** MVP local en modernización para revisión académica. Actualizado: 2026-11-03.
 
 ## Implementado

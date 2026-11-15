@@ -92,6 +92,9 @@ def init_db():
         columns = {row['name'] for row in db.execute('PRAGMA table_info(products)')}
         if 'published' not in columns:
             db.execute('ALTER TABLE products ADD COLUMN published INTEGER NOT NULL DEFAULT 0 CHECK(published IN (0,1))')
+        if 'proposal_id' not in {row['name'] for row in db.execute('PRAGMA table_info(ai_operations)')}:
+            db.execute('ALTER TABLE ai_operations ADD COLUMN proposal_id TEXT REFERENCES ai_proposals(id)')
+        db.execute('CREATE INDEX IF NOT EXISTS idx_ai_operations_proposal ON ai_operations(proposal_id)')
         if db.execute('PRAGMA foreign_key_check').fetchone():
             raise DatabaseMigrationError('Hay referencias inválidas en la base. No se aplicó la migración.')
         db.commit()

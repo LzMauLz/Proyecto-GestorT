@@ -108,18 +108,27 @@ def parse_product_upload(upload):
         upload_buffer = io.BytesIO(raw)
         try:
             with zipfile.ZipFile(upload_buffer) as archive:
+                if any('vbaproject' in entry.filename.lower() or entry.filename.lower().startswith('xl/externallinks/') for entry in archive.infolist()):
+                    raise ValueError('No se aceptan macros ni vínculos externos en el libro.')
                 if sum(entry.file_size for entry in archive.infolist()) > MAX_UNCOMPRESSED_XLSX or any(entry.file_size / max(entry.compress_size,1) > 100 for entry in archive.infolist()):
                     raise ValueError('El contenido descomprimido supera el límite permitido.')
             upload_buffer.seek(0)
-            workbook = load_workbook(upload_buffer, read_only=True, data_only=True, keep_links=False)
-            sheet = workbook.active
-            if sheet.max_column > MAX_COLUMNS or sheet.max_row > MAX_ROWS + 1:
+            workbook = load_workbook(upload_buffer, read_only=True, data_only=False, keep_links=False)
+            try:
+                sheet = workbook.active
+                if (sheet.max_column or 0) > MAX_COLUMNS or (sheet.max_row or 0) > MAX_ROWS + 1:
+                    raise ValueError('El archivo supera los límites de filas o columnas.')
+                values = []
+                for index, cells in enumerate(sheet.iter_rows()):
+                    if index > MAX_ROWS or len(cells) > MAX_COLUMNS:
+                        raise ValueError('El archivo supera los límites de filas o columnas.')
+                    if any(cell.data_type == 'f' for cell in cells):
+                        raise ValueError('No se aceptan fórmulas en el libro; carga valores.')
+                    values.append([cell.value for cell in cells])
+                headers = values[0] if values else []
+                rows = values[1:]
+            finally:
                 workbook.close()
-                raise ValueError('El archivo supera los límites de filas o columnas.')
-            iterator = sheet.iter_rows(values_only=True)
-            headers = list(next(iterator, ()))
-            rows = list(iterator)
-            workbook.close()
         except ValueError:
             raise
         except Exception:
@@ -308,7 +317,7 @@ def import_approve(batch):
         flash(f'Se guardaron {saved} productos aprobados.','success')
         return redirect(url_for('web.products'))
     except Exception:
-        db.rollback(); current_app.logger.exception('Falló el guardado de un lote de importación.')
+        db.rollback(); current_app.logger.error('Falló el guardado de un lote de importación.')
         flash('No fue posible guardar el lote. Revisa precio y cantidad. No se guardó parcialmente.','error')
         return redirect(url_for('web.import_form'))
 

@@ -1,10 +1,13 @@
 import os
+import sqlite3
+import click
 from flask import Flask, abort, jsonify, request
 from config.settings import Config
 from app.infrastructure import database
 from app.web.auth import auth_bp, enforce_csrf
 from app.web.pages import web_bp
 from app.web.api import api_bp
+from app.web.request_limits import enforce_request_limits
 
 
 def create_app(test_config=None):
@@ -35,6 +38,17 @@ def create_app(test_config=None):
         database.init_db()
         print('Base de datos inicializada.')
 
+    @app.cli.command('backup-db')
+    @click.option('--output', required=True, type=click.Path(dir_okay=False))
+    def backup_db_command(output):
+        """Create a coherent SQLite snapshot at a new operator-selected path."""
+        from app.infrastructure.backup import backup_database
+        try:
+            backup_database(app.config['DATABASE'], output)
+        except (OSError, ValueError, sqlite3.Error) as exc:
+            raise click.ClickException('No se creó el respaldo: verifica origen, destino nuevo y permisos.') from exc
+        click.echo('Respaldo SQLite creado y verificado.')
+
     @app.after_request
     def security_headers(response):
         response.headers.setdefault('X-Content-Type-Options', 'nosniff')
@@ -47,6 +61,7 @@ def create_app(test_config=None):
 
     @app.before_request
     def csrf_protection():
+        enforce_request_limits()
         enforce_csrf()
 
     @app.errorhandler(400)
@@ -56,23 +71,26 @@ def create_app(test_config=None):
     @app.errorhandler(409)
     @app.errorhandler(413)
     @app.errorhandler(502)
+    @app.errorhandler(429)
     def http_error(error):
         code = error.code
-        message = error.description if code in (400,409,413,502) else {
+        message = error.description if code in (400,409,413,502,429) else {
             401:'Autenticación requerida.',
             403:'No tienes permiso para realizar esta acción.',
             404:'No se encontró el recurso solicitado.',
             409:'La operación entra en conflicto con el estado actual.'
         }.get(code, 'Solicitud no válida.')
-        if request.path.startswith('/api/'):
-            return jsonify({'error': message}), code
-        return message, code
+        response = jsonify({'error': message}) if request.path.startswith('/api/') else app.response_class(message, mimetype='text/plain')
+        response.status_code = code
+        if code == 429:
+            response.headers['Retry-After'] = str(error.retry_after)
+        return response
 
     @app.errorhandler(500)
     def internal_error(error):
         if request.path.startswith('/api/'):
-            app.logger.exception('Error interno en la API.')
+            app.logger.error('Error interno en la API.')
             return jsonify({'error': 'Error interno del servidor. Revisa la terminal de GestorTech.'}), 500
-        raise error
+        return app.response_class('Error interno del servidor.', status=500, mimetype='text/plain')
 
     return app

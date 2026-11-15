@@ -41,14 +41,7 @@ class GroqAdapter:
                 raise AIProviderError('Provider response too large')
             return json.loads(raw.decode('utf-8'))
         except HTTPError as exc:
-            try:
-                details = json.loads(exc.read(MAX_RESPONSE_BYTES).decode('utf-8'))
-                message = details.get('error', {}).get('message', '')
-            except (OSError, UnicodeDecodeError, ValueError, AttributeError):
-                message = ''
-            if not isinstance(message, str) or not message:
-                message = 'HTTP ' + str(exc.code)
-            raise AIProviderError('Groq rechazó la solicitud: ' + message[:300]) from exc
+            raise AIProviderError('El proveedor IA rechazó la solicitud (HTTP ' + str(exc.code) + ').') from exc
         except AIProviderError:
             raise
         except (URLError, TimeoutError, OSError, ValueError, KeyError, IndexError, TypeError) as exc:

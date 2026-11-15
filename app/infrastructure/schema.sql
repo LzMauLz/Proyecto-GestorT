@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS ai_proposals (
 
 CREATE TABLE IF NOT EXISTS ai_operations (
     id INTEGER PRIMARY KEY,
+    proposal_id TEXT REFERENCES ai_proposals(id),
     user_id INTEGER NOT NULL REFERENCES users(id),
     operation TEXT NOT NULL,
     product_id INTEGER REFERENCES products(id),
@@ -103,3 +104,9 @@ CREATE TABLE IF NOT EXISTS ai_operations (
 
 CREATE INDEX IF NOT EXISTS idx_ai_proposals_user ON ai_proposals(user_id, status, created_at);
 CREATE INDEX IF NOT EXISTS idx_ai_operations_user ON ai_operations(user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS request_limits (
+    bucket TEXT PRIMARY KEY,
+    hits INTEGER NOT NULL,
+    reset_at INTEGER NOT NULL
+);

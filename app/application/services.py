@@ -89,7 +89,7 @@ def update_product(db, product_id, data):
         raise
 
 
-def move_stock(db, product_id, user_id, kind, quantity, note=''):
+def move_stock(db, product_id, user_id, kind, quantity, note='', commit=True):
     if kind not in ('entrada','salida'):
         raise DomainError('Tipo de movimiento no válido.')
     try:
@@ -99,7 +99,8 @@ def move_stock(db, product_id, user_id, kind, quantity, note=''):
     except (TypeError, ValueError):
         raise DomainError('La cantidad debe ser un entero positivo.')
     try:
-        db.execute('BEGIN IMMEDIATE')
+        if commit:
+            db.execute('BEGIN IMMEDIATE')
         product = db.execute('SELECT stock,active FROM products WHERE id=?', (product_id,)).fetchone()
         if not product or not product['active']:
             raise DomainError('Producto no disponible.', 404)
@@ -111,16 +112,22 @@ def move_stock(db, product_id, user_id, kind, quantity, note=''):
         db.execute('UPDATE products SET stock=? WHERE id=?', (new_stock, product_id))
         db.execute('INSERT INTO inventory_movements(product_id,user_id,kind,quantity,note,created_at) VALUES(?,?,?,?,?,?)',
                    (product_id,user_id,kind,quantity,str(note).strip()[:500],now_iso()))
-        db.commit()
+        if commit:
+            db.commit()
     except Exception:
-        db.rollback()
+        if commit:
+            db.rollback()
         raise
     return new_stock
 
 
 def create_repair(db, data, user_id, role):
-    device = str(data.get('device','')).strip()
-    issue = str(data.get('issue','')).strip()
+    device = data.get('device', '')
+    issue = data.get('issue', '')
+    if not isinstance(device, str) or not isinstance(issue, str):
+        raise DomainError('El equipo y la descripción del problema deben ser texto.')
+    device = device.strip()
+    issue = issue.strip()
     if not device or len(device) > 160 or not issue or len(issue) > 2000:
         raise DomainError('Indica el equipo y una descripción del problema (máximo 2000 caracteres).')
     if role not in ('admin', 'technician'):
