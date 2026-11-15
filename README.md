@@ -1,5 +1,7 @@
 # GestorTech
 
+[![CI](https://github.com/LzMauLz/Proyecto-GestorT/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/LzMauLz/Proyecto-GestorT/actions/workflows/ci.yml)
+
 MVP académico para organizar reparaciones e inventario de un taller de servicio técnico. El sistema separa el área del personal de la consulta pública por código de seguimiento.
 
 ## Estado
