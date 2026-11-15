@@ -9,7 +9,7 @@ Controles implementados en la propuesta de cambio: límites persistentes para lo
 ## Implementado
 
 - Issue #5: selección obligatoria de técnico activo, autoasignación para técnicos y protección SQLite; productos únicos por nombre/categoría normalizados, con control de concurrencia. Migración con preflight y rollback verificada solo sobre bases ficticias. Evidencia y límites en [docs/issues/5-integridad.md](docs/issues/5-integridad.md); validación CI en Python 3.11 pendiente.
-- Issue #14: navegación móvil por rol con logout, tablas accesibles, foco de errores y recuperación de campos no secretos; verificación real con Edge headless en 375/768/1440 px y contraste medido. Capturas y alcance en [docs/issues/14-interfaz.md](docs/issues/14-interfaz.md); pendiente repetir los flujos nuevos del #7 tras la integración.
+- Issue #14: navegación móvil por rol con logout, tablas accesibles, foco de errores y recuperación de campos no secretos; verificación real con Edge headless en 375/768/1440 px y contraste medido. La revisión integrada incluye formulario de reparación y asistente manual/con proveedor simulado: carga local, vista previa editable, aclaración, confirmación, cancelación y reintento tras error de red. Capturas y límites en [docs/issues/14-interfaz.md](docs/issues/14-interfaz.md).
 
 - Issue #10: catálogo público con publicación/despublicación administrativa explícita, productos nuevos ocultos y consulta limitada a campos comerciales. Detalles y validación: `docs/issues/10-catalogo.md`. Pendiente validación integrada/CI antes de cierre.
 

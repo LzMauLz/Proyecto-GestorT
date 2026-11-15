@@ -2,15 +2,15 @@
 {% block title %}Nueva reparación · GestorTech{% endblock %}
 {% block content %}
 <section class="page-heading"><div><p class="eyebrow">Servicio técnico</p><h1>Registrar reparación</h1><p>El sistema generará un código privado para que el cliente consulte el avance.</p></div></section>
-<form class="form-panel narrow" method="post">
+<form class="form-panel narrow" method="post" aria-describedby="form-feedback">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-  <label for="device">Equipo</label><input id="device" name="device" required maxlength="160" placeholder="Ej. Portátil Lenovo ThinkPad">
-  <label for="issue">Problema reportado</label><textarea id="issue" name="issue" rows="4" required maxlength="2000" placeholder="Describe el motivo de ingreso"></textarea>
+  <label for="device">Equipo</label><input id="device" name="device" required maxlength="160" placeholder="Ej. Portátil Lenovo ThinkPad" value="{{ request.form.get('device','') }}">
+  <label for="issue">Problema reportado</label><textarea id="issue" name="issue" rows="4" required maxlength="2000" placeholder="Describe el motivo de ingreso">{{ request.form.get('issue','') }}</textarea>
   {% if current_user()['role']=='admin' %}
   <label for="assigned_to">Técnico responsable</label>
   <select id="assigned_to" name="assigned_to" required {% if not technicians %}disabled aria-describedby="technician-help"{% endif %}>
-    <option value="" disabled selected>Selecciona un técnico</option>
-    {% for technician in technicians %}<option value="{{ technician.id }}">{{ technician.name }}</option>{% endfor %}
+    <option value="" disabled {% if not request.form.get('assigned_to') %}selected{% endif %}>Selecciona un técnico</option>
+    {% for technician in technicians %}<option value="{{ technician.id }}" {% if request.form.get('assigned_to') == technician.id|string %}selected{% endif %}>{{ technician.name }}</option>{% endfor %}
   </select>
   {% if not technicians %}<p id="technician-help" class="callout">Necesitas un técnico activo para registrar una reparación. <a href="{{ url_for('web.user_new') }}">Crear técnico</a></p>{% endif %}
   {% else %}<p class="callout">La reparación quedará asignada a tu usuario técnico.</p>{% endif %}
