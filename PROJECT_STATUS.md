@@ -18,13 +18,13 @@
 - Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas. Groq fue probado localmente con una credencial fuera del repositorio.
 - El chat del asistente acepta propuestas de un producto o de hasta 20 productos por solicitud; la confirmación administrativa crea el lote de forma atómica.
 - Suite ejecutada por el usuario con Pytest: 40 pruebas y 40 subtests aprobados. La comprobación de mutación temporal en `_to_integer` fue detectada por la prueba específica y pasó después de restaurar el código.
-- Workflow `.github/workflows/ci.yml` ejecutado correctamente en `push` (run [43757548979](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757548979)); el evento `pull_request` queda pendiente de validar.
+- Workflow `.github/workflows/ci.yml` ejecutado correctamente en `push` (run [43757548979](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757548979)) y `pull_request` (run [43760927131](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43760927131)). El PR [#24](https://github.com/LzMauLz/Proyecto-GestorT/pull/24) está abierto para revisión y no se ha fusionado.
 - Dockerfile y Compose verificados: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. La imagen se construyó, el contenedor inició, `http://127.0.0.1:8000` respondió `HTTP 200` y una marca SQLite sobrevivió al reinicio del contenedor.
 - Repositorio GitHub publicado en `LzMauLz/Proyecto-GestorT`, con `main` como rama principal y `develop` para integración. Los Pull Requests #1–#4, #22 y #23 están fusionados.
 
 ## Pendiente
 
-- La ejecución local de Pytest fue reportada por el usuario y el workflow pasó en `push`; falta abrir/revisar el PR para confirmar el evento `pull_request` y añadir evidencia de esa ejecución.
+- La suite local y la comprobación de mutación se registran en [docs/evidencias.md](docs/evidencias.md); el CI pasó en ambos eventos. El PR #24 queda pendiente de revisión y decisión de merge.
 - El registro acumulativo de resultados y capturas está en [docs/evidencias.md](docs/evidencias.md).
 - Dockerfile/Compose: build, arranque, puerto, creación del volumen y persistencia SQLite tras reinicio verificados. No queda pendiente operativo de Docker para el MVP.
 - Groq está configurado y habilitado en el `.env` local (`GROQ_ENABLED=true`, modelo `openai/gpt-oss-20b`, timeout de 12 segundos). La API key está presente y fue validada con una solicitud real; permanece fuera de Git.

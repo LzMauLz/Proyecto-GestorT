@@ -25,7 +25,8 @@ El 15 de noviembre de 2026 se modificó temporalmente `_to_integer` para aceptar
 - Eventos: `push` y `pull_request`.
 - No requiere secretos ni realiza llamadas al proveedor de IA.
 - Ejecución verificada en `push`: [GitHub Actions run 43757548979](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757548979), resultado **success**.
-- Pendiente: abrir el Pull Request hacia `develop` y verificar el evento `pull_request`.
+- Pull Request [#24](https://github.com/LzMauLz/Proyecto-GestorT/pull/24), abierto hacia `develop` para revisión; no fusionado.
+- Ejecución verificada en `pull_request`: [GitHub Actions run 43760927131](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43760927131), resultado **success**.
 
 ## Historial
 
