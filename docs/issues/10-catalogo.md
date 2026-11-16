@@ -1,5 +1,7 @@
 # Issue #10 — Catálogo público
 
+Verificación final: catálogo junto a integridad, seguridad, asistente e interfaz incluido en **131 pruebas y 77 subtests aprobados**; [CI Python 3.11 integrado 43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059). Las comprobaciones de navegador y sus capturas están en [issue #14](14-interfaz.md). Los resultados por fases inferiores siguen siendo evidencia histórica.
+
 Decisión confirmada por el usuario el 2026-11-15: catálogo público sin cuentas de cliente. Se conserva Flask/Jinja2 y la identidad local.
 
 ## Implementación

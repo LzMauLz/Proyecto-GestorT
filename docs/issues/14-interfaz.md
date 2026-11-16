@@ -1,5 +1,7 @@
 # Issue #14: navegación, formularios y validación visual
 
+Verificación final: CI Python 3.11 de interfaz [43777914192](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777914192) aprobado. La suite conjunta posterior incluye todos los flujos y pasó **131 pruebas y 77 subtests**; [CI integrado 43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059). Los resultados por fases que siguen se conservan como evidencia histórica.
+
 ## Cambios
 
 - La navegación del personal permanece disponible en móvil y tablet mediante un menú nativo `details/summary`, operable con teclado. Reutiliza los enlaces y condiciones de rol del escritorio e incluye cierre de sesión con CSRF.

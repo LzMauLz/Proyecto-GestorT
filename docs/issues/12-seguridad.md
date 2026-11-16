@@ -1,5 +1,7 @@
 # Issue 12 · Controles de seguridad del MVP
 
+Estado final de verificación del código integrado: **131 pruebas y 77 subtests aprobados** localmente; CI Python 3.11 [43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059) aprobado en `0b4f44a`. `tests/test_security.py` contiene 20 tests. Los recuentos inferiores registrados más abajo corresponden a fases anteriores. La auditoría cubre el MVP local y no aprueba su exposición a Internet.
+
 Fecha: 2026-11-15. Alcance: código y pruebas locales con Flask y SQLite reales sobre datos ficticios. La configuración y las bases de datos del taller no se leen ni migran durante estas verificaciones.
 
 ## Controles incorporados

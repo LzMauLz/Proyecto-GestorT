@@ -1,53 +1,50 @@
 # Estado de GestorTech
 
-## Revisión del issue #12 — 2026-11-15
+**Actualizado:** 2026-11-15. **Estado:** MVP local con propuestas de cambio para los issues #5, #10, #12, #7, #14 y #15. La implementación en estas propuestas no implica que se haya fusionado en `develop` o desplegado.
 
-Controles implementados en la propuesta de cambio: límites persistentes para login/seguimiento, resolución y auditoría atómicas de propuestas IA, errores externos sanitizados, rechazo de CSRF Unicode/historial malformado y de XLSX con fórmulas/macros/vínculos externos. Suite local complementaria Python 3.12: 57 pruebas y 44 subtests aprobados. La validación Python 3.11 en CI y los requisitos de producción siguen pendientes. Matriz y límites: [docs/issues/12-seguridad.md](docs/issues/12-seguridad.md). No se consultaron credenciales ni datos reales y no se activó Groq.
+## Capacidades implementadas en las propuestas
 
-**Estado:** MVP local en modernización para revisión académica. Actualizado: 2026-11-03.
+| Issue | Capacidad | Evidencia y límites |
+|---|---|---|
+| #5 | Técnico activo obligatorio al crear/reasignar; autoasignación del técnico; unicidad por nombre/categoría normalizados con protección SQLite y preflight de migración | [Integridad](docs/issues/5-integridad.md) |
+| #10 | Catálogo público sin cuentas de cliente; publicación administrativa explícita; nuevos productos e importaciones ocultos; solo campos comerciales públicos | [Catálogo](docs/issues/10-catalogo.md) |
+| #12 | Límites persistentes de intentos, resolución/auditoría atómica de propuestas IA, errores sanitizados, importación endurecida y utilidad de backup/restauración controlada | [Matriz de seguridad](docs/issues/12-seguridad.md) |
+| #7 | Aclaración de faltantes y precios ambiguos, fichas editables, archivos CSV/XLSX desde el asistente y revisión manual disponible sin proveedor | [Asistente](docs/issues/7-asistente.md) |
+| #14 | Navegación móvil por rol, foco de errores, conservación de campos no secretos, tablas accesibles, contraste y revisión visual local integrada | [Interfaz](docs/issues/14-interfaz.md) |
+| #15 | Ampliación y trazabilidad de pruebas de los flujos integrados e integración continua | [Pruebas integradas](docs/issues/15-pruebas-ci.md) |
 
-## Implementado
+Se conservan Python 3.11 como stack objetivo, Flask/Jinja2, SQLite, HTML/CSS/JavaScript y la arquitectura por capas. La mascota local y la identidad violeta siguen en uso. Los roles son administrador/técnico; el cliente consulta catálogo y seguimiento públicos sin cuenta.
 
-- Issue #5: selección obligatoria de técnico activo, autoasignación para técnicos y protección SQLite; productos únicos por nombre/categoría normalizados, con control de concurrencia. Migración con preflight y rollback verificada solo sobre bases ficticias. Evidencia y límites en [docs/issues/5-integridad.md](docs/issues/5-integridad.md); validación CI en Python 3.11 pendiente.
-- Issue #14: navegación móvil por rol con logout, tablas accesibles, foco de errores y recuperación de campos no secretos; verificación real con Edge headless en 375/768/1440 px y contraste medido. La revisión integrada incluye formulario de reparación y asistente manual/con proveedor simulado: carga local, vista previa editable, aclaración, confirmación, cancelación y reintento tras error de red. Capturas y límites en [docs/issues/14-interfaz.md](docs/issues/14-interfaz.md).
+## Validación actual
 
-- Issue #10: catálogo público con publicación/despublicación administrativa explícita, productos nuevos ocultos y consulta limitada a campos comerciales. Detalles y validación: `docs/issues/10-catalogo.md`. Pendiente validación integrada/CI antes de cierre.
+Las verificaciones actuales se realizan localmente con Flask y SQLite reales, bases temporales y datos ficticios. Los dobles del proveedor se identifican explícitamente; no se conecta Groq ni se consulta `.env` o la base del taller. Los conteos y condiciones observados se conservan en los informes de cada issue. La suite integrada del #15 pasó **131 pruebas y 77 subtests en 65,75 s** en Python 3.12.14. GitHub Actions con Python 3.11 terminó en **success** para el commit `0b4f44a`: [run 43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059). Estos son resultados observados y distintos de las pruebas parciales.
 
-- Estructura Flask por capas con dominio, aplicación, adaptador SQLite y controladores de página/API.
-- Autenticación de personal con roles administrador/técnico y creación inicial segura de administrador mediante CLI.
-- Reparaciones: asignación, código de seguimiento aleatorio, flujo de estados acordado e historial.
-- Consulta pública limitada a estado y avances marcados públicos; notas internas y problema no salen en la respuesta.
-- Inventario: productos, edición de catálogo, baja lógica, precios en centavos y movimientos atómicos que impiden stock negativo.
-- Importación CSV/XLSX local con límites, previsualización editable y selección humana antes de guardar. Groq está integrado mediante puerto/adaptador, con validación de campos permitidos y fallback manual.
-- API alineada con Módulo 2, OpenAPI JSON, documentación README y trazabilidad.
-- Rediseño visual Gaming Premium aplicado al panel, inventario, reparaciones, formularios, importación, login y consulta pública; conserva el logo/mascota oficial local y una paleta violeta con estados operativos diferenciados.
-- Dashboard con estado activo de navegación, región de tabla accesible por teclado y estilos de estado semánticos.
-- Rediseño integral frontend aplicado con metodología `frontend-design`: shell lateral para personal, shell público separado, jerarquía editorial, superficies oscuras de alto contraste, acentos violeta/cian, formularios, tablas, estados, seguimiento, login e inventario coherentes en móvil y escritorio. La mascota/logo local se conserva sin reemplazo.
-- Adaptador Groq opt-in mediante `.env`. Las peticiones están limitadas a 50 filas y 128 KiB; las respuestas a 256 KiB; los prompts tratan campos importados como datos no confiables y existe fallback manual sin reintentos.
-- Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas. Groq fue probado localmente con una credencial fuera del repositorio.
-- El chat del asistente acepta propuestas de un producto o de hasta 20 productos por solicitud; la confirmación administrativa crea el lote de forma atómica.
-- Suite ejecutada por el usuario con Pytest: 40 pruebas y 40 subtests aprobados. La mutación temporal en `_to_integer` fue detectada y pasó tras restaurar el código. En la revisión de una sugerencia de prueba IA se corrigió la expectativa HTTP 422 a HTTP 400 según el contrato Flask; la prueba corregida pasó.
-- Workflow `.github/workflows/ci.yml` ejecutado correctamente en `push` (run [43757548979](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757548979)) y `pull_request` (run [43768715477](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43768715477)). El PR [#24](https://github.com/LzMauLz/Proyecto-GestorT/pull/24) está abierto para revisión y no se ha fusionado.
-- Dockerfile y Compose verificados: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. La imagen se construyó, el contenedor inició, `http://127.0.0.1:8000` respondió `HTTP 200` y una marca SQLite sobrevivió al reinicio del contenedor.
-- Repositorio GitHub publicado en `LzMauLz/Proyecto-GestorT`, con `main` como rama principal y `develop` para integración. Los Pull Requests #1–#4, #22 y #23 están fusionados.
+El ejecutable de Python 3.11 del entorno virtual original no está disponible. Las pruebas locales complementarias usan Python 3.12.14 empaquetado con las dependencias ya presentes; CI con Python 3.11 es la comprobación del stack acordado y pasó en el run enlazado.
 
-## Pendiente
+La validación de navegador documentada en #14 utiliza Edge/Chromium headless a 375, 768 y 1440 px, servidor loopback y datos sintéticos; no equivale a pruebas con dispositivos físicos o lectores de pantalla.
 
-- La suite local y la comprobación de mutación se registran en [docs/evidencias.md](docs/evidencias.md); el CI pasó en ambos eventos. El PR #24 queda pendiente de revisión y decisión de merge.
-- El registro acumulativo de resultados y capturas está en [docs/evidencias.md](docs/evidencias.md).
-- Dockerfile/Compose: build, arranque, puerto, creación del volumen y persistencia SQLite tras reinicio verificados. No queda pendiente operativo de Docker para el MVP.
-- Groq está configurado y habilitado en el `.env` local (`GROQ_ENABLED=true`, modelo `openai/gpt-oss-20b`, timeout de 12 segundos). La API key está presente y fue validada con una solicitud real; permanece fuera de Git.
-- Falta mitigación de intentos repetidos en login/seguimiento y revisión de seguridad antes de desplegar en Internet.
-- Validación visual local realizada en navegador integrado sobre seguimiento público y login: sin overflow a 390, 660 y 1440 px; foco inicial y navegación por teclado comprobados. No se validó dashboard autenticado con navegador.
-- La demostración académica en video y el PDF final de entrega aún deben prepararse.
-- La auditoría actualizada está en `docs/auditoria_estado_actual.md`.
+## Límites y pendientes
 
-## Restricciones
+- La comprensión semántica de Groq real no se ha probado en esta fase. Su activación y cualquier transmisión externa requieren aprobación explícita.
+- No se afirma que una credencial exista ni que el proveedor esté habilitado actualmente en el entorno local; no se han leído esas configuraciones.
+- Producción permanece bloqueada hasta elegir y validar TLS/proxy, servidor WSGI, política operativa de respaldos/restauración y revisión de dependencias/secretos históricos. Estos riesgos no se consideran aceptados automáticamente.
+- Las migraciones no se han aplicado a datos reales. El preflight bloquea inconsistencias; el operador debe respaldar y resolverlas sin reasignaciones ni fusiones automáticas.
+- Las seis propuestas tienen commits publicados y CI verificado, pero sus nuevos PR no se han creado porque el conector devuelve Unknown tool. Projects no se ha movido a Done. El PR #24 permanece abierto. La revisión y el merge siguen pendientes; una tarjeta no sustituye evidencia ni integración.
+- El video, el PDF final académico y tareas de evolución fuera de estos issues siguen su propio alcance.
 
-- No publicar cambios adicionales ni crear remotos sin aprobación.
-- No instalar paquetes, crear conexiones MCP ni enviar código/datos a proveedores externos sin aprobación.
-- No usar datos reales de clientes en demostraciones.
+## Evidencia histórica
 
-## Trabajo issue #7 — revisión de propuestas y archivos
+[docs/evidencias.md](docs/evidencias.md) conserva las capturas de la Sesión 3: 40 pruebas y 40 subtests locales, detección/restauración de mutación y corrección de una expectativa HTTP 422 a 400. Los runs [43757548979](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757548979) y [43768715477](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43768715477) corresponden al trabajo del PR #24 y no certifican cambios posteriores.
 
-La conversación pide datos obligatorios faltantes antes de proponer. Las fichas son editables y revalidadas en servidor; la carga local de CSV/XLSX desde el asistente mantiene el flujo manual. Detalles y límites en [docs/issues/7-asistente.md](docs/issues/7-asistente.md). No se validó comprensión real con Groq ni se realizaron llamadas externas.
+Los informes previos registraron 33 pruebas unittest, una validación Docker local con persistencia SQLite y una prueba controlada de Groq. Son antecedentes fechados; no representan una nueva ejecución ni verifican credenciales actuales. El informe histórico se conserva en [docs/auditoria_estado_actual.md](docs/auditoria_estado_actual.md).
+
+## CI observado por propuesta
+
+| Issue | Ejecución Python 3.11 | Resultado |
+|---|---|---|
+| #5 | [43776061344](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43776061344) | success |
+| #10 | [43777324396](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324396) | success |
+| #12 | [43777324592](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324592) | success |
+| #7 | [43777324295](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324295) | success |
+| #14 | [43777914192](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777914192), commit 6d09e0a | success |
+| #15 integrado | [43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059), commit 0b4f44a | success |

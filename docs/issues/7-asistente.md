@@ -1,5 +1,7 @@
 # Issue #7 — Asistente y revisión de inventario
 
+Verificación final local integrada: **131 pruebas y 77 subtests aprobados** y [CI Python 3.11 43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059). La interfaz real se comprobó en 375/768/1440 px con datos ficticios y, para respuestas del chat, un proveedor local de prueba explícito: [evidencia del #14](14-interfaz.md). Los resultados por fases inferiores son históricos. No se validó Groq real por decisión del usuario.
+
 CI Python 3.11 aprobado para la integración de esta entrega (`f7cc486`): [run 43777324295](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324295). La comprensión con Groq real sigue fuera de la verificación por decisión del usuario de hacer solo pruebas locales.
 
 ## Implementado

@@ -3,8 +3,8 @@
 **Proyecto:** GestorTech  
 **Módulo:** 6 – Proyecto Integrador  
 **Sesión:** 2 – Arquitectura y revisión de código con IA  
-**Rama:** `develop`  
-**Estado:** Arquitectura actual documentada a partir del código del repositorio.
+**Rama de integración:** `develop`
+**Estado:** arquitectura de las propuestas integradas localmente al 2026-11-15; pendiente de revisión/merge. Conserva los límites de la arquitectura aprobada.
 
 ## 1. Propósito
 
@@ -12,7 +12,7 @@ Este documento describe la arquitectura que existe actualmente en GestorTech med
 
 ## 2. C1 – Diagrama de contexto
 
-GestorTech es una aplicación web para la operación de un taller de servicio técnico. El administrador gestiona usuarios, reparaciones e inventario; el técnico trabaja con las reparaciones que tiene asignadas; el cliente utiliza el código de seguimiento para consultar el estado y los avances que el taller haya marcado como públicos.
+GestorTech es una aplicación web para la operación de un taller de servicio técnico. El administrador gestiona usuarios, reparaciones e inventario; el técnico trabaja con las reparaciones que tiene asignadas; el cliente consulta el catálogo público y utiliza el código de seguimiento para consultar el estado y los avances que el taller haya marcado como públicos.
 
 El asistente de IA puede comunicarse con Groq cuando el proveedor está habilitado y configurado. La aplicación conserva un flujo manual cuando el servicio de IA no está disponible.
 
@@ -28,14 +28,14 @@ flowchart LR
 
     Admin -->|"Gestiona reparaciones, inventario, usuarios y asistente"| GestorTech
     Tecnico -->|"Consulta y actualiza reparaciones asignadas; consulta inventario"| GestorTech
-    Cliente -->|"Consulta el seguimiento con su código"| GestorTech
+    Cliente -->|"Consulta catálogo publicado y seguimiento con código"| GestorTech
     GestorTech -->|"HTTPS: solicitudes de IA cuando está habilitada"| Groq
     Groq -->|"HTTPS: respuesta del modelo"| GestorTech
 ```
 
 ### Límites del contexto
 
-- El cliente dispone de consulta pública de seguimiento. El catálogo comercial para clientes está registrado como trabajo pendiente y no se representa como una capacidad implementada.
+- El cliente dispone de seguimiento y catálogo públicos. La propuesta #10 incorpora publicación administrativa explícita; no existe autenticación de clientes.
 - Groq es una integración opcional; no es necesario para que funcionen las operaciones manuales del sistema.
 - Los usuarios acceden mediante un navegador web. No existe una aplicación móvil o un frontend independiente documentado en el código actual.
 
@@ -68,7 +68,7 @@ flowchart TB
 |---|---|---|
 | Navegador web | HTML, CSS y JavaScript | Presenta las páginas y permite la interacción de administradores, técnicos y clientes. |
 | Aplicación web | Python 3.11, Flask y Jinja2 | Atiende páginas y API, aplica autenticación y autorización, coordina servicios y reglas de negocio. |
-| Base de datos | SQLite | Persiste usuarios, reparaciones, historial, productos, movimientos y propuestas del asistente. |
+| Base de datos | SQLite | Persiste usuarios, reparaciones, historial, productos/publicación, movimientos, presupuestos de intentos y propuestas/auditoría del asistente. |
 | Proveedor de IA | Groq API, opcional | Procesa solicitudes del asistente y propuestas de importación cuando está habilitado y configurado. |
 
 ## 4. Organización interna de la aplicación
@@ -92,9 +92,9 @@ La aplicación obtiene la ubicación de la base de datos mediante la variable `G
 ## 6. Límites y evolución pendiente
 
 - **Base de datos actual:** SQLite. La evaluación de una posible migración a PostgreSQL o MySQL está registrada en el [issue #20](https://github.com/LzMauLz/Proyecto-GestorT/issues/20), con prioridad Should. No se representa como una migración realizada.
-- **Catálogo para clientes:** pendiente de implementación; su alcance se sigue en el [issue #10](https://github.com/LzMauLz/Proyecto-GestorT/issues/10).
-- **Integración IA:** Groq continúa siendo opcional y está aislado mediante un adaptador. La aplicación mantiene el flujo manual.
-- **Despliegue:** la configuración Docker verificada en el proyecto es para demostración local; no se debe interpretar como una arquitectura de producción ya desplegada.
+- **Catálogo para clientes:** implementado en la propuesta #10 como página pública de la misma aplicación Flask; sin nuevo servicio ni rol de cliente.
+- **Integración IA:** Groq continúa siendo opcional y está aislado mediante un adaptador. La propuesta #7 incorpora aclaración, edición y archivos locales. Las pruebas actuales son locales con dobles explícitos; no validan semántica de Groq real.
+- **Despliegue:** Docker corresponde a demostración HTTP local. Producción requiere aprobación y evidencia de TLS/proxy, servidor WSGI, retención/cifrado de backups y operación segura. Los límites de intentos SQLite y la utilidad de snapshot no sustituyen esas decisiones.
 
 ## 7. Decisiones de arquitectura
 
