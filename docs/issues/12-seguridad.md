@@ -1,5 +1,7 @@
 # Issue 12 · Controles de seguridad del MVP
 
+**Verificación posterior 2026-11-16:** Docker/Compose probados con volumen QA nuevo, login HTTP/CSRF, UID 10001, raíz read-only y persistencia SQLite/PNG tras reinicio. Recursos QA retirados; datos del taller intactos. [Evidencia](../verificacion_integral_2026-11-16.md#ampliación-autorizada-groq-real-y-docker). Se mantiene el alcance de demostración local.
+
 ## Alcance confirmado para la ampliación del 2026-11-16
 
 El usuario eligió **demostración local por ahora**. TLS público, proxy, WSGI de producción y política de respaldos de un servicio publicado no son componentes de esta demo ni se consideran riesgos aceptados para Internet. El procedimiento local, límites y restauración están en [operacion_demo_local.md](../operacion_demo_local.md).

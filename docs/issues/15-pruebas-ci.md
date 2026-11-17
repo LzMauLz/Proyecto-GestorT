@@ -1,5 +1,7 @@
 # Issue #15 — Pruebas y CI
 
+**Verificación posterior 2026-11-16:** suite final **156 passed, 77 subtests passed en 67,34 s**, Python 3.12.14 local, después de corregir el prompt y agregar la regresión de `price_cents` prohibido en propuestas. Groq real y Docker también verificados con datos ficticios; [informe](../verificacion_integral_2026-11-16.md#ampliación-autorizada-groq-real-y-docker). Los verificadores manuales no se ejecutan automáticamente en CI.
+
 La suite de la Sesión 3 es el punto de partida. Este issue comprueba los flujos ampliados y sus errores, sin reemplazar pruebas existentes para obtener un resultado verde.
 
 ## Matriz de aceptación

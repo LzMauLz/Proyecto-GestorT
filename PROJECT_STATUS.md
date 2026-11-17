@@ -1,5 +1,7 @@
 # Estado de GestorTech
 
+**Validación posterior autorizada:** Groq real completó cinco casos finales con datos ficticios (consulta, faltantes, cancelación, aprobación e importación). Se corrigió una confusión `price_cents`/`price` del proveedor sin relajar validaciones. Docker/Compose construyeron y ejecutaron la aplicación con Python 3.11, login HTTP, UID 10001, raíz read-only y persistencia SQLite/PNG tras reinicio; entorno QA retirado. Base del taller intacta. [Evidencia y límites](docs/verificacion_integral_2026-11-16.md#ampliación-autorizada-groq-real-y-docker). Los párrafos anteriores de ejecución sin proveedor/Docker se conservan como historial de la revisión inicial.
+
 Verificación adicional del 2026-11-16: **155 pruebas y 77 subtests aprobados en 66,98 s**, Python 3.12.14 local y datos temporales. Se corrigieron el aislamiento de temporales y el contexto del asistente para preguntas por nombre, con aprobación del usuario para el contexto comercial. [Informe y límites](docs/verificacion_integral_2026-11-16.md). Groq real y Docker operativo siguen sin verificar en esta ejecución.
 
 ## Ampliación del 2026-11-16
@@ -35,7 +37,7 @@ La validación de navegador documentada en #14 utiliza Edge/Chromium headless a 
 
 ## Límites y pendientes
 
-- La comprensión semántica de Groq real no se ha probado en esta fase. Su activación y cualquier transmisión externa requieren aprobación explícita.
+- Groq real pasó cinco escenarios finales autorizados con datos ficticios; no se garantiza comprensión perfecta de cualquier solicitud. Las transmisiones futuras conservan el requisito de autorización y minimización de datos.
 - No se afirma que una credencial exista ni que el proveedor esté habilitado actualmente en el entorno local; no se han leído esas configuraciones.
 - Producción permanece bloqueada hasta elegir y validar TLS/proxy, servidor WSGI, política operativa de respaldos/restauración y revisión de dependencias/secretos históricos. Estos riesgos no se consideran aceptados automáticamente.
 - Las migraciones no se han aplicado a datos reales. El preflight bloquea inconsistencias; el operador debe respaldar y resolverlas sin reasignaciones ni fusiones automáticas.

@@ -1,5 +1,7 @@
 # Evidencias del proyecto GestorTech
 
+Prueba posterior autorizada: [Groq real y Docker](verificacion_integral_2026-11-16.md#ampliación-autorizada-groq-real-y-docker), cinco casos reales finales aprobados, corrección del formato de precios y contenedor probado con login/persistencia/privilegios. Solo datos ficticios; limpieza de recursos QA verificada.
+
 Verificación adicional 2026-11-16: [informe integral](verificacion_integral_2026-11-16.md), **155 pruebas y 77 subtests aprobados**, navegador con base ficticia, corrección de temporales y regresión del contexto por nombre. Groq real y arranque Docker pendientes.
 
 Registro acumulativo de pruebas, integración continua y entregas académicas. Se actualizará cuando se incorporen nuevas evidencias verificadas.

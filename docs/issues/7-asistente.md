@@ -1,5 +1,7 @@
 # Issue #7 — Asistente y revisión de inventario
 
+**Verificación posterior 2026-11-16:** cinco escenarios finales de Groq real aprobados con datos ficticios; se corrigió el contrato de precio COP frente a centavos del contexto sin relajar la validación. [Informe](../verificacion_integral_2026-11-16.md#ampliación-autorizada-groq-real-y-docker). Los resultados sin proveedor que siguen son históricos.
+
 ## Continuidad hacia la ficha comercial — 2026-11-16
 
 La propuesta sigue usando los campos permitidos del producto: nombre, descripción, categoría, precio y cantidad. Si se proporcionan solo nombre, descripción y precio, se pregunta la cantidad inicial o se solicita confirmar explícitamente 0 hasta contar con existencias; no se asigna cero por omisión.

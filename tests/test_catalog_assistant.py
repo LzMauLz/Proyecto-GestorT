@@ -80,3 +80,9 @@ class CatalogAssistantTests(unittest.TestCase):
         response = self.propose({'name': 'Cable', 'price': '10', 'stock': 1, 'image_url': 'https://example.test/image.png', 'published': True})
         self.assertEqual(response.status_code, 502)
         self.assertEqual(get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0], 0)
+
+    def test_provider_cannot_use_inventory_cent_field_as_product_price(self):
+        response = self.propose({'name': 'Cable', 'price_cents': 2500000, 'stock': 2})
+        self.assertEqual(response.status_code, 502)
+        self.assertEqual(get_db().execute('SELECT COUNT(*) FROM ai_proposals').fetchone()[0], 0)
+        self.assertEqual(get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0], 0)
