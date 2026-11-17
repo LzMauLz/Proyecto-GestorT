@@ -34,6 +34,10 @@ El #7 queda implementado para este flujo y probado localmente; no se probó comp
 
 ## Pruebas automatizadas de esta ampliación
 
+CI Python 3.11 observado para el commit de implementación `bb49c11`: [44007586942 — success](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/44007586942). Solicitud de revisión: [PR #31](https://github.com/LzMauLz/Proyecto-GestorT/pull/31), sin merge, base `test/issue-15`.
+
+El usuario rechazó la migración de su base existente para dejar sus datos intactos. La migración aditiva está preparada y probada con fixtures; no está aplicada sobre los datos del taller. No se debe iniciar la nueva versión sobre una base antigua sin actualizar su esquema con respaldo y autorización.
+
 Suite completa ejecutada en la carpeta real de GestorTech con `.venv-review/Scripts/python.exe -B -m pytest -q -p no:cacheprovider`: **154 passed, 77 subtests passed en 85,85 s**. Python local complementario 3.12.14; Flask 3.1.3, pytest 9.1.1, openpyxl 3.1.5 y Pillow 13.0.0. `pip check` no encontró dependencias rotas. GitHub Actions verificará Python 3.11 con el mismo `requirements.txt`.
 
 Los archivos nuevos `tests/test_storefront_media.py`, `tests/test_catalog_assistant.py`, `tests/test_storefront_journey.py` y `tests/test_local_demo_policy.py` comprueban decodificación real, rechazo de contenido inválido, permisos, privacidad de imágenes, cancelación, aprobación y paso a carga de imagen, publicación/despublicación y disponibilidad independiente del stock. Las bases e imágenes se generan en directorios temporales. El proveedor de la prueba del asistente es un doble explícito, sin tráfico externo.

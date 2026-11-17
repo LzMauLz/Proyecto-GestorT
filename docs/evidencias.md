@@ -48,6 +48,8 @@ Este fue un ejercicio controlado: se preparó una expectativa HTTP 422 para cont
 
 ### 2026-11-16 — Tienda, imágenes y disponibilidad
 
+Implementación `bb49c11`, [PR #31](https://github.com/LzMauLz/Proyecto-GestorT/pull/31) abierto sin merge y [CI Python 3.11 aprobado](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/44007586942). La base real no se migró por decisión expresa del usuario; la evidencia corresponde a datos ficticios.
+
 Suite integrada local: **154 pruebas y 77 subtests aprobados en 85,85 s**, dentro de la carpeta GestorTech. Se usaron Flask/SQLite y decodificadores Pillow reales sobre datos ficticios; el proveedor del asistente se reemplazó por un doble local explícito. La prueba de recorrido completo acepta una propuesta, carga una imagen, publica, cambia disponibilidad sin alterar stock y revoca el acceso público al despublicar.
 
 La evidencia visual y los límites de operación local se conservan en [tienda_y_catalogo.md](tienda_y_catalogo.md), [catalogo-imagenes.md](catalogo-imagenes.md) y [operacion_demo_local.md](operacion_demo_local.md). Las imágenes de demostración de las capturas no pertenecen al inventario real.
