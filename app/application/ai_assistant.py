@@ -169,12 +169,10 @@ def validate_edited_payload(operation, payload):
 def inventory_snapshot(db, question):
     """Return factual, bounded inventory context for the model."""
     lowered = question.lower()
-    products = []
-    if any(term in lowered for term in ('bajo', 'agotado', 'stock', 'existencias', 'productos')):
-        rows = db.execute(
-            'SELECT id,name,category,stock,price_cents FROM products WHERE active=1 ORDER BY name LIMIT 100'
-        ).fetchall()
-        products = [dict(row) for row in rows]
+    rows = db.execute(
+        'SELECT id,name,category,stock,price_cents FROM products WHERE active=1 ORDER BY name LIMIT 100'
+    ).fetchall()
+    products = [dict(row) for row in rows]
     movements = []
     if any(term in lowered for term in ('movimiento', 'entrada', 'salida', 'últimos')):
         rows = db.execute(

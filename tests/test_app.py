@@ -18,8 +18,7 @@ from app.web.pages import parse_product_upload
 
 class GestorTechTests(unittest.TestCase):
     def setUp(self):
-        project_root=os.path.dirname(os.path.dirname(__file__))
-        self.temp = tempfile.TemporaryDirectory(dir=os.path.join(project_root,'instance'))
+        self.temp = tempfile.TemporaryDirectory()
         self.app = create_app({'TESTING':True,'SECRET_KEY':'test-key-only','DATABASE':os.path.join(self.temp.name,'test.sqlite3'),'GROQ_ENABLED':False,'GROQ_API_KEY':'','GROQ_MODEL':''})
         self.context = self.app.app_context()
         self.context.push()

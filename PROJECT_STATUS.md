@@ -1,5 +1,7 @@
 # Estado de GestorTech
 
+Verificación adicional del 2026-11-16: **155 pruebas y 77 subtests aprobados en 66,98 s**, Python 3.12.14 local y datos temporales. Se corrigieron el aislamiento de temporales y el contexto del asistente para preguntas por nombre, con aprobación del usuario para el contexto comercial. [Informe y límites](docs/verificacion_integral_2026-11-16.md). Groq real y Docker operativo siguen sin verificar en esta ejecución.
+
 ## Ampliación del 2026-11-16
 
 La carpeta `D:\Escritorio\GestorTech` contiene la nueva tienda, shell del personal y dashboard, junto con imágenes locales validadas mediante Pillow 13.0.0, disponibilidad comercial y pasos de revisión/publicación tras aceptar propuestas IA. El usuario confirmó demostración local y aprobó la dependencia; no se activó Groq ni se modificó la base del taller. La operación y evidencia nueva están en [docs/tienda_y_catalogo.md](docs/tienda_y_catalogo.md). Los datos y runs anteriores se conservan como históricos; la validación de esta ampliación se registrará al terminar la suite y CI.
@@ -37,7 +39,7 @@ La validación de navegador documentada en #14 utiliza Edge/Chromium headless a 
 - No se afirma que una credencial exista ni que el proveedor esté habilitado actualmente en el entorno local; no se han leído esas configuraciones.
 - Producción permanece bloqueada hasta elegir y validar TLS/proxy, servidor WSGI, política operativa de respaldos/restauración y revisión de dependencias/secretos históricos. Estos riesgos no se consideran aceptados automáticamente.
 - Las migraciones no se han aplicado a datos reales. El preflight bloquea inconsistencias; el operador debe respaldar y resolverlas sin reasignaciones ni fusiones automáticas.
-- Las seis propuestas tienen commits publicados y CI verificado, pero sus nuevos PR no se han creado porque el conector devuelve Unknown tool. Projects no se ha movido a Done. El PR #24 permanece abierto. La revisión y el merge siguen pendientes; una tarjeta no sustituye evidencia ni integración.
+- Los PR #25–#31 fueron creados y están abiertos en la consulta del 2026-11-16. #31 amplía tienda, imágenes y asistente; depende de #30 y sus predecesores. Projects no se ha movido a Done en esta revisión. El PR #24 permanece abierto. Revisión y merge siguen pendientes.
 - El video, el PDF final académico y tareas de evolución fuera de estos issues siguen su propio alcance.
 
 ## Evidencia histórica

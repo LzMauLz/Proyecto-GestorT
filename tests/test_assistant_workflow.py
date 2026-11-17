@@ -212,3 +212,14 @@ class AssistantWorkflowTests(unittest.TestCase):
             'archivo': (io.BytesIO(b'nombre,precio,precio_venta,stock\nCable,10,20,1\n'), 'productos.csv'),
             'campos': ['name', 'price', 'stock']}, content_type='multipart/form-data')
         self.assertEqual(bad.status_code, 302)
+
+def test_named_product_question_includes_inventory_without_trigger_words(integration_app):
+    from app.application.services import create_product
+    from app.application.ai_assistant import inventory_snapshot
+    from app.infrastructure.database import get_db
+
+    with integration_app.app_context():
+        db = get_db()
+        product_id = create_product(db, {'name': 'Cable USB', 'price': '18000', 'stock': 4, 'user_id': 1})
+        facts = inventory_snapshot(db, '¿Cuánto vale el Cable USB?')
+        assert any(item['id'] == product_id for item in facts['products'])

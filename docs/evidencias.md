@@ -1,5 +1,7 @@
 # Evidencias del proyecto GestorTech
 
+Verificación adicional 2026-11-16: [informe integral](verificacion_integral_2026-11-16.md), **155 pruebas y 77 subtests aprobados**, navegador con base ficticia, corrección de temporales y regresión del contexto por nombre. Groq real y arranque Docker pendientes.
+
 Registro acumulativo de pruebas, integración continua y entregas académicas. Se actualizará cuando se incorporen nuevas evidencias verificadas.
 
 ## Módulo 6 · Sesión 3: pruebas e integración continua
