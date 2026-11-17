@@ -2,6 +2,16 @@
 
 Estas decisiones traducen la arquitectura de Módulo 2 a un MVP ejecutable. No alteran el PDF original.
 
+## Ampliación confirmada el 2026-11-16
+
+- El alcance operativo actual es demostración local en loopback. TLS y WSGI de producción se evalúan en una fase de despliegue aprobada por separado.
+- La zona pública se presenta como una tienda de productos y repuestos, con carrusel, búsqueda y acceso al seguimiento mediante código. La referencia Eneba orienta la jerarquía de tienda; se conserva la marca y los recursos propios de GestorTech.
+- Solo administración crea, publica o retira productos, adjunta su imagen y modifica la disponibilidad comercial. El técnico conserva su acceso operativo, sin permisos de edición comercial.
+- La disponibilidad comercial no revela ni sustituye las existencias exactas: un producto publicado puede mostrarse como no disponible sin eliminar su ficha o historial.
+- Las propuestas del asistente se revisan y aceptan/cancelan antes de crear productos. Tras la confirmación, la imagen se solicita mediante un formulario local administrativo, sin enviar imágenes al modelo. Publicar sigue siendo una decisión explícita.
+- Nombre, descripción y precio pueden darse en lenguaje natural; si falta cantidad inicial, se pregunta antes de crear inventario. Un cero explícito es válido; no se infiere de un campo ausente.
+- Pillow 13.0.0 fue aprobado para validar y recodificar raster localmente: [revisión de dependencia](auditoria_pillow.md). No incorpora servicios, frameworks visuales ni acceso general a carpetas.
+
 | Tema | Decisión | Motivo y alcance |
 |---|---|---|
 | Estados de reparación | Recibido → En diagnóstico → Esperando aprobación → En reparación → Listo para entregar → Entregado; Cancelado desde cualquier estado activo. Desde Listo para entregar se permite volver a En reparación. | Flujo confirmado por el usuario el 2026-10-31; Módulo 2 ilustraba estados, pero no definía la matriz de transiciones. Estados terminales: Entregado y Cancelado. |

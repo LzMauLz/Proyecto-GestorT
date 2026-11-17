@@ -1,0 +1,11 @@
+<fieldset class="product-media-fields">
+  <legend>Ficha comercial</legend>
+  <label for="product-image">Imagen del producto <span class="optional">opcional</span></label>
+  <input id="product-image" name="image" type="file" accept=".png,.jpg,.jpeg,.webp" aria-describedby="product-image-help">
+  <small id="product-image-help">PNG, JPEG o WebP, máximo 2 MB y 12 megapíxeles. Se guarda localmente sin metadatos; no se envía a IA. Después de un error vuelve a seleccionar el archivo.</small>
+  {% if product is defined and product.image_key %}<img src="{{ url_for('web.product_image', product_id=product.id) }}" alt="Imagen actual de {{ product.name }}" width="160" loading="lazy">{% endif %}
+  {% set current_availability = request.form.get('available', (product.available|string) if product is defined else '1') %}
+  <label for="available">Disponibilidad para clientes</label>
+  <select id="available" name="available"><option value="1" {% if current_availability == '1' %}selected{% endif %}>Disponible</option><option value="0" {% if current_availability == '0' %}selected{% endif %}>No disponible</option></select>
+  <small>Esta etiqueta comercial no muestra ni modifica las existencias. Guardar la ficha no publica automáticamente el producto.</small>
+</fieldset>

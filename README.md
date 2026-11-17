@@ -1,5 +1,7 @@
 # GestorTech
 
+La ampliación de tienda, imágenes y disponibilidad se encuentra en [docs/tienda_y_catalogo.md](docs/tienda_y_catalogo.md). La zona pública ofrece catálogo y consulta de reparación; administración gestiona las fichas desde Inventario y puede usar la carga manual cuando la IA no está disponible.
+
 [![CI](https://github.com/LzMauLz/Proyecto-GestorT/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/LzMauLz/Proyecto-GestorT/actions/workflows/ci.yml)
 
 MVP académico para organizar reparaciones e inventario de un taller de servicio técnico. El sistema separa el área del personal de la consulta pública por código de seguimiento.

@@ -1,5 +1,11 @@
 # Estado de GestorTech
 
+## Ampliación del 2026-11-16
+
+La carpeta `D:\Escritorio\GestorTech` contiene la nueva tienda, shell del personal y dashboard, junto con imágenes locales validadas mediante Pillow 13.0.0, disponibilidad comercial y pasos de revisión/publicación tras aceptar propuestas IA. El usuario confirmó demostración local y aprobó la dependencia; no se activó Groq ni se modificó la base del taller. La operación y evidencia nueva están en [docs/tienda_y_catalogo.md](docs/tienda_y_catalogo.md). Los datos y runs anteriores se conservan como históricos; la validación de esta ampliación se registrará al terminar la suite y CI.
+
+Verificación local de la ampliación: **154 pruebas y 77 subtests aprobados en 85,85 s**, con Python 3.12.14 en `.venv-review`. `pip check` aprobado. Pillow 13.0.0 instalado desde wheel oficial y declarado en requirements. La ejecución Python 3.11 de CI se registrará tras publicar el commit; las pruebas locales y sus capturas no se presentan como llamadas reales a Groq.
+
 **Actualizado:** 2026-11-15. **Estado:** MVP local con propuestas de cambio para los issues #5, #10, #12, #7, #14 y #15. La implementación en estas propuestas no implica que se haya fusionado en `develop` o desplegado.
 
 ## Capacidades implementadas en las propuestas

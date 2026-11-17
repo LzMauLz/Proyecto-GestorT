@@ -1,5 +1,13 @@
 # Issue 12 · Controles de seguridad del MVP
 
+## Alcance confirmado para la ampliación del 2026-11-16
+
+El usuario eligió **demostración local por ahora**. TLS público, proxy, WSGI de producción y política de respaldos de un servicio publicado no son componentes de esta demo ni se consideran riesgos aceptados para Internet. El procedimiento local, límites y restauración están en [operacion_demo_local.md](../operacion_demo_local.md).
+
+Pillow 13.0.0 fue revisado y autorizado expresamente para validar y recodificar imágenes locales. La carga de imágenes, su publicación y la disponibilidad exigen administración y CSRF; los escenarios de prueba de esta ampliación se documentarán en su informe integrado. No se ejecutan las migraciones sobre la base real durante el desarrollo.
+
+Comprobaciones iniciales con Flask/SQLite reales: `tests/test_local_demo_policy.py`, **2 passed**, verifican catálogo sin IA, ausencia de persistencia automática y protección del acceso del personal. No constituyen por sí solas la validación completa de imágenes.
+
 Estado final de verificación del código integrado: **131 pruebas y 77 subtests aprobados** localmente; CI Python 3.11 [43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059) aprobado en `0b4f44a`. `tests/test_security.py` contiene 20 tests. Los recuentos inferiores registrados más abajo corresponden a fases anteriores. La auditoría cubre el MVP local y no aprueba su exposición a Internet.
 
 Fecha: 2026-11-15. Alcance: código y pruebas locales con Flask y SQLite reales sobre datos ficticios. La configuración y las bases de datos del taller no se leen ni migran durante estas verificaciones.

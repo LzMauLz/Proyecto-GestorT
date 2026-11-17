@@ -46,6 +46,12 @@ Este fue un ejercicio controlado: se preparó una expectativa HTTP 422 para cont
 
 ## Historial
 
+### 2026-11-16 — Tienda, imágenes y disponibilidad
+
+Suite integrada local: **154 pruebas y 77 subtests aprobados en 85,85 s**, dentro de la carpeta GestorTech. Se usaron Flask/SQLite y decodificadores Pillow reales sobre datos ficticios; el proveedor del asistente se reemplazó por un doble local explícito. La prueba de recorrido completo acepta una propuesta, carga una imagen, publica, cambia disponibilidad sin alterar stock y revoca el acceso público al despublicar.
+
+La evidencia visual y los límites de operación local se conservan en [tienda_y_catalogo.md](tienda_y_catalogo.md), [catalogo-imagenes.md](catalogo-imagenes.md) y [operacion_demo_local.md](operacion_demo_local.md). Las imágenes de demostración de las capturas no pertenecen al inventario real.
+
 ### 2026-11-15 — Ampliación de los issues #5, #10, #12, #7, #14 y #15
 
 La implementación combinada pasó **131 pruebas y 77 subtests en 65,75 s** en el runtime local complementario Python 3.12.14. GitHub Actions con Python 3.11 confirmó el resultado del código `0b4f44a`: [ejecución 43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059).

@@ -72,9 +72,24 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           const options = {method:'POST', headers:{'X-CSRF-Token':csrf}};
           if (approve) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify({correcciones:edits}); }
-          await readResponse(await fetch(`/api/asistente/propuestas/${encodeURIComponent(proposal.id)}/${approve ? 'confirmar' : 'cancelar'}`, options));
+          const result = await readResponse(await fetch(`/api/asistente/propuestas/${encodeURIComponent(proposal.id)}/${approve ? 'confirmar' : 'cancelar'}`, options));
           status.textContent = approve ? 'Operación confirmada. Los datos se guardaron.' : 'Propuesta cancelada. No se cambió el inventario.';
           groups.forEach(group => { group.disabled = true; });
+          if (approve && products) {
+            status.textContent = 'Productos guardados sin publicar. Ahora adjunta una imagen local y revisa su disponibilidad antes de publicarlos.';
+            const nextSteps = document.createElement('div');
+            nextSteps.className = 'button-row';
+            const ids = result.product_ids || [result.product_id];
+            ids.filter(id => Number.isSafeInteger(id) && id > 0).forEach((id, index) => {
+              const link = document.createElement('a');
+              link.className = 'button secondary';
+              link.href = `/products/${id}/edit`;
+              link.textContent = `Adjuntar imagen y revisar: ${values[index]?.name || 'producto ' + id}`;
+              nextSteps.append(link);
+            });
+            review.append(nextSteps);
+            nextSteps.querySelector('a')?.focus();
+          }
         } catch (error) {
           status.textContent = error.message || 'No se pudo guardar la decisión. Puedes reintentar.';
           confirm.disabled = cancel.disabled = false;

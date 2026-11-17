@@ -1,0 +1,84 @@
+[
+  {
+    "selector": ".store-topline",
+    "color": "rgb(238, 227, 255)",
+    "bg": "rgb(67, 36, 104)",
+    "ratio": 10.09
+  },
+  {
+    "selector": ".store-header .brand",
+    "color": "rgb(247, 244, 255)",
+    "bg": "rgb(32, 17, 51)",
+    "ratio": 16.26
+  },
+  {
+    "selector": ".store-search input",
+    "color": "rgb(247, 244, 255)",
+    "bg": "rgb(19, 13, 32)",
+    "ratio": 17.48
+  },
+  {
+    "selector": ".store-search button",
+    "color": "rgb(247, 244, 255)",
+    "bg": "rgb(65, 39, 95)",
+    "ratio": 11.51
+  },
+  {
+    "selector": ".store-tracking label",
+    "color": "rgb(247, 244, 255)",
+    "bg": "rgb(38, 22, 56)",
+    "ratio": 15.42
+  },
+  {
+    "selector": ".store-tracking .primary",
+    "color": "rgb(255, 255, 255)",
+    "bg": "rgb(112, 64, 191)",
+    "ratio": 6.61
+  },
+  {
+    "selector": ".store-shelf-content h3",
+    "color": "rgb(247, 244, 255)",
+    "bg": "rgb(33, 22, 46)",
+    "ratio": 15.87
+  },
+  {
+    "selector": ".product-availability",
+    "color": "rgb(161, 237, 190)",
+    "bg": "rgb(33, 22, 46)",
+    "ratio": 12.61
+  },
+  {
+    "selector": ".product-availability.is-unavailable",
+    "color": "rgb(231, 189, 136)",
+    "bg": "rgb(33, 22, 46)",
+    "ratio": 9.87
+  },
+  {
+    "selector": ".store-category",
+    "color": "rgb(207, 180, 235)",
+    "bg": "rgb(33, 22, 46)",
+    "ratio": 9.34
+  },
+  {
+    "selector": ".store-product-card summary",
+    "color": "rgb(226, 200, 250)",
+    "bg": "rgb(33, 22, 46)",
+    "ratio": 11.38
+  },
+  {
+    "selector": ".category-chip",
+    "color": "rgb(255, 255, 255)",
+    "bg": "rgb(99, 53, 155)",
+    "ratio": 8.36
+  },
+  {
+    "selector": ".store-footer",
+    "color": "rgb(194, 183, 208)",
+    "bg": "rgb(26, 16, 41)",
+    "ratio": 9.55
+  },
+  {
+    "selector": "hero paragraph against brightest declared gradient stop",
+    "ratio": 5.13
+  }
+]

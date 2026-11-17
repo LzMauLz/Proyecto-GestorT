@@ -8,11 +8,11 @@
 <section class="assistant-shell" data-assistant data-available="{{ 'true' if assistant_available else 'false' }}">
   <div class="assistant-chat">
     <div class="assistant-messages" data-messages role="log" aria-label="Conversación del asistente" aria-live="polite" aria-relevant="additions text">
-      <div class="assistant-message assistant-message-ai"><strong>GestorTech</strong><p>Indica el producto, precio y cantidad. Si falta un dato, te lo preguntaré antes de preparar una propuesta.</p></div>
+      <div class="assistant-message assistant-message-ai"><strong>GestorTech</strong><p>Describe el producto que quieres preparar para tu catálogo: nombre, descripción y precio. También te pediré la cantidad inicial; si todavía no tienes existencias, puedes indicar explícitamente 0. Revisa la propuesta y acepta o cancela. Después de aceptarla podrás adjuntar su imagen y decidir cuándo publicarla.</p></div>
     </div>
     <form class="assistant-composer" data-composer>
       <label for="assistant-message">Tu solicitud</label>
-      <textarea id="assistant-message" data-input rows="3" maxlength="2000" aria-describedby="assistant-help" placeholder="Ej. Prepara 3 cables USB-C a 18.000 pesos cada uno" {% if not assistant_available %}disabled{% endif %}></textarea>
+      <textarea id="assistant-message" data-input rows="3" maxlength="2000" aria-describedby="assistant-help" placeholder="Ej. Prepara para catálogo un cable USB-C reforzado a 18000 pesos, cantidad inicial 3" {% if not assistant_available %}disabled{% endif %}></textarea>
       <p id="assistant-help" class="muted">Envía solo datos de productos. No incluyas nombres, teléfonos ni información de clientes. {% if not assistant_available %}Puedes cargar un archivo o registrar un producto manualmente.{% endif %}</p>
       <div class="assistant-composer-footer"><small>Enter envía · Shift+Enter agrega una línea</small><button class="button primary" type="submit" {% if not assistant_available %}disabled{% endif %}>Preparar solicitud</button></div>
     </form>
@@ -30,7 +30,7 @@
       <a class="subtle-link" href="{{ url_for('web.product_new') }}">Registrar producto manualmente</a>
     </form>
     {% endif %}
-    <div class="assistant-panel assistant-safety"><h2>La decisión es tuya</h2><p>Revisa y corrige las propuestas antes de confirmar. Importar un producto no lo publica en el catálogo.</p>{% if current_user()['role'] == 'technician' %}<p>Tu rol permite consultar inventario. Administración prepara y confirma cambios.</p>{% endif %}</div>
+    <div class="assistant-panel assistant-safety"><h2>De la propuesta a la ficha</h2><ol><li>Revisa nombre, descripción, precio y cantidad.</li><li>Acepta o cancela la propuesta.</li><li>Al aceptar, adjunta la imagen local, revisa la disponibilidad y publica cuando la ficha esté lista.</li></ol><p>Las imágenes se adjuntan en la ficha del producto; el asistente no las recibe ni las envía al proveedor.</p>{% if current_user()['role'] == 'technician' %}<p>Tu rol permite consultar inventario. Administración prepara y confirma cambios.</p>{% endif %}</div>
   </aside>
 </section>
 {% endblock %}

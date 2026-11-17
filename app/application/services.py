@@ -69,7 +69,7 @@ def create_product(db, data, commit=True):
     return cur.lastrowid
 
 
-def update_product(db, product_id, data):
+def update_product(db, product_id, data, commit=True):
     name = str(data.get('name') or '').strip()
     if not name or len(name) > 160:
         raise DomainError('El nombre del producto es obligatorio y admite hasta 160 caracteres.')
@@ -79,11 +79,14 @@ def update_product(db, product_id, data):
     category = str(data.get('category') or '').strip()[:100]
     _ensure_unique_product(db, name, category, product_id)
     try:
-        with db:
-            db.execute('UPDATE products SET name=?,description=?,category=?,price_cents=? WHERE id=?',
-                       (name, str(data.get('description','')).strip()[:2000], category,
-                        to_cents(data.get('price')), product_id))
+        db.execute('UPDATE products SET name=?,description=?,category=?,price_cents=? WHERE id=?',
+                   (name, str(data.get('description','')).strip()[:2000], category,
+                    to_cents(data.get('price')), product_id))
+        if commit:
+            db.commit()
     except sqlite3.IntegrityError as exc:
+        if commit:
+            db.rollback()
         if exc.sqlite_errorname == 'SQLITE_CONSTRAINT_UNIQUE':
             raise DomainError('Ya existe un producto con ese nombre en la misma categoría.', 409) from exc
         raise

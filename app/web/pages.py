@@ -5,13 +5,14 @@ import secrets
 import zipfile
 import sqlite3
 from decimal import Decimal, InvalidOperation
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for, send_file
 from openpyxl import load_workbook
 from werkzeug.security import generate_password_hash
 
 from app.application.services import create_product, create_repair, move_stock, now_iso, update_product, update_repair_status
 from app.application.ai_import import prepare_product_proposal
-from app.application.catalog import public_catalog, set_publication
+from app.application.catalog import public_catalog, set_publication, set_availability
+from app.infrastructure.product_images import prepare_image, store_image, discard_image, image_path
 from app.domain.models import DomainError, REPAIR_STATUSES, TRANSITIONS
 from app.infrastructure.database import get_db
 from app.web.auth import current_user, login_required, roles_required
@@ -142,7 +143,7 @@ def parse_product_upload(upload):
 
 @web_bp.get('/')
 def index():
-    return redirect(url_for('web.dashboard') if current_user() else url_for('web.track'))
+    return redirect(url_for('web.dashboard') if current_user() else url_for('web.catalog'))
 
 @web_bp.get('/dashboard')
 @login_required
@@ -226,6 +227,77 @@ def catalog():
     return response
 
 
+
+def _image_response(image_key):
+    try:
+        path = image_path(image_key)
+    except ValueError:
+        abort(404)
+    if not path.is_file():
+        abort(404)
+    response = send_file(path, mimetype='image/png', conditional=False, max_age=0)
+    response.headers['Cache-Control'] = 'no-store'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
+@web_bp.get('/catalog/images/<image_key>')
+def catalog_image(image_key):
+    if not get_db().execute('SELECT 1 FROM products WHERE image_key=? AND active=1 AND published=1', (image_key,)).fetchone():
+        abort(404)
+    return _image_response(image_key)
+
+
+def _discard_failed_product_image(key):
+    try:
+        discard_image(key)
+    except (OSError, ValueError):
+        current_app.logger.error('No se pudo retirar una imagen no vinculada a un producto.')
+
+
+@web_bp.route('/products/<int:product_id>/image', methods=['GET', 'POST'])
+@roles_required('admin')
+def product_image(product_id):
+    db = get_db()
+    product = db.execute('SELECT image_key FROM products WHERE id=? AND active=1', (product_id,)).fetchone()
+    if not product:
+        abort(404)
+    if request.method == 'GET':
+        return _image_response(product['image_key'])
+    key = None
+    try:
+        content = prepare_image(request.files.get('image'))
+        if content is None:
+            raise ValueError('Selecciona una imagen para el producto.')
+        key = store_image(content)
+        with db:
+            cursor = db.execute('UPDATE products SET image_key=? WHERE id=? AND active=1', (key, product_id))
+            if cursor.rowcount != 1:
+                raise DomainError('Producto no disponible.', 404)
+    except (DomainError, ValueError) as exc:
+        _discard_failed_product_image(key)
+        abort(getattr(exc, 'status_code', 400), description=getattr(exc, 'message', str(exc)))
+    except (OSError, sqlite3.Error):
+        _discard_failed_product_image(key)
+        abort(500)
+    flash('Imagen actualizada. Publicar el producto sigue siendo una decisión independiente.', 'success')
+    return redirect(url_for('web.product_edit', product_id=product_id))
+
+
+@web_bp.post('/products/<int:product_id>/availability')
+@roles_required('admin')
+def product_availability(product_id):
+    value = request.form.get('available')
+    if value not in ('0', '1'):
+        abort(400, description='Selecciona disponible o no disponible.')
+    try:
+        set_availability(get_db(), product_id, value == '1')
+    except DomainError as exc:
+        abort(exc.status_code, description=exc.message)
+    flash('Disponibilidad comercial actualizada.', 'success')
+    return redirect(url_for('web.products'))
+
+
 @web_bp.post('/products/<int:product_id>/publication')
 @roles_required('admin')
 def product_publication(product_id):
@@ -242,26 +314,66 @@ def product_publication(product_id):
 @web_bp.route('/products/new',methods=['GET','POST'])
 @roles_required('admin')
 def product_new():
-    if request.method=='POST':
+    if request.method == 'POST':
+        db = get_db()
+        key = None
         try:
-            data={'name':request.form.get('name'),'description':request.form.get('description'),'category':request.form.get('category'),'price':request.form.get('price'),'stock':request.form.get('stock','0'),'user_id':current_user()['id']}
-            create_product(get_db(),data)
-            flash('Producto guardado.','success'); return redirect(url_for('web.products'))
-        except DomainError as exc: flash(exc.message,'error')
+            available = request.form.get('available', '1')
+            if available not in ('0', '1'):
+                raise ValueError('Selecciona disponible o no disponible.')
+            content = prepare_image(request.files.get('image'))
+            if content is not None:
+                key = store_image(content)
+            data = {'name': request.form.get('name'), 'description': request.form.get('description'), 'category': request.form.get('category'), 'price': request.form.get('price'), 'stock': request.form.get('stock', '0'), 'user_id': current_user()['id']}
+            db.execute('BEGIN IMMEDIATE')
+            product_id = create_product(db, data, commit=False)
+            db.execute('UPDATE products SET available=?,image_key=? WHERE id=?', (int(available), key, product_id))
+            db.commit()
+            flash('Producto guardado. Revisa su ficha antes de publicarlo.', 'success')
+            return redirect(url_for('web.products'))
+        except (DomainError, ValueError) as exc:
+            db.rollback()
+            _discard_failed_product_image(key)
+            flash(getattr(exc, 'message', str(exc)), 'error')
+        except (OSError, sqlite3.Error):
+            db.rollback()
+            _discard_failed_product_image(key)
+            flash('No se pudo guardar el producto y su imagen. Revisa el archivo e inténtalo nuevamente.', 'error')
     return render_template('product_form.html')
+
 
 @web_bp.route('/products/<int:product_id>/edit',methods=['GET','POST'])
 @roles_required('admin')
 def product_edit(product_id):
-    db=get_db(); product=db.execute('SELECT * FROM products WHERE id=? AND active=1',(product_id,)).fetchone()
-    if not product: abort(404)
-    if request.method=='POST':
+    db = get_db()
+    product = db.execute('SELECT * FROM products WHERE id=? AND active=1', (product_id,)).fetchone()
+    if not product:
+        abort(404)
+    if request.method == 'POST':
+        key = None
         try:
-            update_product(db,product_id,{'name':request.form.get('name'),'description':request.form.get('description'),
-                          'category':request.form.get('category'),'price':request.form.get('price')})
-            flash('Producto actualizado.','success'); return redirect(url_for('web.products'))
-        except DomainError as exc: flash(exc.message,'error')
-    return render_template('product_edit.html',product=product)
+            available = request.form.get('available', str(product['available']))
+            if available not in ('0', '1'):
+                raise ValueError('Selecciona disponible o no disponible.')
+            content = prepare_image(request.files.get('image'))
+            if content is not None:
+                key = store_image(content)
+            db.execute('BEGIN IMMEDIATE')
+            update_product(db, product_id, {'name': request.form.get('name'), 'description': request.form.get('description'), 'category': request.form.get('category'), 'price': request.form.get('price')}, commit=False)
+            db.execute('UPDATE products SET available=?,image_key=? WHERE id=?', (int(available), key or product['image_key'], product_id))
+            db.commit()
+            flash('Producto actualizado.', 'success')
+            return redirect(url_for('web.products'))
+        except (DomainError, ValueError) as exc:
+            db.rollback()
+            _discard_failed_product_image(key)
+            flash(getattr(exc, 'message', str(exc)), 'error')
+        except (OSError, sqlite3.Error):
+            db.rollback()
+            _discard_failed_product_image(key)
+            flash('No se pudo guardar la ficha y su imagen. Revisa el archivo e inténtalo nuevamente.', 'error')
+    return render_template('product_edit.html', product=product)
+
 
 @web_bp.post('/products/<int:product_id>/movement')
 @roles_required('admin')
