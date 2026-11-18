@@ -3,7 +3,9 @@
 **Proyecto integrador – Módulo 6**  
 **Sesión 1: Diagnóstico y definición de requisitos**  
 **Repositorio:** [LzMauLz/Proyecto-GestorT](https://github.com/LzMauLz/Proyecto-GestorT)  
-**Rama de trabajo:** `develop`
+**Rama de integración:** `develop`
+
+**Actualización de estado:** 2026-11-15; las capacidades nuevas se describen como propuestas de cambio aún sujetas a revisión, CI e integración.
 
 ## 1. Descripción del proyecto
 
@@ -48,7 +50,7 @@ Como administrador del taller, quiero que cada reparación nueva quede asociada 
 - Dado que un técnico registra una reparación, cuando la guarda, entonces queda asignada a su propio usuario; el backend no acepta una asignación distinta.
 - Dado que falta la asignación o el usuario indicado no es un técnico activo, cuando se intenta guardar la reparación, entonces el sistema rechaza la operación y muestra un mensaje claro.
 
-**Estado:** Implementado y probado localmente para el issue #5; pendiente de validación CI en Python 3.11 e integración.
+**Estado:** Implementado y probado localmente para el issue #5; con CI Python 3.11 aprobado y revisión/merge pendientes.
 
 **Issue relacionada:** [#5 – Corregir bugs de reparaciones e inventario](https://github.com/LzMauLz/Proyecto-GestorT/issues/5).
 
@@ -60,7 +62,7 @@ Como administrador del taller, quiero que GestorTech detecte productos con el mi
 - Dado que el administrador edita un producto, cuando conserva su propio nombre/categoría o utiliza una combinación que no pertenece a otro producto, entonces la actualización se permite; si coincide con otro registro, se rechaza.
 - Dado que llegan dos solicitudes simultáneas para crear o editar un producto hacia la misma combinación normalizada de nombre/categoría, cuando se persisten, entonces la validación de backend y base de datos evita que ambas generen duplicados.
 
-**Estado:** Implementado y probado localmente para el issue #5; pendiente de validación CI en Python 3.11 e integración.
+**Estado:** Implementado y probado localmente para el issue #5; con CI Python 3.11 aprobado y revisión/merge pendientes.
 
 **Issue relacionada:** [#5 – Corregir bugs de reparaciones e inventario](https://github.com/LzMauLz/Proyecto-GestorT/issues/5).
 
@@ -74,7 +76,7 @@ Como administrador del taller, quiero decidir qué productos del inventario se p
 - Dado que un producto se despublica o se da de baja, cuando el cliente consulta el catálogo, entonces ese producto deja de mostrarse sin eliminar el historial interno del inventario.
 - Dado que un producto se importa o se crea mediante IA, cuando termina el registro, entonces no se publica automáticamente; requiere una decisión explícita del administrador.
 
-**Estado:** Pendiente.  
+**Estado:** Implementado en la propuesta del issue #10; publicación explícita, filtrado público y pruebas locales documentados. CI Python 3.11 aprobado; pendiente de revisión/merge.
 **Issue relacionada:** [#10 – Implementar catálogo de productos y repuestos para clientes](https://github.com/LzMauLz/Proyecto-GestorT/issues/10).
 
 ### HU-04: Consultar el catálogo de productos y repuestos
@@ -85,10 +87,10 @@ Como cliente, quiero consultar los productos y repuestos que ofrece el taller, p
 - Dado que un producto no está publicado, está inactivo o fue retirado, cuando el cliente consulta el catálogo, entonces no recibe información de ese producto.
 - Dado que el cliente consulta el catálogo, cuando se presenta la información, entonces no se exponen cantidades exactas de inventario, costos, movimientos, proveedores ni datos administrativos.
 
-**Estado:** Pendiente.  
+**Estado:** Implementado en la propuesta del issue #10; publicación explícita, filtrado público y pruebas locales documentados. CI Python 3.11 aprobado; pendiente de revisión/merge.
 **Issue relacionada:** [#10 – Implementar catálogo de productos y repuestos para clientes](https://github.com/LzMauLz/Proyecto-GestorT/issues/10).
 
-**Decisión por confirmar:** el repositorio actual dispone de roles de administrador y técnico y de una consulta pública de seguimiento, pero no documenta cuentas autenticadas de clientes. Se debe decidir si el catálogo será una página pública sin inicio de sesión o si formará parte de un futuro panel autenticado. No se crearán cuentas de cliente sin aprobar primero ese alcance.
+**Decisión confirmada por el usuario (2026-11-15):** catálogo público sin inicio de sesión. No se añaden cuentas de cliente; solo se muestran productos activos y publicados y campos comerciales aprobados.
 
 ### HU-05: Preparar operaciones de inventario mediante instrucciones naturales
 
@@ -98,7 +100,7 @@ Como administrador del taller, quiero conversar con el asistente de GestorTech u
 - Dado que el mensaje no contiene datos suficientes o presenta ambigüedades, cuando el asistente prepara la operación, entonces pregunta o marca los campos pendientes en lugar de inventarlos.
 - Dado que el asistente prepara una propuesta, cuando la presenta, entonces el administrador puede revisarla, editarla, confirmarla o cancelarla; no se guarda ningún cambio sin confirmación.
 
-**Estado:** Pendiente. La conversación y las propuestas básicas ya existen; falta completar y validar la comprensión flexible y los flujos requeridos para esta entrega.  
+**Estado:** Implementado en la propuesta del issue #7: faltantes/ambigüedad producen aclaración, fichas editables y validación/confirmación de backend. Probado localmente con proveedor simulado; comprensión real de Groq pendiente de aprobación y validación externa.
 **Issue relacionada:** [#7 – Mejorar el asistente IA para trabajar con lenguaje natural y archivos de inventario](https://github.com/LzMauLz/Proyecto-GestorT/issues/7).
 
 ### HU-06: Importar inventario desde CSV/XLSX usando el asistente
@@ -109,7 +111,7 @@ Como encargado del inventario, quiero adjuntar un archivo CSV o XLSX y explicar 
 - Dado que el archivo contiene valores ausentes, ambiguos o inválidos, cuando se genera la previsualización, entonces esos datos quedan señalados para revisión y no se completan con valores inventados.
 - Dado que el usuario revisa la previsualización, cuando confirma la importación, entonces el backend vuelve a validar los datos y persiste únicamente las filas aprobadas; si la IA falla, se conserva la alternativa manual.
 
-**Estado:** Pendiente. El importador CSV/XLSX existe como flujo separado; falta integrarlo en la conversación del asistente.  
+**Estado:** Integrado en la propuesta del issue #7: carga local desde el asistente, selección de campos y filtro de palabras clave, previsualización editable y aprobación. No se envía el archivo completo al proveedor ni se inventan campos ausentes.
 **Issue relacionada:** [#7 – Mejorar el asistente IA para trabajar con lenguaje natural y archivos de inventario](https://github.com/LzMauLz/Proyecto-GestorT/issues/7).
 
 ### HU-07: Consultar el avance de una reparación
@@ -131,7 +133,7 @@ Como administrador o técnico del taller, quiero que GestorTech habilite únicam
 - Dado que un técnico consulta o modifica reparaciones, cuando realiza la operación, entonces solo puede acceder a las órdenes que tiene asignadas y a las funciones permitidas para su rol.
 - Dado que un usuario intenta ejecutar una operación sin autorización o sin la protección CSRF requerida, cuando envía la solicitud, entonces el backend la rechaza sin modificar los datos.
 
-**Estado:** Hecha en su base funcional según la documentación y pruebas existentes; el endurecimiento adicional y las pruebas de seguridad siguen pendientes.  
+**Estado:** Base funcional conservada y controles/pruebas locales ampliados en la propuesta #12. La validación integrada y las condiciones de producción siguen el informe de seguridad; no se afirma cumplimiento de un estándar.
 **Issues relacionadas:** [#12 – Auditar, reforzar y probar la seguridad](https://github.com/LzMauLz/Proyecto-GestorT/issues/12) y [#15 – Pruebas automatizadas e integración continua](https://github.com/LzMauLz/Proyecto-GestorT/issues/15).
 
 ## 4. Requisitos no funcionales
@@ -180,14 +182,14 @@ Los issues se organizaron por bloques de trabajo. Cuando varias tareas correspon
 - **Could:** mejora deseable si queda tiempo después de terminar Must y Should.
 - **Won't:** se registra, pero queda fuera del alcance de esta entrega.
 
-## 7. Decisiones funcionales pendientes de confirmación
+## 7. Decisiones confirmadas y pendientes
 
-Antes de implementar los cambios relacionados, deben quedar acordadas estas decisiones:
+Las decisiones confirmadas se incorporan a las propuestas; las restantes requieren evidencia o aprobación específica:
 
-- **Catálogo del cliente:** determinar si será público sin inicio de sesión o si se integrará en un panel autenticado. El repositorio actual no contiene un rol de cliente.
-- **Unicidad de productos:** confirmar si el nombre normalizado será único globalmente o si se permitirá repetirlo al cambiar marca/categoría.
+- **Catálogo del cliente — confirmado:** público sin inicio de sesión, sin crear rol/cuentas de cliente.
+- **Unicidad de productos — confirmado:** combinación de nombre y categoría normalizados; se permite el mismo nombre en categorías distintas.
 - **Disponibilidad en catálogo:** definir si se mostrará una indicación general de disponibilidad. No se recomienda exponer existencias exactas.
-- **Campos obligatorios de inventario:** confirmar qué datos deben ser obligatorios para registrar un producto y cómo se manejarán valores ausentes.
+- **Propuestas del asistente — implementado según HU-05/HU-06:** exigir nombre, precio y cantidad explícitos; pedir aclaración por faltantes o precios ambiguos, sin completar ceros por omisión.
 - **Integración IA:** mantener Groq opcional, la alternativa manual y la aprobación explícita antes de persistir cambios.
 - **Motor de base de datos:** comparar PostgreSQL y MySQL considerando compatibilidad, concurrencia, transacciones, despliegue, mantenimiento, respaldos y costos. Registrar la opción seleccionada en un ADR. La migración deberá conservar los datos y restricciones, contar con respaldo y reversión, y superar pruebas antes de retirar SQLite.
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+PRODUCT_CATEGORIES = ('Accesorio', 'Repuesto', 'Insumo')
+
 REPAIR_STATUSES = (
     'Recibido',
     'En diagnóstico',

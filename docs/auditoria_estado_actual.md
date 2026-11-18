@@ -1,3 +1,30 @@
+# Auditoría consolidada del estado de GestorTech
+
+**Fecha de consolidación:** 2026-11-15. Alcance: propuestas de los issues #5, #10, #12, #7, #14 y #15 integradas localmente. No implica merge, despliegue o aceptación de riesgos de producción.
+
+## Estado verificable de las propuestas
+
+- Integridad: técnico activo obligatorio, autoasignación y unicidad por nombre/categoría normalizados protegidas por SQLite. Migración con preflight, sin reasignaciones ni deduplicación automática: [#5](issues/5-integridad.md).
+- Catálogo público aprobado: publicación explícita, altas/importaciones ocultas y datos comerciales minimizados: [#10](issues/10-catalogo.md).
+- Seguridad: rate limiting SQLite local, CSRF/roles, propuestas atómicas y auditoría vinculada, rechazo de contenido activo de XLSX y errores externos sanitizados. Matriz de severidad, pruebas y límites: [#12](issues/12-seguridad.md).
+- Asistente: aclaración de faltantes/ambigüedad, edición y revalidación, carga local CSV/XLSX con continuidad manual: [#7](issues/7-asistente.md).
+- Interfaz: revisión real Edge headless en móvil/tablet/escritorio sobre datos ficticios, navegación por rol, foco/errores, contraste seleccionado y flujos integrados de asistente/reparación: [#14](issues/14-interfaz.md).
+- La suite conjunta local pasó **131 pruebas y 77 subtests en 65,75 s**; [CI Python 3.11](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059) pasó para el commit **0b4f44a**. Evidencia y límites en [#15](issues/15-pruebas-ci.md). Los nuevos PR y el movimiento de Projects aún no se han completado; no se ha hecho merge.
+
+Las ejecuciones actuales usan datos sintéticos, nunca la base del taller. Python 3.12.14 fue el runtime local complementario porque el ejecutable 3.11 del entorno virtual original no está disponible; el stack objetivo y CI continúan en Python 3.11. Los conteos observados por fase están en sus informes, sin sumarlos ni tratarlos como un conteo integrado.
+
+## Límites que permanecen abiertos
+
+No hubo nuevas llamadas a Groq ni lectura de credenciales. La activación, modelo y clave actuales no están auditados; los ensayos con dobles comprueban límites de confianza y contratos, no calidad semántica del proveedor real. No se verificaron lectores de pantalla/dispositivos físicos, todos los pares de contraste ni todos los formatos de archivos posibles.
+
+La exposición a Internet sigue bloqueada: faltan decisión y validación de TLS/proxy, servidor WSGI de producción, política de backups/retención/cifrado/restauración y análisis de dependencias/secretos históricos. El snapshot/restauración SQLite se verificó sobre datos ficticios; no configura una política productiva. Estos pendientes no se registran como riesgos aceptados.
+
+## Archivo histórico — informe de 2026-11-02
+
+El texto siguiente se conserva como antecedente de Misiones 08–12. Sus afirmaciones sobre 33 pruebas, disponibilidad de Docker, configuración de Groq y pendientes de interfaz pertenecen a esa etapa; contiene contradicciones históricas y no sustituye el estado consolidado de arriba ni verifica secretos presentes. Se preserva para mantener trazabilidad, no como certificación vigente.
+
+---
+
 # Auditoría del estado actual de GestorTech
 
 **Fecha:** 2026-11-02

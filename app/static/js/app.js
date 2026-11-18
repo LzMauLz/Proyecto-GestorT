@@ -6,90 +6,166 @@ document.addEventListener('submit', (event) => {
 document.addEventListener('DOMContentLoaded', () => {
   const shell = document.querySelector('[data-assistant]');
   if (!shell) return;
-  const form = shell.querySelector('[data-composer]');
+  const composer = shell.querySelector('[data-composer]');
   const input = shell.querySelector('[data-input]');
   const messages = shell.querySelector('[data-messages]');
   const history = [];
+  const categories = JSON.parse(shell.dataset.categories);
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  let sending = false;
+  const readResponse = async (response) => {
+    const data = (response.headers.get('content-type') || '').includes('application/json')
+      ? await response.json() : {error: 'No se pudo completar la solicitud. Intenta nuevamente.'};
+    if (!response.ok) throw new Error(data.error || 'No se pudo completar la solicitud.');
+    return data;
+  };
   const addMessage = (role, text, proposal) => {
     const item = document.createElement('div');
     item.className = `assistant-message assistant-message-${role}`;
     const title = document.createElement('strong');
-    title.textContent = role === 'user' ? 'Tú' : 'GestorTech IA';
+    title.textContent = role === 'user' ? 'Tú' : role === 'error' ? 'Revisa la solicitud' : 'GestorTech';
     const paragraph = document.createElement('p');
     paragraph.textContent = text;
     item.append(title, paragraph);
-    if (proposal) {
-      const box = document.createElement('div');
-      box.className = 'assistant-proposal';
-      box.textContent = JSON.stringify(proposal, null, 2);
-      if (proposal.id) {
-        const actions = document.createElement('div');
-        actions.className = 'button-row';
-        const confirm = document.createElement('button');
-        confirm.className = 'button primary small';
-        confirm.type = 'button';
-        confirm.textContent = Array.isArray(proposal.products)
-          ? `Confirmar ${proposal.products.length} productos`
-          : 'Confirmar propuesta';
-        confirm.dataset.proposal = proposal.id;
-        const cancel = document.createElement('button');
-        cancel.className = 'button quiet small';
-        cancel.type = 'button';
-        cancel.textContent = 'Cancelar';
-        cancel.dataset.cancelProposal = proposal.id;
-        actions.append(confirm, cancel);
-        box.append(actions);
-      }
-      item.append(box);
+    if (proposal?.id) {
+      const review = document.createElement('form');
+      review.className = 'assistant-proposal';
+      const products = proposal.operation === 'product_create';
+      const entries = products ? (proposal.products || [proposal]) : [proposal];
+      const groups = [];
+      entries.forEach((entry, index) => {
+        const group = document.createElement('fieldset');
+        const legend = document.createElement('legend');
+        legend.textContent = products ? `Producto ${index + 1}` : 'Movimiento de inventario';
+        group.append(legend);
+        const fields = products ? [['name','Nombre'],['description','Descripción'],['category','Categoría'],['price','Precio COP'],['stock','Cantidad']]
+          : proposal.operation === 'stock_move' ? [['product_id','ID del producto'],['kind','Tipo'],['quantity','Cantidad'],['note','Nota del movimiento']]
+          : [['name','Nombre'],['description','Descripción'],['category','Categoría']];
+        fields.forEach(([key, labelText]) => {
+          const label = document.createElement('label');
+          label.textContent = labelText;
+          const isCategory = key === 'category';
+          const control = document.createElement(key === 'kind' || isCategory ? 'select' : key === 'description' || key === 'note' ? 'textarea' : 'input');
+          control.name = key;
+          if (key === 'kind') ['entrada','salida'].forEach(value => {
+            const option = document.createElement('option'); option.value = value; option.textContent = value === 'entrada' ? 'Entrada' : 'Salida'; control.append(option);
+          });
+          if (isCategory) {
+            const choices = new Set(['', ...categories, entry.category || '']);
+            choices.forEach(value => control.add(new Option(value || 'Sin categoría', value)));
+          }
+          control.value = entry[key] ?? '';
+          if (['name','price','stock','product_id','kind','quantity'].includes(key)) control.required = true;
+          if (['stock','quantity','product_id'].includes(key)) { control.type = 'number'; control.step = '1'; control.min = key === 'stock' ? '0' : '1'; control.max = '2147483647'; }
+          if (key === 'price') control.inputMode = 'decimal';
+          if (key === 'name') control.maxLength = 160;
+          if (key === 'description') control.maxLength = 2000;
+          if (key === 'note') control.maxLength = 500;
+          label.append(control); group.append(label);
+        });
+        groups.push(group); review.append(group);
+      });
+      const status = document.createElement('p'); status.setAttribute('role','status');
+      const actions = document.createElement('div'); actions.className = 'button-row';
+      const confirm = document.createElement('button'); confirm.type = 'submit'; confirm.className = 'button primary'; confirm.textContent = products ? `Confirmar ${entries.length} producto${entries.length > 1 ? 's' : ''}` : 'Confirmar propuesta';
+      const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'button quiet'; cancel.textContent = 'Cancelar propuesta';
+      actions.append(confirm, cancel); review.append(status, actions); item.append(review);
+      const resolve = async (approve) => {
+        confirm.disabled = cancel.disabled = true; review.setAttribute('aria-busy','true'); status.textContent = 'Guardando tu decisión…';
+        const values = groups.map(group => Object.fromEntries(Array.from(group.querySelectorAll('[name]')).map(control => [control.name, control.value])));
+        const edits = products && proposal.products ? {products: values} : values[0];
+        try {
+          const options = {method:'POST', headers:{'X-CSRF-Token':csrf}};
+          if (approve) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify({correcciones:edits}); }
+          const result = await readResponse(await fetch(`/api/asistente/propuestas/${encodeURIComponent(proposal.id)}/${approve ? 'confirmar' : 'cancelar'}`, options));
+          status.textContent = approve ? 'Operación confirmada. Los datos se guardaron.' : 'Propuesta cancelada. No se cambió el inventario.';
+          groups.forEach(group => { group.disabled = true; });
+          if (approve && products) {
+            status.textContent = 'Productos guardados sin publicar. Ahora adjunta una imagen local y revisa su disponibilidad antes de publicarlos.';
+            const nextSteps = document.createElement('div');
+            nextSteps.className = 'button-row';
+            const ids = result.product_ids || [result.product_id];
+            ids.filter(id => Number.isSafeInteger(id) && id > 0).forEach((id, index) => {
+              const link = document.createElement('a');
+              link.className = 'button secondary';
+              link.href = `/products/${id}/edit`;
+              link.textContent = `Adjuntar imagen y revisar: ${values[index]?.name || 'producto ' + id}`;
+              nextSteps.append(link);
+            });
+            review.append(nextSteps);
+            nextSteps.querySelector('a')?.focus();
+          }
+        } catch (error) {
+          status.textContent = error.message || 'No se pudo guardar la decisión. Puedes reintentar.';
+          confirm.disabled = cancel.disabled = false;
+        } finally { review.removeAttribute('aria-busy'); }
+      };
+      review.addEventListener('submit', event => { event.preventDefault(); resolve(true); });
+      cancel.addEventListener('click', () => resolve(false));
     }
-    messages.append(item);
-    messages.scrollTop = messages.scrollHeight;
+    messages.append(item); messages.scrollTop = messages.scrollHeight;
   };
   const send = async () => {
     const text = input.value.trim();
-    if (!text) return;
-    input.value = '';
+    if (!text || sending) return;
+    sending = true;
+    const button = composer.querySelector('button[type="submit"]'); button.disabled = true; composer.setAttribute('aria-busy','true');
     addMessage('user', text);
-    history.push({role: 'user', content: text});
-    const pending = document.createElement('p');
-    pending.className = 'assistant-pending';
-    pending.textContent = 'Procesando solicitud…';
-    messages.append(pending);
+    const pending = document.createElement('p'); pending.className = 'assistant-pending'; pending.textContent = 'Preparando respuesta…'; messages.append(pending);
     try {
-      const response = await fetch('/api/asistente/mensaje', {
-        method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
-        body: JSON.stringify({mensaje: text, historial: history.slice(-10)})
-      });
-      const contentType = response.headers.get('content-type') || '';
-      const data = contentType.includes('application/json')
-        ? await response.json()
-        : {error: 'El servidor devolvió una respuesta inesperada. Revisa la terminal de GestorTech.'};
-      pending.remove();
-      if (!response.ok) throw new Error(data.error || 'El asistente no pudo responder.');
-      addMessage('ai', data.message, data.proposal);
-      history.push({role: 'assistant', content: data.message});
-    } catch (error) {
-      pending.remove();
-      addMessage('error', error.message);
-    }
+      const data = await readResponse(await fetch('/api/asistente/mensaje', {
+        method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},
+        body:JSON.stringify({mensaje:text,historial:history.slice(-10)})
+      }));
+      input.value = ''; pending.remove(); addMessage('ai', data.message, data.proposal);
+      history.push({role:'user',content:text},{role:'assistant',content:data.message});
+    } catch (error) { pending.remove(); addMessage('error', (error.message || 'No se pudo responder.') + ' Puedes usar la revisión manual del archivo o registrar el producto desde Inventario.'); }
+    finally { sending = false; button.disabled = false; composer.removeAttribute('aria-busy'); input.focus(); }
   };
-  form.addEventListener('submit', (event) => { event.preventDefault(); send(); });
-  input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); send(); }
-  });
-  messages.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-proposal], [data-cancel-proposal]');
-    if (!button) return;
-    const action = button.dataset.proposal ? 'confirmar' : 'cancelar';
-    button.disabled = true;
-    const response = await fetch(`/api/asistente/propuestas/${button.dataset.proposal || button.dataset.cancelProposal}/${action}`, {
-      method: 'POST', headers: {'X-CSRF-Token': csrf}
+  composer.addEventListener('submit', event => { event.preventDefault(); send(); });
+  composer.querySelectorAll('[data-assistant-example]').forEach(example => {
+    example.addEventListener('click', () => {
+      input.value = example.dataset.assistantExample;
+      input.focus();
     });
-    const contentType = response.headers.get('content-type') || '';
-    const data = contentType.includes('application/json')
-      ? await response.json()
-      : {error: 'El servidor devolvió una respuesta inesperada. Revisa la terminal de GestorTech.'};
-    addMessage(response.ok ? 'ai' : 'error', response.ok ? (action === 'confirmar' ? 'Operación confirmada y registrada.' : 'Propuesta cancelada.') : (data.error || 'No se pudo resolver la propuesta.'));
+  });
+  input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); send(); } });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-suggest-description]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const form = button.form;
+      const {name, category, description} = form.elements;
+      const status = form.querySelector('[data-description-status]');
+      if (!name.value.trim()) {
+        status.textContent = 'Escribe el nombre del producto primero.';
+        name.focus();
+        return;
+      }
+      const fields = {name: name.value, category: category.value, description: description.value};
+      button.disabled = true;
+      status.textContent = 'Redactando descripción…';
+      try {
+        const response = await fetch(button.dataset.suggestDescription, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRF-Token': form.elements._csrf_token.value},
+          body: JSON.stringify(fields)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        if (Object.keys(fields).some(key => form.elements[key].value !== fields[key])) {
+          status.textContent = 'Cambiaste los datos mientras se redactaba. Pulsa el botón para usar la versión actual.';
+          return;
+        }
+        description.value = data.description;
+        status.textContent = 'Descripción sugerida. Revísala antes de guardar.';
+        description.focus();
+      } catch (error) {
+        status.textContent = error instanceof SyntaxError ? 'No se pudo redactar. Recarga la página o escribe la descripción.' : error.message || 'No se pudo redactar la descripción.';
+      } finally {
+        button.disabled = false;
+      }
+    });
   });
 });

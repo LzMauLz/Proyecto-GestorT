@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS products (
     category TEXT NOT NULL DEFAULT '',
     price_cents INTEGER NOT NULL CHECK(price_cents >= 0),
     stock INTEGER NOT NULL DEFAULT 0 CHECK(stock >= 0),
+    published INTEGER NOT NULL DEFAULT 0 CHECK(published IN (0,1)),
+    available INTEGER NOT NULL DEFAULT 1 CHECK(available IN (0,1)),
+    image_key TEXT,
     active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)),
     created_at TEXT NOT NULL
 );
@@ -92,6 +95,7 @@ CREATE TABLE IF NOT EXISTS ai_proposals (
 
 CREATE TABLE IF NOT EXISTS ai_operations (
     id INTEGER PRIMARY KEY,
+    proposal_id TEXT REFERENCES ai_proposals(id),
     user_id INTEGER NOT NULL REFERENCES users(id),
     operation TEXT NOT NULL,
     product_id INTEGER REFERENCES products(id),
@@ -102,3 +106,9 @@ CREATE TABLE IF NOT EXISTS ai_operations (
 
 CREATE INDEX IF NOT EXISTS idx_ai_proposals_user ON ai_proposals(user_id, status, created_at);
 CREATE INDEX IF NOT EXISTS idx_ai_operations_user ON ai_operations(user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS request_limits (
+    bucket TEXT PRIMARY KEY,
+    hits INTEGER NOT NULL,
+    reset_at INTEGER NOT NULL
+);

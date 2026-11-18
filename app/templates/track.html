@@ -1,1 +1,34 @@
-{% extends 'base.html' %}{% block title %}Consultar reparación · GestorTech{% endblock %}{% block content %}<section class="track-layout"><div class="track-intro"><img src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="Mascota de GestorTech" class="track-logo"><p class="eyebrow">Consulta para clientes</p><h1>Tu equipo, en seguimiento.</h1><p>Ingresa el código que te entregó el taller para consultar el último avance publicado.</p><div class="track-line" aria-hidden="true"><span></span><span></span><span></span><span></span></div><p class="privacy-note">La consulta muestra únicamente avances autorizados por el taller. No se solicitan datos personales.</p></div><div class="track-side"><form class="track-form" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><label for="code">Código de seguimiento</label><div class="track-input"><input id="code" name="code" autocomplete="off" required maxlength="40" placeholder="GT-…"><button class="button primary" type="submit">Consultar</button></div><small>Revisa las letras y números del comprobante.</small></form>{% if error %}<div class="result-card error-card" role="status"><h2>No encontramos esa reparación</h2><p>{{ error }}</p></div>{% endif %}{% if result %}{% set flow = ['Recibido','En diagnóstico','Esperando aprobación','En reparación','Listo para entregar','Entregado'] %}{% set active_index = flow.index(result.status) if result.status in flow else -1 %}<section class="result-card" aria-live="polite"><p class="eyebrow">Código de seguimiento</p><p class="tracking-code">{{ result.tracking_code }}</p><h2>Estado de tu reparación</h2><div class="current-status"><span>Estado actual</span><strong class="status-chip status-{{ {'Recibido':'received','En diagnóstico':'diagnosis','Esperando aprobación':'approval','En reparación':'repairing','Listo para entregar':'ready','Entregado':'delivered','Cancelado':'cancelled'}.get(result.status, 'other') }}">{{ result.status }}</strong></div>{% if active_index >= 0 %}<ol class="repair-progress" aria-label="Progreso de reparación">{% for step in flow %}<li class="{% if loop.index0 < active_index %}done{% elif loop.index0 == active_index %}current{% endif %}"><span>{{ step }}</span></li>{% endfor %}</ol>{% else %}<p class="callout">Esta reparación fue cancelada.</p>{% endif %}<p class="muted">Última actualización: <time>{{ result.updated_at }}</time></p><h3>Avances publicados</h3>{% if result.history %}<ol class="public-timeline">{% for item in result.history %}<li><strong>{{ item.status }}</strong><time>{{ item.created_at }}</time>{% if item.public_note %}<p>{{ item.public_note }}</p>{% endif %}</li>{% endfor %}</ol>{% else %}<p>Aún no hay avances publicados.</p>{% endif %}</section>{% endif %}</div></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Consultar reparación · GestorTech{% endblock %}
+{% block content %}
+<section class="tracking-page" aria-labelledby="tracking-title">
+  <header class="tracking-header">
+    <img src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="" width="84" height="84">
+    <div><p class="eyebrow">Servicio técnico</p><h1 id="tracking-title">Consulta tu reparación</h1><p>Ingresa el código de tu comprobante para ver el estado y los avances publicados por el taller.</p></div>
+  </header>
+  <form class="track-form" method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label for="code">Código de seguimiento</label>
+    <div class="track-input">
+      <input id="code" name="code" autocomplete="off" autocapitalize="characters" spellcheck="false" required maxlength="40" placeholder="GT-…" value="{{ request.form.get('code','') }}" aria-describedby="code-help{% if error %} code-error{% endif %}" {% if error %}aria-invalid="true"{% endif %}>
+      <button class="button primary" type="submit">Ver estado</button>
+    </div>
+    <small id="code-help">Busca el código que empieza por GT- en tu comprobante. No necesitas iniciar sesión.</small>
+    {% if error %}<p class="tracking-error" role="alert" id="code-error" data-tracking-feedback tabindex="-1">{{ error }}</p>{% endif %}
+  </form>
+  {% if result %}
+  <section class="result-card tracking-result" aria-labelledby="tracking-result" tabindex="-1" data-tracking-feedback>
+    <div class="tracking-summary">
+      <div><p class="eyebrow">Estado actual</p><h2 id="tracking-result">{{ result.status }}</h2></div>
+      <p class="tracking-result-code">Código de seguimiento <strong class="tracking-code">{{ result.tracking_code }}</strong></p>
+    </div>
+    <h3>Avances publicados</h3>
+    {% if result.history %}
+    <ol class="public-timeline">{% for item in result.history|reverse %}
+      <li><strong>{{ item.status }}</strong><time datetime="{{ item.created_at }}">{{ item.created_at[:10] }}</time>{% if item.public_note %}<p>{{ item.public_note }}</p>{% endif %}</li>
+    {% endfor %}</ol>
+    {% else %}<p class="muted">Aún no hay avances publicados.</p>{% endif %}
+  </section>
+  {% endif %}
+</section>
+{% endblock %}
