@@ -69,6 +69,8 @@ guardes esas variables en archivos versionados.
 
 La configuración está en `railway.json`. Conecta el repositorio y despliega desde `develop`. Monta un volumen en `/app/instance` y configura las variables, el dominio y el primer usuario según `docs/despliegue_railway.md`. Railway asigna `PORT`; Gunicorn sirve Flask y `/health` comprueba que la aplicación pueda consultar SQLite.
 
+Para una demo sin costo con la cuenta Beginner de PythonAnywhere, consulta [docs/despliegue_pythonanywhere.md](docs/despliegue_pythonanywhere.md). La cuenta gratuita tiene límites de espacio y vencimiento mensual.
+
 ## Funcionalidades
 
 El catálogo público está en `/catalog`. Administración controla su publicación desde Inventario; los productos nuevos e importados permanecen ocultos hasta publicarlos. Solo se muestran campos comerciales, sin existencias exactas ni movimientos. Consulta [la decisión y verificación del catálogo](docs/issues/10-catalogo.md).
