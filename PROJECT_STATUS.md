@@ -17,13 +17,15 @@
 - Adaptador Groq opt-in mediante `.env`. Las peticiones están limitadas a 50 filas y 128 KiB; las respuestas a 256 KiB; los prompts tratan campos importados como datos no confiables y existe fallback manual sin reintentos.
 - Asistente administrativo IA implementado con chat, consultas factuales de inventario, propuestas de producto/movimiento, confirmación/cancelación y registro de aprobación en SQLite. Técnicos quedan limitados a consultas. Groq fue probado localmente con una credencial fuera del repositorio.
 - El chat del asistente acepta propuestas de un producto o de hasta 20 productos por solicitud; la confirmación administrativa crea el lote de forma atómica.
-- Suite `unittest`: 33 pruebas aprobadas en última ejecución; `compileall` aprobado.
+- Suite ejecutada por el usuario con Pytest: 40 pruebas y 40 subtests aprobados. La mutación temporal en `_to_integer` fue detectada y pasó tras restaurar el código. En la revisión de una sugerencia de prueba IA se corrigió la expectativa HTTP 422 a HTTP 400 según el contrato Flask; la prueba corregida pasó.
+- Workflow `.github/workflows/ci.yml` ejecutado correctamente en `push` (run [43757548979](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43757548979)) y `pull_request` (run [43768715477](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43768715477)). El PR [#24](https://github.com/LzMauLz/Proyecto-GestorT/pull/24) está abierto para revisión y no se ha fusionado.
 - Dockerfile y Compose verificados: usuario `10001`, filesystem raíz read-only, volumen persistente SQLite y credenciales Groq solo como variables de ejecución. La imagen se construyó, el contenedor inició, `http://127.0.0.1:8000` respondió `HTTP 200` y una marca SQLite sobrevivió al reinicio del contenedor.
-- Repositorio GitHub publicado en `LzMauLz/Proyecto-GestorT`, con ramas `main` y `develop`, commits descriptivos y Pull Requests #1, #2 y #3 fusionados.
+- Repositorio GitHub publicado en `LzMauLz/Proyecto-GestorT`, con `main` como rama principal y `develop` para integración. Los Pull Requests #1–#4, #22 y #23 están fusionados.
 
 ## Pendiente
 
-- La validación principal se ejecutó con `unittest`; Pytest está declarado en `requirements.txt`, pero no se utilizó para el resultado registrado.
+- La suite local y la comprobación de mutación se registran en [docs/evidencias.md](docs/evidencias.md); el CI pasó en ambos eventos. El PR #24 queda pendiente de revisión y decisión de merge.
+- El registro acumulativo de resultados y capturas está en [docs/evidencias.md](docs/evidencias.md).
 - Dockerfile/Compose: build, arranque, puerto, creación del volumen y persistencia SQLite tras reinicio verificados. No queda pendiente operativo de Docker para el MVP.
 - Groq está configurado y habilitado en el `.env` local (`GROQ_ENABLED=true`, modelo `openai/gpt-oss-20b`, timeout de 12 segundos). La API key está presente y fue validada con una solicitud real; permanece fuera de Git.
 - Falta mitigación de intentos repetidos en login/seguimiento y revisión de seguridad antes de desplegar en Internet.
