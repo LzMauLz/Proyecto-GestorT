@@ -1,2 +1,45 @@
-{% extends 'base.html' %}{% block title %}Inventario · GestorTech{% endblock %}{% block content %}<section class="page-heading"><div><p class="eyebrow">Repuestos y accesorios</p><h1>Inventario</h1><p>Las existencias se actualizan con movimientos trazables.</p></div>{% if current_user()['role']=='admin' %}<div class="button-row"><a class="button secondary" href="{{ url_for('web.import_form') }}">Importar archivo</a><a class="button primary" href="{{ url_for('web.product_new') }}">Añadir producto</a></div>{% endif %}</section>{% if products %}<div class="table-wrap"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Existencias</th>{% if current_user()['role']=='admin' %}<th>Movimiento</th><th>Acciones</th>{% endif %}</tr></thead><tbody>{% for product in products %}<tr><td><strong>{{ product.name }}</strong><small>{{ product.description }}</small></td><td>{{ product.category or '—' }}</td><td>${{ product.price_cents // 100 }}.{{ '%02d'|format(product.price_cents % 100) }}</td><td><span class="stock-count {% if product.stock<=2 %}low{% endif %}">{{ product.stock }}</span></td>{% if current_user()['role']=='admin' %}<td><form class="inline-form" method="post" action="{{ url_for('web.product_movement',product_id=product.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><select name="kind" aria-label="Tipo de movimiento"><option value="entrada">Entrada</option><option value="salida">Salida</option></select><input name="quantity" type="number" min="1" required aria-label="Cantidad"><button class="button small secondary" type="submit">Aplicar</button></form></td><td><a class="row-link" href="{{ url_for('web.product_edit',product_id=product.id) }}">Editar</a> · <form method="post" action="{{ url_for('web.product_retire',product_id=product.id) }}" data-confirm="¿Dar de baja este producto? El historial se conserva."><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="text-danger" type="submit">Dar de baja</button></form></td>{% endif %}</tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">+</span><h2>Inventario vacío</h2><p>Añade un producto o prepara una importación para revisión.</p>{% if current_user()['role']=='admin' %}<div class="button-row centered"><a class="button primary" href="{{ url_for('web.product_new') }}">Añadir producto</a><a class="button secondary" href="{{ url_for('web.import_form') }}">Importar archivo</a></div>{% endif %}</div>{% endif %}{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Inventario · GestorTech{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><h1>Inventario</h1><p>Consulta productos y registra movimientos de existencias.</p></div>
+  {% if current_user()['role'] == 'admin' %}
+  <div class="button-row"><a class="button secondary" href="{{ url_for('web.import_form') }}">Importar archivo</a><a class="button primary" href="{{ url_for('web.product_new') }}">Añadir producto</a></div>
+  {% endif %}
+</section>
+<form class="form-panel inventory-search" method="get" action="{{ url_for('web.products') }}" role="search" aria-label="Buscar en el inventario">
+  <div><label for="inventory-query">Nombre del producto</label><input id="inventory-query" name="q" type="search" maxlength="160" value="{{ query }}" placeholder="Ej. cable USB"></div>
+  <div><label for="inventory-category">Categoría</label><select id="inventory-category" name="category">
+    <option value="">Todas las categorías</option>
+    {% for option in product_categories %}<option value="{{ option }}" {% if category == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+  </select></div>
+  <div class="button-row"><button class="button primary" type="submit">Buscar</button>{% if query or category %}<a class="button quiet" href="{{ url_for('web.products') }}">Limpiar filtros</a>{% endif %}</div>
+</form>
+{% if products %}
+<p class="inventory-results">{% if total == 1 %}Mostrando 1 producto{% else %}Mostrando {{ offset + 1 }}–{{ offset + products|length }} de {{ total }} productos{% endif %}</p>
+<p class="table-hint">La tabla se puede desplazar horizontalmente. Con teclado, enfócala y usa las flechas.</p><div class="table-wrap" role="region" aria-label="Inventario y movimientos" tabindex="0"><table><thead><tr><th scope="col">Producto</th><th scope="col">Categoría</th><th scope="col">Precio</th><th scope="col">Existencias</th>{% if current_user()['role']=='admin' %}<th scope="col">Movimiento</th><th scope="col">Acciones</th>{% endif %}</tr></thead><tbody>{% for product in products %}<tr><td><strong>{{ product.name }}</strong><small>{{ product.description }}</small></td><td>{{ product.category or '—' }}</td><td>${{ product.price_cents // 100 }}.{{ '%02d'|format(product.price_cents % 100) }}</td><td><span class="stock-count {% if product.stock<=2 %}low{% endif %}">{{ product.stock }}</span></td>{% if current_user()['role']=='admin' %}<td><form class="inline-form" method="post" action="{{ url_for('web.product_movement',product_id=product.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><select name="kind" aria-label="Tipo de movimiento para {{ product.name }}"><option value="entrada">Entrada</option><option value="salida">Salida</option></select><input name="quantity" type="number" min="1" required aria-label="Cantidad para {{ product.name }}"><button class="button small secondary" type="submit">Aplicar</button></form></td><td><a class="row-link" href="{{ url_for('web.product_edit',product_id=product.id) }}">Editar</a><form class="availability-form" method="post" action="{{ url_for('web.product_availability', product_id=product.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="available" value="{{ '0' if product.available else '1' }}"><small class="product-availability">{{ 'Disponible para clientes' if product.available else 'No disponible para clientes' }}</small><button class="button small secondary" type="submit">{{ 'Marcar no disponible' if product.available else 'Marcar disponible' }}</button></form><form class="publication-form" method="post" action="{{ url_for('web.product_publication', product_id=product.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="published" value="{{ '0' if product.published else '1' }}"><small>{{ 'Publicado en el catálogo' if product.published else 'Solo inventario interno' }}</small><button class="button small secondary" type="submit">{{ 'Retirar del catálogo' if product.published else 'Publicar en catálogo' }}</button></form> · <form method="post" action="{{ url_for('web.product_retire',product_id=product.id) }}" data-confirm="¿Dar de baja este producto? El historial se conserva."><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="text-danger" type="submit">Dar de baja</button></form></td>{% endif %}</tr>{% endfor %}</tbody></table></div>
+{% if last_page > 1 %}
+<nav class="inventory-pagination" aria-label="Páginas del inventario">
+  {% if page > 1 %}<a class="button quiet" href="{{ url_for('web.products', page=page-1, q=query, category=category) }}">Anterior</a>{% endif %}
+  {% for number in page_numbers %}
+  {% if not loop.first and number > loop.previtem + 1 %}<span aria-hidden="true">…</span>{% endif %}
+  {% if page == number %}
+  <span class="button primary" aria-current="page" aria-label="Página {{ number }}">{{ number }}</span>
+  {% else %}
+  <a class="button quiet" aria-label="Página {{ number }}" href="{{ url_for('web.products', page=number, q=query, category=category) }}">{{ number }}</a>
+  {% endif %}
+  {% endfor %}
+  {% if page < last_page %}<a class="button quiet" href="{{ url_for('web.products', page=page+1, q=query, category=category) }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<div class="empty-state">
+  {% if query or category %}
+  <h2>No hay productos que coincidan</h2><p>Prueba con otro nombre o cambia la categoría.</p>
+  {% else %}
+  <h2>Inventario vacío</h2><p>Añade un producto o prepara una importación para revisión.</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
 

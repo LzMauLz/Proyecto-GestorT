@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage
 
 from app import create_app
 from app.application.ai_import import prepare_product_proposal
-from app.application.ai_assistant import inventory_snapshot, request_assistant
+from app.application.ai_assistant import inventory_snapshot, request_assistant, _validate_product_proposal, _validate_response
 from app.application.ports import AIProviderError
 from app.infrastructure.ai.groq_adapter import GroqAdapter
 from app.application.services import create_product, create_repair, move_stock, update_repair_status
@@ -18,8 +18,7 @@ from app.web.pages import parse_product_upload
 
 class GestorTechTests(unittest.TestCase):
     def setUp(self):
-        project_root=os.path.dirname(os.path.dirname(__file__))
-        self.temp = tempfile.TemporaryDirectory(dir=os.path.join(project_root,'instance'))
+        self.temp = tempfile.TemporaryDirectory()
         self.app = create_app({'TESTING':True,'SECRET_KEY':'test-key-only','DATABASE':os.path.join(self.temp.name,'test.sqlite3'),'GROQ_ENABLED':False,'GROQ_API_KEY':'','GROQ_MODEL':''})
         self.context = self.app.app_context()
         self.context.push()
@@ -41,7 +40,7 @@ class GestorTechTests(unittest.TestCase):
         return {'X-CSRF-Token':csrf}
 
     def test_public_tracking_excludes_problem_and_internal_note(self):
-        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Detalle privado'},1,'admin')
+        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Detalle privado','assigned_to':2},1,'admin')
         update_repair_status(get_db(),repair_id,1,'admin','En diagnóstico','No publicar: dato interno','')
         response=self.client.get('/api/seguimiento/'+code)
         self.assertEqual(response.status_code,200)
@@ -52,13 +51,13 @@ class GestorTechTests(unittest.TestCase):
         self.assertNotIn('dato interno',response.get_data(as_text=True))
 
     def test_public_note_is_explicitly_published(self):
-        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Falla'},1,'admin')
+        repair_id,code=create_repair(get_db(),{'device':'Portátil','issue':'Falla','assigned_to':2},1,'admin')
         update_repair_status(get_db(),repair_id,1,'admin','En diagnóstico','','Diagnóstico iniciado')
         data=self.client.get('/api/seguimiento/'+code).get_json()
         self.assertEqual(data['historial_publico'][-1]['comentario'],'Diagnóstico iniciado')
 
     def test_repair_transitions_are_enforced_and_recorded(self):
-        repair_id,_=create_repair(get_db(),{'device':'Laptop','issue':'No inicia'},1,'admin')
+        repair_id,_=create_repair(get_db(),{'device':'Laptop','issue':'No inicia','assigned_to':2},1,'admin')
         update_repair_status(get_db(),repair_id,1,'admin','En diagnóstico')
         with self.assertRaises(DomainError):
             update_repair_status(get_db(),repair_id,1,'admin','Entregado')
@@ -66,12 +65,51 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(count,2)
 
     def test_technician_can_only_change_assigned_repair(self):
-        repair_id,_=create_repair(get_db(),{'device':'Laptop','issue':'Falla'},1,'admin')
+        db=get_db()
+        db.execute("INSERT INTO users(id,name,email,password_hash,role,created_at) SELECT 3,'Otro técnico','other@example.test',password_hash,'technician',created_at FROM users WHERE id=2")
+        db.commit()
+        repair_id,_=create_repair(db,{'device':'Laptop','issue':'Falla','assigned_to':3},1,'admin')
         with self.assertRaises(DomainError) as err:
             update_repair_status(get_db(),repair_id,2,'technician','En diagnóstico')
         self.assertEqual(err.exception.status_code,403)
         db=get_db(); db.execute('UPDATE repairs SET assigned_to=2 WHERE id=?',(repair_id,)); db.commit()
         update_repair_status(db,repair_id,2,'technician','En diagnóstico')
+
+    def test_ai_product_proposal_rejects_non_integer_stock(self):
+        base={'name':'Cable','description':'','category':'Accesorios','price':'1000'}
+        for invalid in (1.5,'1.5',True,-1,2_147_483_648,float('nan'),float('inf')):
+            with self.subTest(stock=invalid):
+                with self.assertRaises(AIProviderError):
+                    _validate_product_proposal({**base,'stock':invalid})
+        for valid in (0,3,'3',3.0,''):
+            with self.subTest(valid_stock=valid):
+                self.assertEqual(_validate_product_proposal({**base,'stock':valid})['stock'],valid)
+
+    def test_ai_product_proposal_rejects_boolean_values(self):
+        base = {'name': 'Cable', 'description': '', 'category': 'Accesorios', 'price': '1000', 'stock': 1}
+        for field in base:
+            with self.subTest(field=field), self.assertRaises(AIProviderError):
+                _validate_product_proposal({**base, field: True})
+
+    def test_ai_stock_proposal_rejects_boolean_ids_and_quantities(self):
+        base = {'action': 'stock_proposal', 'proposal': {'product_id': 1, 'kind': 'entrada', 'quantity': 1}}
+        self.assertEqual(_validate_response(base)['proposal']['quantity'], 1)
+        invalid = (
+            {'product_id': True, 'kind': 'entrada', 'quantity': 1},
+            {'product_id': 1, 'kind': 'entrada', 'quantity': True},
+            {'product_id': 0, 'kind': 'entrada', 'quantity': 1},
+        )
+        for proposal in invalid:
+            with self.subTest(proposal=proposal), self.assertRaises(AIProviderError):
+                _validate_response({'action': 'stock_proposal', 'proposal': proposal})
+
+    def test_inventory_snapshot_omits_free_text_movement_notes(self):
+        product_id=create_product(get_db(),{'name':'Cable de prueba','price':'1000','stock':1,'user_id':1})
+        move_stock(get_db(),product_id,1,'entrada',1,'Dato personal ficticio que no debe enviarse al proveedor IA')
+        snapshot=inventory_snapshot(get_db(),'últimos movimientos')
+        self.assertEqual(len(snapshot['movements']),2)
+        self.assertTrue(all('note' not in movement for movement in snapshot['movements']))
+        self.assertTrue(all('Dato personal ficticio' not in str(movement) for movement in snapshot['movements']))
 
     def test_stock_movement_is_atomic_and_never_negative(self):
         product_id=create_product(get_db(),{'name':'Cable','price':'18000','stock':3,'user_id':1})
@@ -81,6 +119,17 @@ class GestorTechTests(unittest.TestCase):
         row=get_db().execute('SELECT stock FROM products WHERE id=?',(product_id,)).fetchone()
         self.assertEqual(row['stock'],1)
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM inventory_movements WHERE product_id=?',(product_id,)).fetchone()['n'],2)
+
+    def test_product_stock_and_movement_quantity_require_integers(self):
+        db = get_db()
+        for value in (True, 1.5, '1.5', '١'):
+            with self.subTest(value=value), self.assertRaises(DomainError):
+                create_product(db, {'name': 'Invalid stock', 'price': '10', 'stock': value, 'user_id': 1})
+
+        product_id = create_product(db, {'name': 'Cable', 'price': '10', 'stock': 1, 'user_id': 1})
+        for value in (True, 1.5, '1.5', '١'):
+            with self.subTest(value=value), self.assertRaises(DomainError):
+                move_stock(db, product_id, 1, 'entrada', value)
 
     def test_api_requires_auth_and_csrf(self):
         self.assertEqual(self.client.get('/api/productos').status_code,401)
@@ -125,6 +174,17 @@ class GestorTechTests(unittest.TestCase):
         invalid=parse_product_upload(missing)
         self.assertIn('faltante',invalid[0]['error'])
 
+    def test_csv_import_accepts_inventory_template_with_sale_price(self):
+        content = (
+            'codigo,nombre,marca,descripcion,categoria,precio_compra,precio_venta,stock,stock_minimo\n'
+            'REP-001,Pantalla LCD,Samsung,Pantalla Samsung A12,Pantallas,85000,125000,5,2\n'
+        ).encode()
+        rows = parse_product_upload(FileStorage(stream=io.BytesIO(content), filename='repuestos.csv'))
+        self.assertEqual(rows[0]['name'], 'Pantalla LCD')
+        self.assertEqual(rows[0]['price'], '125000')
+        self.assertEqual(rows[0]['stock'], '5')
+        self.assertEqual(rows[0]['category'], 'Pantallas')
+
     def test_staff_pages_render(self):
         self.session_as(1)
         for path in ['/dashboard','/products','/products/new','/products/import','/repairs/new','/users/new','/assistant']:
@@ -133,7 +193,7 @@ class GestorTechTests(unittest.TestCase):
                 self.assertEqual(response.status_code,200,response.get_data(as_text=True)[:500])
 
     def test_dashboard_has_active_navigation_and_keyboard_table_region(self):
-        create_repair(get_db(),{'device':'Tablet','issue':'Pantalla dañada'},1,'admin')
+        create_repair(get_db(),{'device':'Tablet','issue':'Pantalla dañada','assigned_to':2},1,'admin')
         self.session_as(1)
         response=self.client.get('/dashboard')
         html=response.get_data(as_text=True)
@@ -153,7 +213,7 @@ class GestorTechTests(unittest.TestCase):
 
     def test_repair_detail_and_import_preview_render_and_approve(self):
         headers=self.session_as(1)
-        repair_id,code=create_repair(get_db(),{'device':'Consola','issue':'No enciende'},1,'admin')
+        repair_id,code=create_repair(get_db(),{'device':'Consola','issue':'No enciende','assigned_to':2},1,'admin')
         self.assertEqual(self.client.get(f'/repairs/{repair_id}').status_code,200)
         upload=(io.BytesIO(b'nombre,precio,cantidad_stock\nCable,18000,4\n'),'productos.csv')
         preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload},content_type='multipart/form-data')
@@ -251,7 +311,7 @@ class GestorTechTests(unittest.TestCase):
                 return [{'source_row':2,'name':'Cable normalizado','description':'','category':'Accesorios'}]
         self.app.extensions['gestortech_ai_provider']=MockProvider()
         upload=(io.BytesIO(b'nombre,descripcion,categoria,precio,cantidad_stock\nCable,USB,,18000,4\n'),'productos.csv')
-        preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload},content_type='multipart/form-data')
+        preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload,'use_ai':'1'},content_type='multipart/form-data')
         self.assertEqual(preview.status_code,200)
         self.assertIn('Cable normalizado',preview.get_data(as_text=True))
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM products').fetchone()['n'],0)
@@ -354,6 +414,25 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(len(confirmed.get_json()['product_ids']), 2)
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM products').fetchone()['n'], 2)
 
+    def test_assistant_requests_missing_stock_before_confirmation(self):
+        class MockAssistant:
+            def chat(self, messages):
+                return {'message': 'Propuesta preparada.', 'action': 'product_proposal',
+                        'proposal': {'name': 'Puerto tipo C', 'description': '', 'category': 'Repuesto',
+                                     'price': '5.000,00', 'stock': ''}}
+        self.app.extensions['gestortech_ai_provider'] = MockAssistant()
+        headers = self.session_as(1)
+        response = self.client.post(
+            '/api/asistente/mensaje',
+            json={'mensaje': 'Agrega 5 puertos tipo C para Moto G58'},
+            headers=headers,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.get_json()['proposal'])
+        self.assertIn('cantidad', response.get_json()['message'])
+        self.assertEqual(get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0], 0)
+        self.assertEqual(get_db().execute('SELECT COUNT(*) FROM ai_proposals').fetchone()[0], 0)
+
     def test_technician_cannot_prepare_mutation_from_assistant(self):
         class MockAssistant:
             def chat(self, messages):
@@ -379,6 +458,18 @@ class GestorTechTests(unittest.TestCase):
         self.assertEqual(get_db().execute('SELECT stock FROM products WHERE id=?',(product_id,)).fetchone()['stock'],2)
         self.assertEqual(get_db().execute('SELECT approval_status FROM ai_operations').fetchone()['approval_status'],'cancelled')
 
+    def test_invalid_product_price_returns_400(self):
+        headers = self.session_as(1)
+        response = self.client.post(
+            '/api/productos',
+            json={
+                'nombre': 'Cable de prueba',
+                'precio': 'no-es-numero',
+                'cantidad_stock': 0,
+            },
+            headers=headers,
+        )
+        self.assertEqual(response.status_code, 400)
 
 if __name__=='__main__':
     unittest.main()

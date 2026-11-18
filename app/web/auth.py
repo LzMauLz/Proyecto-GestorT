@@ -54,7 +54,7 @@ def enforce_csrf():
     if request.method in {'POST','PUT','PATCH','DELETE'}:
         expected = session.get('_csrf_token','')
         provided = request.headers.get('X-CSRF-Token') or request.form.get('_csrf_token','')
-        if not expected or not provided or not hmac.compare_digest(expected, provided):
+        if not expected or not provided or not provided.isascii() or not hmac.compare_digest(expected, provided):
             abort(400, description='Token de seguridad inválido. Recarga la página e inténtalo de nuevo.')
 
 

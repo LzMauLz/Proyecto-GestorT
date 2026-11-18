@@ -22,6 +22,9 @@ def _load_local_env():
 
 
 class Config:
+    LOGIN_RATE_LIMIT = 5
+    TRACKING_RATE_LIMIT = 30
+    RATE_LIMIT_WINDOW = 60
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'

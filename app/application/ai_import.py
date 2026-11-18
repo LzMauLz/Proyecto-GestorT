@@ -9,38 +9,42 @@ MAX_AI_ROWS = 50
 
 def prepare_product_proposal(rows, provider=None):
     """Return source rows and validated suggestions; failures preserve manual input."""
-    if provider is None or len(rows) > MAX_AI_ROWS or any(row.get('error') for row in rows):
+    eligible = [row for row in rows if not row.get('error')]
+    if provider is None or not eligible or len(eligible) > MAX_AI_ROWS:
         return rows, 'manual'
 
     payload = [
         {'source_row': row['source_row'], **{key: row.get(key, '') for key in AI_FIELDS}}
-        for row in rows
+        for row in eligible
     ]
     try:
         proposals = provider.propose_products(payload)
-        if not isinstance(proposals, list) or len(proposals) != len(rows):
+        if not isinstance(proposals, list) or len(proposals) != len(eligible):
             raise AIProviderError('Invalid proposal shape')
         by_row = {}
         for proposal in proposals:
             if not isinstance(proposal, dict) or set(proposal) != {'source_row', *AI_FIELDS}:
                 raise AIProviderError('Invalid proposal fields')
             row_id = proposal['source_row']
-            if not isinstance(row_id, int) or row_id in by_row:
+            if type(row_id) is not int or row_id in by_row:
                 raise AIProviderError('Invalid proposal row')
             for key in AI_FIELDS:
                 value = proposal[key]
                 if not isinstance(value, str) or len(value) > {'name': 160, 'description': 2000, 'category': 100}[key]:
                     raise AIProviderError('Invalid proposal value')
             by_row[row_id] = proposal
-        if set(by_row) != {row['source_row'] for row in rows}:
+        if set(by_row) != {row['source_row'] for row in eligible}:
             raise AIProviderError('Proposal rows mismatch')
         prepared = []
         for source in rows:
+            if source.get('error'):
+                prepared.append(source)
+                continue
             suggestion = by_row[source['source_row']]
             row = dict(source)
             row['original_values'] = {key: source.get(key, '') for key in AI_FIELDS}
             for key in AI_FIELDS:
-                row[key] = suggestion[key].strip()
+                row[key] = suggestion[key].strip() or source.get(key, '')
             row['ai_suggested'] = True
             prepared.append(row)
         return prepared, 'groq'

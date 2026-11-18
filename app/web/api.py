@@ -156,16 +156,20 @@ def assistant_message():
         result = request_assistant(get_db(), provider, user, data.get('mensaje'), data.get('historial', []))
         return jsonify(result)
     except AIProviderError as exc:
-        current_app.logger.warning('Fallo del asistente IA: %s', str(exc)[:300])
-        abort(502, description=str(exc))
+        current_app.logger.warning('El asistente IA no pudo completar la solicitud.')
+        abort(502, description='No fue posible procesar la solicitud del asistente. Revisa los datos o usa el flujo manual.')
 
 @api_bp.post('/asistente/propuestas/<proposal_id>/confirmar')
 def assistant_confirm(proposal_id):
     user = actor(('admin',))
     try:
-        return jsonify(resolve_proposal(get_db(), user, proposal_id, True))
+        edits = body().get('correcciones') if request.is_json else None
+        return jsonify(resolve_proposal(get_db(), user, proposal_id, True, edited_payload=edits))
     except AIProviderError as exc:
         abort(409, description=str(exc))
+    except DomainError as exc:
+        get_db().rollback()
+        api_error(exc)
     except Exception as exc:
         get_db().rollback()
         current_app.logger.warning('No se pudo confirmar propuesta IA (%s).', type(exc).__name__)

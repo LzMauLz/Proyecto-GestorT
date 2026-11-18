@@ -1,0 +1,98 @@
+[
+  {
+    "selector": ".repair-progress li:not(.current)",
+    "foreground": "rgb(157, 168, 187)",
+    "background": "rgb(17, 22, 36)",
+    "ratio": 7.52
+  },
+  {
+    "selector": "th",
+    "foreground": "rgb(127, 140, 163)",
+    "background": "rgb(21, 27, 42)",
+    "ratio": 5.06
+  },
+  {
+    "selector": ".site-footer",
+    "foreground": "rgb(157, 168, 187)",
+    "background": "rgb(9, 12, 20)",
+    "ratio": 8.15
+  },
+  {
+    "selector": ".primary",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(124, 92, 232)",
+    "ratio": 4.61
+  },
+  {
+    "selector": ".primary",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(118, 84, 211)",
+    "ratio": 5.28
+  },
+  {
+    "selector": ".repair-progress li:not(.current)",
+    "foreground": "rgb(157, 168, 187)",
+    "background": "rgb(17, 22, 36)",
+    "ratio": 7.52
+  },
+  {
+    "selector": "th",
+    "foreground": "rgb(127, 140, 163)",
+    "background": "rgb(21, 27, 42)",
+    "ratio": 5.06
+  },
+  {
+    "selector": ".site-footer",
+    "foreground": "rgb(157, 168, 187)",
+    "background": "rgb(9, 12, 20)",
+    "ratio": 8.15
+  },
+  {
+    "selector": ".primary",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(124, 92, 232)",
+    "ratio": 4.61
+  },
+  {
+    "selector": ".primary",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(118, 84, 211)",
+    "ratio": 5.28
+  },
+  {
+    "selector": ".repair-progress li:not(.current)",
+    "foreground": "rgb(157, 168, 187)",
+    "background": "rgb(17, 22, 36)",
+    "ratio": 7.52
+  },
+  {
+    "selector": ".sidebar-label",
+    "foreground": "rgb(157, 168, 187)",
+    "background": "rgb(13, 17, 29)",
+    "ratio": 7.85
+  },
+  {
+    "selector": "th",
+    "foreground": "rgb(127, 140, 163)",
+    "background": "rgb(21, 27, 42)",
+    "ratio": 5.06
+  },
+  {
+    "selector": ".site-footer",
+    "foreground": "rgb(157, 168, 187)",
+    "background": "rgb(9, 12, 20)",
+    "ratio": 8.15
+  },
+  {
+    "selector": ".primary",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(124, 92, 232)",
+    "ratio": 4.61
+  },
+  {
+    "selector": ".primary",
+    "foreground": "rgb(255, 255, 255)",
+    "background": "rgb(118, 84, 211)",
+    "ratio": 5.28
+  }
+]

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import secrets
+import sqlite3
 
 from app.domain.models import DomainError, REPAIR_STATUSES, TRANSITIONS
 
@@ -21,18 +22,45 @@ def to_cents(value):
         raise DomainError('El precio debe ser un número igual o mayor que cero.')
 
 
+def _to_integer(value):
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.isascii() and value.isdecimal() and len(value) <= 10:
+        return int(value)
+    raise ValueError
+
+
+def _ensure_unique_product(db, name, category, product_id=None):
+    duplicate = db.execute(
+        'SELECT 1 FROM products WHERE normalize_inventory_key(name)=normalize_inventory_key(?) '
+        'AND normalize_inventory_key(category)=normalize_inventory_key(?) AND (? IS NULL OR id<>?)',
+        (name, category, product_id, product_id),
+    ).fetchone()
+    if duplicate:
+        raise DomainError('Ya existe un producto con ese nombre en la misma categoría.', 409)
+
+
 def create_product(db, data, commit=True):
-    name = str(data.get('name', '')).strip()
+    name = str(data.get('name') or '').strip()
     if not name or len(name) > 160:
         raise DomainError('El nombre del producto es obligatorio y admite hasta 160 caracteres.')
     try:
-        stock = int(data.get('stock', 0))
+        stock = _to_integer(data.get('stock', 0))
         if stock < 0 or stock > 2_147_483_647:
             raise ValueError
     except (TypeError, ValueError):
         raise DomainError('La cantidad inicial debe ser un entero igual o mayor que cero.')
-    cur = db.execute('INSERT INTO products(name,description,category,price_cents,stock,created_at) VALUES(?,?,?,?,?,?)',
-                     (name, str(data.get('description','')).strip()[:2000], str(data.get('category','')).strip()[:100], to_cents(data.get('price',0)), stock, now_iso()))
+    category = str(data.get('category') or '').strip()[:100]
+    _ensure_unique_product(db, name, category)
+    try:
+        cur = db.execute('INSERT INTO products(name,description,category,price_cents,stock,created_at) VALUES(?,?,?,?,?,?)',
+                         (name, str(data.get('description','')).strip()[:2000], category, to_cents(data.get('price',0)), stock, now_iso()))
+    except sqlite3.IntegrityError as exc:
+        if commit:
+            db.rollback()
+        if exc.sqlite_errorname == 'SQLITE_CONSTRAINT_UNIQUE':
+            raise DomainError('Ya existe un producto con ese nombre en la misma categoría.', 409) from exc
+        raise
     if stock:
         db.execute('INSERT INTO inventory_movements(product_id,user_id,kind,quantity,note,created_at) VALUES(?,?,?,?,?,?)',
                    (cur.lastrowid, data['user_id'], 'entrada', stock, 'Stock inicial', now_iso()))
@@ -41,30 +69,41 @@ def create_product(db, data, commit=True):
     return cur.lastrowid
 
 
-def update_product(db, product_id, data):
-    name = str(data.get('name', '')).strip()
+def update_product(db, product_id, data, commit=True):
+    name = str(data.get('name') or '').strip()
     if not name or len(name) > 160:
         raise DomainError('El nombre del producto es obligatorio y admite hasta 160 caracteres.')
     exists = db.execute('SELECT id FROM products WHERE id=? AND active=1', (product_id,)).fetchone()
     if not exists:
         raise DomainError('Producto no disponible.', 404)
-    with db:
+    category = str(data.get('category') or '').strip()[:100]
+    _ensure_unique_product(db, name, category, product_id)
+    try:
         db.execute('UPDATE products SET name=?,description=?,category=?,price_cents=? WHERE id=?',
-                   (name, str(data.get('description','')).strip()[:2000], str(data.get('category','')).strip()[:100],
+                   (name, str(data.get('description','')).strip()[:2000], category,
                     to_cents(data.get('price')), product_id))
+        if commit:
+            db.commit()
+    except sqlite3.IntegrityError as exc:
+        if commit:
+            db.rollback()
+        if exc.sqlite_errorname == 'SQLITE_CONSTRAINT_UNIQUE':
+            raise DomainError('Ya existe un producto con ese nombre en la misma categoría.', 409) from exc
+        raise
 
 
-def move_stock(db, product_id, user_id, kind, quantity, note=''):
+def move_stock(db, product_id, user_id, kind, quantity, note='', commit=True):
     if kind not in ('entrada','salida'):
         raise DomainError('Tipo de movimiento no válido.')
     try:
-        quantity = int(quantity)
+        quantity = _to_integer(quantity)
         if quantity <= 0 or quantity > 2_147_483_647:
             raise ValueError
     except (TypeError, ValueError):
         raise DomainError('La cantidad debe ser un entero positivo.')
     try:
-        db.execute('BEGIN IMMEDIATE')
+        if commit:
+            db.execute('BEGIN IMMEDIATE')
         product = db.execute('SELECT stock,active FROM products WHERE id=?', (product_id,)).fetchone()
         if not product or not product['active']:
             raise DomainError('Producto no disponible.', 404)
@@ -76,30 +115,48 @@ def move_stock(db, product_id, user_id, kind, quantity, note=''):
         db.execute('UPDATE products SET stock=? WHERE id=?', (new_stock, product_id))
         db.execute('INSERT INTO inventory_movements(product_id,user_id,kind,quantity,note,created_at) VALUES(?,?,?,?,?,?)',
                    (product_id,user_id,kind,quantity,str(note).strip()[:500],now_iso()))
-        db.commit()
+        if commit:
+            db.commit()
     except Exception:
-        db.rollback()
+        if commit:
+            db.rollback()
         raise
     return new_stock
 
 
 def create_repair(db, data, user_id, role):
-    device = str(data.get('device','')).strip()
-    issue = str(data.get('issue','')).strip()
+    device = data.get('device', '')
+    issue = data.get('issue', '')
+    if not isinstance(device, str) or not isinstance(issue, str):
+        raise DomainError('El equipo y la descripción del problema deben ser texto.')
+    device = device.strip()
+    issue = issue.strip()
     if not device or len(device) > 160 or not issue or len(issue) > 2000:
         raise DomainError('Indica el equipo y una descripción del problema (máximo 2000 caracteres).')
+    if role not in ('admin', 'technician'):
+        raise DomainError('No tienes permiso para registrar reparaciones.', 403)
     assigned = data.get('assigned_to') if role == 'admin' else user_id
-    if assigned is not None:
-        person = db.execute('SELECT id FROM users WHERE id=? AND active=1 AND role=\'technician\'', (assigned,)).fetchone()
-        if not person:
-            raise DomainError('Técnico asignado no válido.')
+    try:
+        assigned = _to_integer(assigned)
+        if not 0 < assigned <= 9_223_372_036_854_775_807:
+            raise ValueError
+    except (TypeError, ValueError):
+        raise DomainError('Selecciona un técnico activo para registrar la reparación.')
+    person = db.execute('SELECT id FROM users WHERE id=? AND active=1 AND role=\'technician\'', (assigned,)).fetchone()
+    if not person:
+        raise DomainError('Técnico asignado no válido.')
     code = 'GT-' + secrets.token_hex(16).upper()
     stamp = now_iso()
-    cur = db.execute('INSERT INTO repairs(tracking_code,device,issue,status,assigned_to,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
-                     (code,device,issue,'Recibido',assigned,user_id,stamp,stamp))
-    db.execute('INSERT INTO repair_history(repair_id,user_id,status,public_note,public_visible,created_at) VALUES(?,?,?,?,?,?)',
-               (cur.lastrowid,user_id,'Recibido','Reparación recibida.',1,stamp))
-    db.commit()
+    try:
+        with db:
+            cur = db.execute('INSERT INTO repairs(tracking_code,device,issue,status,assigned_to,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
+                             (code,device,issue,'Recibido',assigned,user_id,stamp,stamp))
+            db.execute('INSERT INTO repair_history(repair_id,user_id,status,public_note,public_visible,created_at) VALUES(?,?,?,?,?,?)',
+                       (cur.lastrowid,user_id,'Recibido','Reparación recibida.',1,stamp))
+    except sqlite3.IntegrityError as exc:
+        if 'repair_assignment_invalid' in str(exc):
+            raise DomainError('Técnico asignado no válido.') from exc
+        raise
     return cur.lastrowid, code
 
 
@@ -116,6 +173,12 @@ def update_repair_status(db, repair_id, actor_id, role, status, internal_note=''
     if assigned_to is not None:
         if role != 'admin':
             raise DomainError('Solo administración puede reasignar reparaciones.',403)
+        try:
+            assigned_to = _to_integer(assigned_to)
+            if not 0 < assigned_to <= 9_223_372_036_854_775_807:
+                raise ValueError
+        except (TypeError, ValueError):
+            raise DomainError('Técnico asignado no válido.')
         if not db.execute('SELECT 1 FROM users WHERE id=? AND role=\'technician\' AND active=1',(assigned_to,)).fetchone():
             raise DomainError('Técnico asignado no válido.')
     stamp = now_iso()

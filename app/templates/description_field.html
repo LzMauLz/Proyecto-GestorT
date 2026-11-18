@@ -1,0 +1,4 @@
+<label for="description">Descripción <span class="optional">opcional</span></label>
+<textarea id="description" name="description" rows="3" maxlength="2000">{{ request.form.get('description', product.description if product is defined else '') }}</textarea>
+<button class="button quiet" type="button" data-suggest-description="{{ url_for('web.suggest_description') }}">Redactar descripción con IA</button>
+<small data-description-status role="status">Escribe el nombre y, si quieres, la categoría. Revisa el texto sugerido antes de guardar.</small>

@@ -1,0 +1,4 @@
+{% if assistant_available %}
+<label class="import-option"><input type="checkbox" name="use_ai" value="1" aria-describedby="import-ai-help"> Pedir a la IA que redacte las descripciones</label>
+<small id="import-ai-help">Solo se envían a la IA el nombre, la descripción y la categoría de hasta 50 productos válidos. Carga archivos con información de productos.</small>
+{% else %}<p class="muted">La IA no está disponible. Puedes importar y revisar el archivo manualmente.</p>{% endif %}

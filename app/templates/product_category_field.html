@@ -1,0 +1,11 @@
+{% set selected_category = request.form.get('category', product.category if product is defined else '') %}
+<label for="category">Categoría</label>
+<select id="category" name="category">
+  <option value="">Sin categoría</option>
+  {% for option in product_categories %}
+  <option value="{{ option }}" {% if selected_category == option %}selected{% endif %}>{{ option }}</option>
+  {% endfor %}
+  {% if selected_category and selected_category not in product_categories %}
+  <option value="{{ selected_category }}" selected>{{ selected_category }}</option>
+  {% endif %}
+</select>
