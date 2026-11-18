@@ -27,6 +27,7 @@ def enforce_request_limits():
     try:
         with db:
             db.execute('BEGIN IMMEDIATE')
+            db.execute('CREATE TABLE IF NOT EXISTS request_limits (bucket TEXT PRIMARY KEY, hits INTEGER NOT NULL, reset_at INTEGER NOT NULL)')
             db.execute('DELETE FROM request_limits WHERE reset_at <= ?', (now,))
             row = db.execute('SELECT hits,reset_at FROM request_limits WHERE bucket=?', (bucket,)).fetchone()
             if row and row['hits'] >= maximum:
