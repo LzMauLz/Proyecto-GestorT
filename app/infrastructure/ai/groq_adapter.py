@@ -92,6 +92,7 @@ class GroqAdapter:
         body = json.dumps({
             'model': self._model,
             'temperature': 0,
+            **({'reasoning_effort': 'low'} if self._model in {'openai/gpt-oss-20b', 'openai/gpt-oss-120b'} else {}),
             'response_format': PRODUCT_PROPOSAL_FORMAT if self._model in STRICT_OUTPUT_MODELS else {'type': 'json_object'},
             'messages': [
                 {'role': 'system', 'content': prompt},
