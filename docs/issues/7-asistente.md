@@ -1,5 +1,17 @@
 # Issue #7 — Asistente y revisión de inventario
 
+**Verificación posterior 2026-11-16:** cinco escenarios finales de Groq real aprobados con datos ficticios; se corrigió el contrato de precio COP frente a centavos del contexto sin relajar la validación. [Informe](../verificacion_integral_2026-11-16.md#ampliación-autorizada-groq-real-y-docker). Los resultados sin proveedor que siguen son históricos.
+
+## Continuidad hacia la ficha comercial — 2026-11-16
+
+La propuesta sigue usando los campos permitidos del producto: nombre, descripción, categoría, precio y cantidad. Si se proporcionan solo nombre, descripción y precio, se pregunta la cantidad inicial o se solicita confirmar explícitamente 0 hasta contar con existencias; no se asigna cero por omisión.
+
+Aceptar guarda el producto sin publicarlo y usa `product_id`/`product_ids` de la respuesta existente para mostrar enlaces a `/products/<id>/edit`: adjuntar imagen local, revisar disponibilidad y decidir publicación. Cancelar no crea productos ni ofrece esos enlaces. No se añade una entidad ni un tipo de operación nuevo.
+
+Las imágenes no se envían al asistente ni a Groq: se cargan en la ficha administrativa mediante el flujo nativo del catálogo. La disponibilidad comercial es independiente del stock interno. Las pruebas de este incremento usan Flask/SQLite reales y respuestas de proveedor ficticio explícito; no se verifica comprensión de Groq real.
+
+Validación dirigida del incremento: pendiente de ejecutar tras aplicar el parche y completar la integración de medios.
+
 Verificación final local integrada: **131 pruebas y 77 subtests aprobados** y [CI Python 3.11 43777915059](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777915059). La interfaz real se comprobó en 375/768/1440 px con datos ficticios y, para respuestas del chat, un proveedor local de prueba explícito: [evidencia del #14](14-interfaz.md). Los resultados por fases inferiores son históricos. No se validó Groq real por decisión del usuario.
 
 CI Python 3.11 aprobado para la integración de esta entrega (`f7cc486`): [run 43777324295](https://github.com/LzMauLz/Proyecto-GestorT/actions/runs/43777324295). La comprensión con Groq real sigue fuera de la verificación por decisión del usuario de hacer solo pruebas locales.

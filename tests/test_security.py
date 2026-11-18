@@ -73,6 +73,15 @@ class SecurityTests(unittest.TestCase):
         db.commit()
         self.assertEqual(other.post('/login').status_code, 400)
 
+    def test_login_limit_creates_missing_table_in_legacy_database(self):
+        get_db().execute('DROP TABLE request_limits')
+        get_db().commit()
+        response = self.client.post('/login')
+        self.assertEqual(response.status_code, 400)
+        self.assertIsNotNone(get_db().execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='request_limits'"
+        ).fetchone())
+
     def test_tracking_budget_shared_between_web_api_and_ignores_forwarded_ip(self):
         self.assertEqual(self.client.get('/api/seguimiento/INVALID').status_code, 404)
         self.assertEqual(self.client.post('/track').status_code, 400)

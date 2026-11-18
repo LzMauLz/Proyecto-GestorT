@@ -18,8 +18,7 @@ from app.web.pages import parse_product_upload
 
 class GestorTechTests(unittest.TestCase):
     def setUp(self):
-        project_root=os.path.dirname(os.path.dirname(__file__))
-        self.temp = tempfile.TemporaryDirectory(dir=os.path.join(project_root,'instance'))
+        self.temp = tempfile.TemporaryDirectory()
         self.app = create_app({'TESTING':True,'SECRET_KEY':'test-key-only','DATABASE':os.path.join(self.temp.name,'test.sqlite3'),'GROQ_ENABLED':False,'GROQ_API_KEY':'','GROQ_MODEL':''})
         self.context = self.app.app_context()
         self.context.push()
@@ -312,7 +311,7 @@ class GestorTechTests(unittest.TestCase):
                 return [{'source_row':2,'name':'Cable normalizado','description':'','category':'Accesorios'}]
         self.app.extensions['gestortech_ai_provider']=MockProvider()
         upload=(io.BytesIO(b'nombre,descripcion,categoria,precio,cantidad_stock\nCable,USB,,18000,4\n'),'productos.csv')
-        preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload},content_type='multipart/form-data')
+        preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload,'use_ai':'1'},content_type='multipart/form-data')
         self.assertEqual(preview.status_code,200)
         self.assertIn('Cable normalizado',preview.get_data(as_text=True))
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM products').fetchone()['n'],0)

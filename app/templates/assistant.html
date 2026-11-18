@@ -2,35 +2,39 @@
 {% block title %}Asistente · GestorTech{% endblock %}
 {% block content %}
 <section class="page-heading assistant-heading">
-  <div><p class="eyebrow">Operaciones del taller</p><h1>Prepara. Revisa. Confirma.</h1><p>Consulta inventario y prepara cambios con tus palabras. Tú decides qué se guarda.</p></div>
+  <div><p class="eyebrow">Operaciones del taller</p><h1>Asistente del taller</h1><p>Pregunta por las existencias, prepara una ficha o carga una lista de productos.</p></div>
   <span class="assistant-status {% if assistant_available %}is-ready{% endif %}"><span aria-hidden="true"></span>{{ 'IA disponible' if assistant_available else 'Modo manual disponible' }}</span>
 </section>
-<section class="assistant-shell" data-assistant data-available="{{ 'true' if assistant_available else 'false' }}">
+<section class="assistant-shell" data-assistant data-available="{{ 'true' if assistant_available else 'false' }}" data-categories='{{ product_categories|tojson }}'>
   <div class="assistant-chat">
     <div class="assistant-messages" data-messages role="log" aria-label="Conversación del asistente" aria-live="polite" aria-relevant="additions text">
-      <div class="assistant-message assistant-message-ai"><strong>GestorTech</strong><p>Indica el producto, precio y cantidad. Si falta un dato, te lo preguntaré antes de preparar una propuesta.</p></div>
+      <div class="assistant-message assistant-message-ai"><strong>GestorTech</strong><p>{% if current_user()['role'] == 'admin' %}Para preparar una ficha, dime el nombre, el precio y cuántas unidades tienes. Yo redacto la descripción. Tú revisas la ficha y decides si la publicas.{% else %}Pregúntame por precios, existencias o movimientos del inventario.{% endif %}</p></div>
     </div>
     <form class="assistant-composer" data-composer>
+      {% if assistant_available %}<div class="assistant-examples" aria-label="Ejemplos para empezar">
+        {% if current_user()['role'] == 'admin' %}<button type="button" class="button quiet" data-assistant-example="Prepara una ficha para un cable USB-C de 1 metro. Precio 18000 pesos, cantidad inicial 3. Redacta la descripción.">Preparar una ficha</button><button type="button" class="button quiet" data-assistant-example="Redacta una descripción breve para el catálogo de un soporte ajustable para portátil.">Redactar descripción</button>{% endif %}
+        <button type="button" class="button quiet" data-assistant-example="¿Qué productos tienen pocas unidades disponibles?">Consultar existencias</button>
+      </div>{% endif %}
       <label for="assistant-message">Tu solicitud</label>
-      <textarea id="assistant-message" data-input rows="3" maxlength="2000" aria-describedby="assistant-help" placeholder="Ej. Prepara 3 cables USB-C a 18.000 pesos cada uno" {% if not assistant_available %}disabled{% endif %}></textarea>
+      <textarea id="assistant-message" data-input rows="3" maxlength="2000" aria-describedby="assistant-help" placeholder="Ej. Prepara para catálogo un cable USB-C reforzado a 18000 pesos, cantidad inicial 3" {% if not assistant_available %}disabled{% endif %}></textarea>
       <p id="assistant-help" class="muted">Envía solo datos de productos. No incluyas nombres, teléfonos ni información de clientes. {% if not assistant_available %}Puedes cargar un archivo o registrar un producto manualmente.{% endif %}</p>
-      <div class="assistant-composer-footer"><small>Enter envía · Shift+Enter agrega una línea</small><button class="button primary" type="submit" {% if not assistant_available %}disabled{% endif %}>Preparar solicitud</button></div>
+      <div class="assistant-composer-footer"><button class="button primary" type="submit" {% if not assistant_available %}disabled{% endif %}>Enviar solicitud</button></div>
     </form>
   </div>
   <aside class="assistant-side">
     {% if current_user()['role'] == 'admin' %}
     <form class="assistant-panel form-panel assistant-upload" method="post" enctype="multipart/form-data" action="{{ url_for('web.assistant_import') }}">
       <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <h2>Trabaja desde un archivo</h2><p class="muted">La extracción es local y sigue disponible sin IA. El archivo no se envía a Groq.</p>
+      <h2>Importar productos desde un archivo</h2><p class="muted">Carga un CSV o Excel para revisar los productos antes de guardarlos.</p>
       <label for="assistant-file">Archivo CSV o XLSX</label><input id="assistant-file" type="file" name="archivo" accept=".csv,.xlsx" required aria-describedby="file-help">
       <small id="file-help">Hasta 5 MB, 1.000 filas y 30 columnas; sin macros ni contenido activo.</small>
-      <label for="assistant-keywords">Palabras clave <span class="optional">opcional</span></label><input id="assistant-keywords" name="palabras" maxlength="100" placeholder="Ej. cable USB"><small>Busca todas las palabras en nombre, descripción o categoría.</small>
-      <fieldset class="assistant-fields"><legend>Campos que quieres extraer</legend>{% for key,label in [('name','Nombre'),('description','Descripción'),('category','Categoría'),('price','Precio'),('stock','Cantidad')] %}<label><input type="checkbox" name="campos" value="{{ key }}" checked> {{ label }}</label>{% endfor %}</fieldset>
-      <button class="button secondary full" type="submit">Extraer y revisar filas</button>
+      {% include 'import_ai_option.html' %}
+      <details><summary>Filtrar productos del archivo</summary><label for="assistant-keywords">Palabras clave</label><input id="assistant-keywords" name="palabras" maxlength="100" placeholder="Ej. cable USB"></details>
+      <button class="button secondary full" type="submit">Revisar productos</button>
       <a class="subtle-link" href="{{ url_for('web.product_new') }}">Registrar producto manualmente</a>
     </form>
     {% endif %}
-    <div class="assistant-panel assistant-safety"><h2>La decisión es tuya</h2><p>Revisa y corrige las propuestas antes de confirmar. Importar un producto no lo publica en el catálogo.</p>{% if current_user()['role'] == 'technician' %}<p>Tu rol permite consultar inventario. Administración prepara y confirma cambios.</p>{% endif %}</div>
+    <div class="assistant-panel assistant-safety"><h2>De la propuesta a la ficha</h2><ol><li>Revisa nombre, descripción, precio y cantidad.</li><li>Acepta o cancela la propuesta.</li><li>Al aceptar, adjunta la imagen local, revisa la disponibilidad y publica cuando la ficha esté lista.</li></ol><p>Las imágenes se adjuntan en la ficha del producto; el asistente no las recibe ni las envía al proveedor.</p>{% if current_user()['role'] == 'technician' %}<p>Tu rol permite consultar inventario. Administración prepara y confirma cambios.</p>{% endif %}</div>
   </aside>
 </section>
 {% endblock %}

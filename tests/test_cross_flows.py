@@ -16,12 +16,17 @@ def test_duplicate_import_rolls_back_all_approved_rows(integration_app, admin_cl
     with integration_app.app_context():
         batch = get_db().execute('SELECT id FROM import_batches').fetchone()[0]
     response = client.post(f'/products/import/{batch}/approve', headers=headers, data={'row': ['0', '1']})
-    assert response.status_code == 302
+    assert response.status_code == 409
+    assert 'Fila 3: Ya existe' in response.get_data(as_text=True)
+    assert 'No se guardó ninguna fila' in response.get_data(as_text=True)
     with integration_app.app_context():
         db = get_db()
         assert db.execute('SELECT COUNT(*) FROM products').fetchone()[0] == 0
         assert db.execute('SELECT COUNT(*) FROM inventory_movements').fetchone()[0] == 0
         assert db.execute('SELECT COUNT(*) FROM import_batches WHERE id=?', (batch,)).fetchone()[0] == 1
+    response = client.post(f'/products/import/{batch}/approve', headers=headers, data={'row': '0', 'publish': '1'})
+    assert response.status_code == 302
+    assert 'Cable USB' in integration_app.test_client().get('/catalog').get_data(as_text=True)
 
 
 def test_duplicate_ai_batch_remains_pending_without_partial_products(integration_app):

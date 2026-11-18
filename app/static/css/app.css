@@ -282,3 +282,10 @@ code { color: #d6c9ff; font-family: ui-monospace, SFMono-Regular, Consolas, mono
 .assistant-message { overflow-wrap: anywhere; }
 @media (max-width: 620px) { .assistant-message { max-width: 100%; } .assistant-proposal .button-row { flex-direction: column; } .assistant-composer-footer { align-items: stretch; flex-direction: column; } }
 .assistant-composer textarea { width: 100%; padding: .75rem; background: var(--canvas); color: var(--ink); border: 1px solid #60718d; border-radius: 8px; }
+
+.inventory-search { display: grid; grid-template-columns: minmax(0, 2fr) minmax(10rem, 1fr) auto; gap: 1rem; align-items: end; margin-bottom: 1.25rem; }
+.inventory-search label { margin-top: 0; }
+.inventory-results { color: var(--muted); margin: 0 0 .65rem; }
+.inventory-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 1rem 0; }
+.inventory-pagination .button { min-width: 44px; min-height: 44px; justify-content: center; }
+@media (max-width: 720px) { .inventory-search { grid-template-columns: minmax(0, 1fr); } }

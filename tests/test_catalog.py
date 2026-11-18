@@ -63,11 +63,11 @@ def test_catalog_exposes_only_approved_commercial_fields(catalog_app):
     html = response.get_data(as_text=True)
     assert response.status_code == 200
     assert response.headers['Cache-Control'] == 'no-store'
-    assert 'Pantalla ficticia' in html and '12,500.50' in html
+    assert 'Pantalla ficticia' in html and '12.500,50' in html
     assert '987654' not in html and 'Admin ficticio' not in html
     assert '<script>alert(1)</script>' not in html and '&lt;script&gt;' in html
     with catalog_app.app_context():
-        assert set(public_catalog(get_db())[0]) == {'name', 'description', 'category', 'price_cents'}
+        assert set(public_catalog(get_db())[0]) == {'id', 'name', 'description', 'category', 'price_cents', 'available', 'image_key'}
 
 
 def test_unpublish_and_retirement_hide_without_deleting_history(catalog_app):
