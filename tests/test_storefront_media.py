@@ -157,10 +157,30 @@ def test_duplicate_forms_roll_back_and_discard_new_image(media_app, admin_client
         response = client.post(path, headers=headers, data={**fields, 'image': (io.BytesIO(raster()), 'collision.png')})
         assert response.status_code == 200
         assert b'Ya existe' in response.data
+        if path == '/products/new':
+            assert f'/products/{first}/edit'.encode() in response.data
     assert product_row(media_app, second) == before
     assert list((tmp_path / 'product-images').glob('*.png')) == []
     with media_app.app_context():
         assert get_db().execute('SELECT count(*) FROM products').fetchone()[0] == 2
+
+
+def test_publish_with_image_from_product_form_updates_catalog_and_featured(media_app, admin_client):
+    client, headers = admin_client
+    for index in range(9):
+        product_id = add_product(media_app, f'Anterior {index}')
+        assert client.post(f'/products/{product_id}/publication', headers=headers, data={'published': '1'}).status_code == 302
+    response = client.post('/products/new', headers=headers, data={
+        'name': 'Ficha nueva', 'price': '120.000,50', 'stock': '2', 'publish': '1',
+        'image': (io.BytesIO(raster('JPEG')), 'producto.jpg'),
+    })
+    assert response.status_code == 302
+    public = media_app.test_client()
+    html = public.get('/catalog').get_data(as_text=True)
+    shelf = html.split('id="store-carousel"', 1)[1].split('</section>', 1)[0]
+    assert 'Ficha nueva' in shelf and '120.000,50' in shelf
+    key = re.search(r'/catalog/images/([a-f0-9]+\.png)', shelf)[1]
+    assert public.get('/catalog/images/' + key).mimetype == 'image/png'
 
 
 def test_generated_filename_collision_never_overwrites(media_app, monkeypatch):

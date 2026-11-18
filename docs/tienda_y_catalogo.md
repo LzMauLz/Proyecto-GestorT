@@ -1,16 +1,26 @@
 # Tienda, catálogo y revisión administrativa
 
+## Ajustes locales del 2026-11-17
+
+- En alta y edición, **Guardar y publicar** hace visible la ficha revisada con su imagen. **Guardar en inventario** conserva el borrador. El carrusel muestra primero los ocho productos publicados de registro más reciente.
+- **Redactar descripción con IA** deja una sugerencia editable en el formulario. `POST /products/suggest-description` requiere administración y CSRF, acepta nombre, categoría y descripción opcional, y no guarda el texto. El asistente también ofrece ejemplos que se pueden editar antes de enviar.
+- Los CSV se pueden separar con coma o punto y coma y guardarse en UTF-8 o Windows-1252. En las pantallas web, marca **Pedir a la IA que redacte las descripciones** para sugerir textos de hasta 50 filas válidas. El archivo se lee localmente y solo nombre, categoría y descripción se envían al proveedor. Las filas incompletas quedan en revisión. Si un duplicado o dato inválido impide guardar el lote, se conserva la selección y se señala la fila que requiere corrección. Solo se publican las filas seleccionadas cuando administración marca la opción correspondiente.
+- La ficha duplicada enlaza al producto activo existente cuando corresponde. Se conserva la unicidad por nombre y categoría normalizados.
+- El seguimiento público destaca el estado actual y muestra los eventos publicados del más reciente al más antiguo.
+
 Entrega del 2026-11-16 implementada en la carpeta `D:\Escritorio\GestorTech`. La rama `feat/tienda-catalogo-imagenes` reúne la ampliación posterior a los seis PR anteriores. No se han fusionado esos PR durante este trabajo.
 
 ## Experiencia pública
 
-La entrada anónima dirige a una tienda pública con buscador por nombre/descripción/categoría, filtros de categorías reales, carrusel manual de productos publicados y fichas con imagen, precio y disponibilidad comercial. El carrusel no se reproduce automáticamente; conserva controles de teclado y respeta movimiento reducido. La consulta de reparación está presente como formulario con código y CSRF y conserva el filtrado de notas internas.
+La entrada anónima dirige a una tienda pública con buscador por nombre, descripción o categoría, filtros de categorías y fichas con imagen, precio y disponibilidad comercial. El carrusel de destacados avanza automáticamente cada 20 segundos y vuelve al inicio al llegar al final. Se puede usar con las flechas, pausar y reanudar. El avance se suspende durante la interacción y respeta la preferencia de movimiento reducido. La consulta de reparación usa un formulario con código y CSRF y mantiene el filtrado de notas internas.
 
 La referencia de estructura comercial fue [Eneba](https://www.eneba.com/); no se copiaron su marca, textos ni imágenes. Se conserva la mascota y paleta violeta de GestorTech. No se añadieron pagos, carrito o descuentos ficticios.
 
 ## Administración y técnicos
 
 Solo administración puede crear o editar productos, adjuntar/reemplazar imágenes, cambiar disponibilidad y publicar/despublicar. El técnico puede consultar inventario y trabajar sobre reparaciones asignadas; ocultar botones no sustituye las comprobaciones del servidor.
+
+Inventario muestra ocho productos activos por página. El buscador encuentra productos por nombre en todo el inventario activo, y la paginación conserva la búsqueda y el filtro. Accesorio, Repuesto e Insumo son las opciones de las fichas y de la revisión del asistente. Los filtros también encuentran las variantes en plural almacenadas anteriormente. Las categorías ya guardadas siguen disponibles al editar su ficha.
 
 El dashboard muestra sus métricas existentes y atajos para inventario, asistente, reparaciones y tienda. Las métricas proceden de SQLite, sin datos decorativos. La navegación móvil conserva enlaces por rol y cierre de sesión.
 

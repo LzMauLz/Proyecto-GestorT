@@ -311,7 +311,7 @@ class GestorTechTests(unittest.TestCase):
                 return [{'source_row':2,'name':'Cable normalizado','description':'','category':'Accesorios'}]
         self.app.extensions['gestortech_ai_provider']=MockProvider()
         upload=(io.BytesIO(b'nombre,descripcion,categoria,precio,cantidad_stock\nCable,USB,,18000,4\n'),'productos.csv')
-        preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload},content_type='multipart/form-data')
+        preview=self.client.post('/products/import/preview',data={'_csrf_token':'test-csrf','file':upload,'use_ai':'1'},content_type='multipart/form-data')
         self.assertEqual(preview.status_code,200)
         self.assertIn('Cable normalizado',preview.get_data(as_text=True))
         self.assertEqual(get_db().execute('SELECT COUNT(*) n FROM products').fetchone()['n'],0)

@@ -7,5 +7,5 @@
   {% set current_availability = request.form.get('available', (product.available|string) if product is defined else '1') %}
   <label for="available">Disponibilidad para clientes</label>
   <select id="available" name="available"><option value="1" {% if current_availability == '1' %}selected{% endif %}>Disponible</option><option value="0" {% if current_availability == '0' %}selected{% endif %}>No disponible</option></select>
-  <small>Esta etiqueta comercial no muestra ni modifica las existencias. Guardar la ficha no publica automáticamente el producto.</small>
+  <small>Este estado se muestra en la tienda cuando el producto está publicado.</small>
 </fieldset>

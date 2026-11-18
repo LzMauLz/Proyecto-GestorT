@@ -4,6 +4,8 @@ El 2026-11-16 el usuario confirmó que esta entrega es para demostración local.
 
 ## Inicio y datos
 
+En Windows, `./iniciar_gestortech.ps1` inicia Flask en `127.0.0.1:5000`. Primero comprueba que el entorno virtual cargue Flask, openpyxl y Pillow. Si `.venv` no funciona o no tiene Pillow, prueba `.venv-review`. También puedes ejecutar `./.venv-review/Scripts/python.exe -B -m flask --app wsgi:app run --host=127.0.0.1 --port=5000` directamente. El arranque no ejecuta `init-db`.
+
 - Abrir `D:\Escritorio\GestorTech` en Visual Studio Code. Los cambios actuales están en `feat/tienda-catalogo-imagenes`.
 - Usar Python 3.11 y las dependencias aprobadas de `requirements.txt` en el entorno virtual del proyecto.
 - Servir exclusivamente en loopback: `python -m flask --app wsgi:app run --host=127.0.0.1 --port=8000`. Compose también publica únicamente `127.0.0.1:8000`.

@@ -41,7 +41,7 @@ def prepare_image(upload):
     try:
         from PIL import Image, ImageOps, UnidentifiedImageError
     except ImportError as exc:
-        raise ValueError('La carga de imágenes no está disponible en este entorno. Contacta a administración.') from exc
+        raise ValueError('Este servidor no tiene Pillow disponible. Detén Flask e inicia GestorTech con iniciar_gestortech.ps1 para habilitar las imágenes.') from exc
     try:
         with warnings.catch_warnings():
             warnings.simplefilter('error', Image.DecompressionBombWarning)

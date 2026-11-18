@@ -12,9 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const controls = document.querySelector('[data-carousel-controls]');
   const previous = document.querySelector('[data-carousel-prev]');
   const next = document.querySelector('[data-carousel-next]');
+  const toggle = document.querySelector('[data-carousel-toggle]');
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
   let category = '';
+  let paused = false;
+  let autoAdvance;
   const normalized = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim().replace(/\s+/g, ' ');
-  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reducedMotion = () => motionPreference.matches;
   const updateArrows = () => {
     if (!track || !controls) return;
     const overflow = track.scrollWidth > track.clientWidth + 2;
@@ -33,9 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (track && shelf) {
       const shelfCards = [...track.querySelectorAll('[data-shelf-card]')];
       shelfCards.forEach(card => { card.hidden = !matches(card); });
-      shelf.hidden = !shelfCards.some(card => !card.hidden);
+      const visibleCount = shelfCards.filter(card => !card.hidden).length;
+      track.dataset.count = visibleCount;
+      shelf.hidden = visibleCount === 0;
       track.scrollLeft = 0;
-      requestAnimationFrame(updateArrows);
+      requestAnimationFrame(() => {
+        updateArrows();
+        scheduleAdvance();
+      });
     }
   };
   catalog.querySelector('[data-category-tools]').hidden = false;
@@ -57,11 +66,54 @@ document.addEventListener('DOMContentLoaded', () => {
     filter();
     search?.focus();
   });
+  const canAdvance = () => track && !controls.hidden && !shelf.hidden && !paused && !reducedMotion()
+    && !document.hidden && !shelf.matches(':hover, :focus-within');
+  const scheduleAdvance = () => {
+    clearTimeout(autoAdvance);
+    if (!canAdvance()) return;
+    autoAdvance = setTimeout(() => {
+      if (!canAdvance()) return;
+      if (next.disabled) {
+        track.scrollTo({left: 0, behavior: 'smooth'});
+        scheduleAdvance();
+      } else {
+        next.click();
+      }
+    }, 20_000);
+  };
   if (track) {
-    previous.addEventListener('click', () => track.scrollBy({left: -track.clientWidth * .85, behavior: reducedMotion() ? 'auto' : 'smooth'}));
-    next.addEventListener('click', () => track.scrollBy({left: track.clientWidth * .85, behavior: reducedMotion() ? 'auto' : 'smooth'}));
+    const scroll = direction => {
+      const cards = [...track.querySelectorAll('[data-shelf-card]:not([hidden])')];
+      const start = cards[0]?.offsetLeft ?? 0;
+      const positions = cards.map(card => card.offsetLeft - start);
+      const left = direction > 0 ? positions.find(position => position > track.scrollLeft + 6)
+        : positions.reverse().find(position => position < track.scrollLeft - 6);
+      track.scrollTo({left: left ?? (direction > 0 ? track.scrollWidth : 0), behavior: reducedMotion() ? 'auto' : 'smooth'});
+      scheduleAdvance();
+    };
+    previous.addEventListener('click', () => scroll(-1));
+    next.addEventListener('click', () => scroll(1));
+    toggle.addEventListener('click', () => {
+      paused = !paused;
+      toggle.textContent = paused ? 'Reanudar' : 'Pausar';
+      scheduleAdvance();
+    });
+    const syncMotion = () => {
+      toggle.hidden = reducedMotion();
+      scheduleAdvance();
+    };
+    motionPreference.addEventListener('change', syncMotion);
+    toggle.hidden = reducedMotion();
+    track.dataset.carouselReady = '';
     track.addEventListener('scroll', updateArrows, {passive: true});
-    window.addEventListener('resize', updateArrows);
+    window.addEventListener('resize', () => {
+      updateArrows();
+      scheduleAdvance();
+    });
+    document.addEventListener('visibilitychange', scheduleAdvance);
+    ['mouseenter', 'mouseleave', 'focusin', 'focusout'].forEach(event => {
+      shelf.addEventListener(event, () => queueMicrotask(scheduleAdvance));
+    });
   }
   filter();
 });

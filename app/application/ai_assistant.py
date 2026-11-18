@@ -6,7 +6,7 @@ import secrets
 
 from app.application.ports import AIProviderError
 from app.application.services import now_iso, move_stock, create_product, to_cents, _to_integer
-from app.domain.models import DomainError
+from app.domain.models import DomainError, PRODUCT_CATEGORIES
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_HISTORY = 10
@@ -203,11 +203,16 @@ def request_assistant(db, provider, user, message, history=None):
         'Usa action answer, product_description, product_proposal o stock_proposal. '
         'Para inventario usa únicamente los datos FACTUALES suministrados. '
         'Una propuesta de producto usa name, description, category, price y stock. '
+        f'Para una ficha nueva, usa una categoría del catálogo: {", ".join(PRODUCT_CATEGORIES)}. '
+        'Usa Accesorio para complementos, Repuesto para piezas de reemplazo e Insumo para materiales que se consumen. '
+        'Si no hay información suficiente para elegir, deja category vacío para que el usuario lo revise. '
         'Formato obligatorio: message es texto, action indica la operación y proposal contiene los campos de la propuesta. '
         'En product_proposal, price es el precio suministrado por el usuario en pesos COP, como texto decimal sin separador de miles. '
         'No uses price_cents en las propuestas: ese campo solo pertenece al contexto de consulta y está expresado en centavos. '
         'Para answer usa proposal null. '
-        'Puedes preparar fichas de catálogo con nombre, descripción y precio. '
+        'Redacta tú la descripción comercial de cada ficha a partir del nombre, categoría y detalles disponibles. '
+        'No pidas al usuario que redacte la descripción. No inventes especificaciones, accesorios ni garantías. '
+        'Si solo pide redactar una descripción, usa action answer y escribe la descripción en message. '
         'Si no se indicó stock, pregunta la cantidad inicial o si el usuario confirma registrar 0 hasta tener existencias; nunca asumas cero. '
         'Tras aceptar un producto, administración adjuntará una imagen local a su ficha y decidirá publicarlo. '
         'No solicites imágenes al modelo, no inventes enlaces de imagen y no publiques productos. '

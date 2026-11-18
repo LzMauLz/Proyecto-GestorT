@@ -1,5 +1,6 @@
 """Local application tests for reviewed assistant operations; no external provider."""
 import io
+import json
 import os
 import tempfile
 import unittest
@@ -8,6 +9,7 @@ from openpyxl import Workbook
 from werkzeug.security import generate_password_hash
 from app import create_app
 from app.infrastructure.database import get_db, init_db
+from app.infrastructure.ai.groq_adapter import GroqAdapter
 from app.domain.models import DomainError
 
 
@@ -212,6 +214,71 @@ class AssistantWorkflowTests(unittest.TestCase):
             'archivo': (io.BytesIO(b'nombre,precio,precio_venta,stock\nCable,10,20,1\n'), 'productos.csv'),
             'campos': ['name', 'price', 'stock']}, content_type='multipart/form-data')
         self.assertEqual(bad.status_code, 302)
+
+def test_assistant_csv_reads_excel_delimiter_and_only_sends_valid_catalog_fields(integration_app, admin_client):
+    class DescriptionProvider:
+        def propose_products(self, rows):
+            assert rows == [{'source_row': 2, 'name': 'Pantalla', 'description': '', 'category': 'Repuestos'}]
+            return [{**rows[0], 'description': 'Pantalla de repuesto.'}]
+
+    integration_app.extensions['gestortech_ai_provider'] = DescriptionProvider()
+    client, headers = admin_client
+    csv_data = 'nombre;categoría;precio;cantidad;correo\nPantalla;Repuestos;120.000,50;2;privado@example.test\nCable;Cables;15,50;;otro@example.test\n'
+    response = client.post('/assistant/import', headers=headers, data={
+        'archivo': (io.BytesIO(csv_data.encode('cp1252')), 'inventario.csv'), 'use_ai': '1',
+    })
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'Pantalla de repuesto.' in html and '120000.50' in html
+    assert 'faltante' in html and '@example.test' not in html
+    with integration_app.app_context():
+        assert get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0] == 0
+
+
+def test_csv_import_requests_strict_groq_schema_for_supported_model(integration_app, admin_client):
+    def open_response(request, timeout):
+        body = json.loads(request.data)
+        response_format = body['response_format']
+        assert response_format['type'] == 'json_schema'
+        assert response_format['json_schema']['strict'] is True
+        rows = json.loads(body['messages'][-1]['content'])['products']
+        assert len(rows) == 6 and all(row['description'] == '' for row in rows)
+        proposals = [{**row, 'description': f'Descripción redactada para la fila {row["source_row"]}.'}
+                     for row in rows]
+        return io.BytesIO(json.dumps({'choices': [{'message': {'content': json.dumps({'products': proposals})}}]}).encode())
+
+    integration_app.extensions['gestortech_ai_provider'] = GroqAdapter(
+        'test-key', 'openai/gpt-oss-20b', enabled=True, opener=open_response)
+    client, headers = admin_client
+    csv_data = 'nombre;categoria;precio;cantidad\n' + ''.join(f'Repuesto {i};Repuesto;120000;2\n' for i in range(6))
+    response = client.post('/assistant/import', headers=headers, data={
+        'archivo': (io.BytesIO(csv_data.encode()), 'productos.csv'), 'use_ai': '1',
+    })
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert all(f'Descripción redactada para la fila {line}.' in html for line in range(2, 8))
+    with integration_app.app_context():
+        assert get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0] == 0
+
+
+def test_product_description_suggestion_needs_admin_csrf_and_review(integration_app, admin_client):
+    class DescriptionProvider:
+        def propose_products(self, rows):
+            assert rows == [{'source_row': 1, 'name': 'Base', 'category': 'Accesorios', 'description': ''}]
+            return [{**rows[0], 'description': 'Base para tu equipo.'}]
+
+    integration_app.extensions['gestortech_ai_provider'] = DescriptionProvider()
+    client, headers = admin_client
+    path = '/products/suggest-description'
+    fields = {'name': 'Base', 'category': 'Accesorios'}
+    assert client.post(path, json=fields).status_code == 400
+    assert client.post(path, json=fields, headers=headers).json == {'description': 'Base para tu equipo.'}
+    with client.session_transaction() as session:
+        session['user_id'] = 2
+    assert client.post(path, json=fields, headers=headers).status_code == 403
+    with integration_app.app_context():
+        assert get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0] == 0
+
 
 def test_named_product_question_includes_inventory_without_trigger_words(integration_app):
     from app.application.services import create_product

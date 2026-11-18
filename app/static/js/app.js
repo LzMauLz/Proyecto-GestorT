@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = shell.querySelector('[data-input]');
   const messages = shell.querySelector('[data-messages]');
   const history = [];
+  const categories = JSON.parse(shell.dataset.categories);
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
   let sending = false;
   const readResponse = async (response) => {
@@ -43,18 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
         fields.forEach(([key, labelText]) => {
           const label = document.createElement('label');
           label.textContent = labelText;
-          const control = document.createElement(key === 'kind' ? 'select' : key === 'description' || key === 'note' ? 'textarea' : 'input');
+          const isCategory = key === 'category';
+          const control = document.createElement(key === 'kind' || isCategory ? 'select' : key === 'description' || key === 'note' ? 'textarea' : 'input');
           control.name = key;
           if (key === 'kind') ['entrada','salida'].forEach(value => {
             const option = document.createElement('option'); option.value = value; option.textContent = value === 'entrada' ? 'Entrada' : 'Salida'; control.append(option);
           });
+          if (isCategory) {
+            const choices = new Set(['', ...categories, entry.category || '']);
+            choices.forEach(value => control.add(new Option(value || 'Sin categoría', value)));
+          }
           control.value = entry[key] ?? '';
           if (['name','price','stock','product_id','kind','quantity'].includes(key)) control.required = true;
           if (['stock','quantity','product_id'].includes(key)) { control.type = 'number'; control.step = '1'; control.min = key === 'stock' ? '0' : '1'; control.max = '2147483647'; }
           if (key === 'price') control.inputMode = 'decimal';
           if (key === 'name') control.maxLength = 160;
           if (key === 'description') control.maxLength = 2000;
-          if (key === 'category') control.maxLength = 100;
           if (key === 'note') control.maxLength = 500;
           label.append(control); group.append(label);
         });
@@ -104,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = input.value.trim();
     if (!text || sending) return;
     sending = true;
-    const button = composer.querySelector('button'); button.disabled = true; composer.setAttribute('aria-busy','true');
+    const button = composer.querySelector('button[type="submit"]'); button.disabled = true; composer.setAttribute('aria-busy','true');
     addMessage('user', text);
     const pending = document.createElement('p'); pending.className = 'assistant-pending'; pending.textContent = 'Preparando respuesta…'; messages.append(pending);
     try {
@@ -118,5 +123,49 @@ document.addEventListener('DOMContentLoaded', () => {
     finally { sending = false; button.disabled = false; composer.removeAttribute('aria-busy'); input.focus(); }
   };
   composer.addEventListener('submit', event => { event.preventDefault(); send(); });
+  composer.querySelectorAll('[data-assistant-example]').forEach(example => {
+    example.addEventListener('click', () => {
+      input.value = example.dataset.assistantExample;
+      input.focus();
+    });
+  });
   input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); send(); } });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-suggest-description]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const form = button.form;
+      const {name, category, description} = form.elements;
+      const status = form.querySelector('[data-description-status]');
+      if (!name.value.trim()) {
+        status.textContent = 'Escribe el nombre del producto primero.';
+        name.focus();
+        return;
+      }
+      const fields = {name: name.value, category: category.value, description: description.value};
+      button.disabled = true;
+      status.textContent = 'Redactando descripción…';
+      try {
+        const response = await fetch(button.dataset.suggestDescription, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRF-Token': form.elements._csrf_token.value},
+          body: JSON.stringify(fields)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        if (Object.keys(fields).some(key => form.elements[key].value !== fields[key])) {
+          status.textContent = 'Cambiaste los datos mientras se redactaba. Pulsa el botón para usar la versión actual.';
+          return;
+        }
+        description.value = data.description;
+        status.textContent = 'Descripción sugerida. Revísala antes de guardar.';
+        description.focus();
+      } catch (error) {
+        status.textContent = error instanceof SyntaxError ? 'No se pudo redactar. Recarga la página o escribe la descripción.' : error.message || 'No se pudo redactar la descripción.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  });
 });

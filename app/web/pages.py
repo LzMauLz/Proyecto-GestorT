@@ -2,29 +2,44 @@ import csv
 import io
 import json
 import secrets
+import re
 import zipfile
 import sqlite3
 from decimal import Decimal, InvalidOperation
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for, send_file
+from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for, send_file
 from openpyxl import load_workbook
 from werkzeug.security import generate_password_hash
 
-from app.application.services import create_product, create_repair, move_stock, now_iso, update_product, update_repair_status
+from app.application.services import create_product, create_repair, move_stock, now_iso, to_cents, update_product, update_repair_status
 from app.application.ai_import import prepare_product_proposal
 from app.application.catalog import public_catalog, set_publication, set_availability
 from app.infrastructure.product_images import prepare_image, store_image, discard_image, image_path
-from app.domain.models import DomainError, REPAIR_STATUSES, TRANSITIONS
-from app.infrastructure.database import get_db
+from app.domain.models import DomainError, PRODUCT_CATEGORIES, REPAIR_STATUSES, TRANSITIONS
+from app.infrastructure.database import get_db, normalize_inventory_key
 from app.web.auth import current_user, login_required, roles_required
 
 web_bp = Blueprint('web', __name__)
 MAX_ROWS = 1000
 MAX_COLUMNS = 30
 MAX_UNCOMPRESSED_XLSX = 20 * 1024 * 1024
+PRODUCTS_PER_PAGE = 8
 
 
 def _header_key(value):
     return ' '.join(str(value or '').strip().lower().replace('_',' ').split())
+
+
+def _form_price(value):
+    price = str(value if value is not None else '').strip().removeprefix('$').strip()
+    if re.fullmatch(r'[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{1,2})?', price):
+        return price.replace(',', '')
+    if re.fullmatch(r'(?:[0-9]+|[0-9]{1,3}(?:\.[0-9]{3})+),[0-9]{1,2}', price):
+        return price.replace('.', '').replace(',', '.')
+    if re.fullmatch(r'[0-9]{1,3}(?:\.[0-9]{3})+', price):
+        return price.replace('.', '')
+    if not re.fullmatch(r'[0-9]+(?:\.[0-9]{1,2})?', price):
+        raise DomainError('Escribe el precio en pesos, por ejemplo 120000 o 120.000,50.')
+    return price
 
 
 def _normalize_rows(headers, rows):
@@ -52,20 +67,17 @@ def _normalize_rows(headers, rows):
         if len(row) > MAX_COLUMNS:
             raise ValueError(f'La fila {number} supera el límite de {MAX_COLUMNS} columnas.')
         item = {field: (row[indexes[field]] if indexes.get(field) is not None and indexes[field] < len(row) else '') for field in aliases}
+        if len(row) > len(headers):
+            raise ValueError(f'La fila {number} tiene más columnas que el encabezado. Si usas coma como separador, pon entre comillas los valores que contienen comas.')
         try:
-            item['price'] = str('' if item['price'] is None else item['price']).strip().replace('$','').replace(' ','')
+            item['price'] = _form_price(item['price'])
             item['stock'] = str('' if item['stock'] is None else item['stock']).strip()
             if not item['price'] or not item['stock'] or not str(item['name'] or '').strip():
                 raise ValueError
-            if ',' in item['price']:
-                raise ValueError
-            price_value=Decimal(item['price'])
+            to_cents(item['price'])
             stock_value=Decimal(item['stock'])
-            if not price_value.is_finite() or price_value < 0 or price_value > Decimal('92233720368547758.07') or price_value != price_value.quantize(Decimal('0.01')):
-                raise ValueError
             if not stock_value.is_finite() or stock_value < 0 or stock_value > 2_147_483_647 or stock_value != stock_value.to_integral_value():
                 raise ValueError
-            item['price']=str(price_value)
             item['stock']=str(int(stock_value))
             item['source_row'] = number
             item['name'] = str(item['name']).strip()
@@ -74,7 +86,7 @@ def _normalize_rows(headers, rows):
             if len(item['name']) > 160 or len(item['description']) > 2000 or len(item['category']) > 100:
                 raise ValueError
             normalized.append(item)
-        except (ValueError, InvalidOperation, TypeError):
+        except (DomainError, ValueError, InvalidOperation, TypeError):
             limits = {'name': 160, 'description': 2000, 'category': 100, 'price': 64, 'stock': 64}
             normalized.append({'source_row': number, **{key: str('' if item.get(key) is None else item.get(key, ''))[:limit] for key, limit in limits.items()},
                                'error':'Nombre, precio o cantidad faltante o inválida. Corrige los campos antes de aprobar.'})
@@ -92,12 +104,18 @@ def parse_product_upload(upload):
     if len(raw) > current_app.config['MAX_CONTENT_LENGTH']:
         raise ValueError('El archivo supera el límite de 5 MB.')
     if extension == 'csv':
-        text = raw.decode('utf-8-sig')
-        reader = csv.reader(io.StringIO(text, newline=''))
         try:
+            text = raw.decode('utf-8-sig')
+        except UnicodeDecodeError:
+            text = raw.decode('cp1252')
+        try:
+            delimiter = max((',', ';'), key=lambda sep: len(next(csv.reader(io.StringIO(text, newline=''), delimiter=sep), [])))
+            reader = csv.reader(io.StringIO(text, newline=''), delimiter=delimiter, strict=True)
             headers = next(reader)
         except StopIteration:
             raise ValueError('El archivo está vacío.')
+        except csv.Error as exc:
+            raise ValueError('No se pudo leer el encabezado del CSV.') from exc
         if len(headers) > MAX_COLUMNS:
             raise ValueError(f'El archivo supera el límite de {MAX_COLUMNS} columnas.')
         rows = []
@@ -163,7 +181,8 @@ def dashboard():
 @web_bp.get('/assistant')
 @roles_required('admin', 'technician')
 def assistant():
-    return render_template('assistant.html', assistant_available=current_app.extensions.get('gestortech_ai_provider') is not None)
+    return render_template('assistant.html', assistant_available=current_app.extensions.get('gestortech_ai_provider') is not None,
+                           product_categories=PRODUCT_CATEGORIES)
 
 @web_bp.route('/repairs/new', methods=['GET','POST'])
 @roles_required('admin','technician')
@@ -209,9 +228,33 @@ def repair_status(repair_id):
 @web_bp.get('/products')
 @roles_required('admin','technician')
 def products():
-    db=get_db()
-    items=db.execute('SELECT p.*,u.name AS last_user FROM products p LEFT JOIN inventory_movements m ON m.product_id=p.id LEFT JOIN users u ON u.id=m.user_id WHERE p.active=1 GROUP BY p.id ORDER BY p.name').fetchall()
-    return render_template('products.html',products=items)
+    query = request.args.get('q', '').strip()[:160]
+    category = request.args.get('category', '')
+    conditions = ['active=1']
+    parameters = []
+    if query:
+        conditions.append('instr(normalize_inventory_key(name), ?) > 0')
+        parameters.append(normalize_inventory_key(query))
+    if category in PRODUCT_CATEGORIES:
+        key = normalize_inventory_key(category)
+        conditions.append('normalize_inventory_key(category) IN (?, ?)')
+        parameters.extend((key, key + 's'))
+    else:
+        category = ''
+    where = ' AND '.join(conditions)
+    db = get_db()
+    total = db.execute(f'SELECT COUNT(*) FROM products WHERE {where}', parameters).fetchone()[0]
+    last_page = max(1, (total + PRODUCTS_PER_PAGE - 1) // PRODUCTS_PER_PAGE)
+    page = min(last_page, max(1, request.args.get('page', 1, type=int)))
+    offset = (page - 1) * PRODUCTS_PER_PAGE
+    items = db.execute(
+        f'SELECT * FROM products WHERE {where} ORDER BY normalize_inventory_key(name), id LIMIT ? OFFSET ?',
+        (*parameters, PRODUCTS_PER_PAGE, offset),
+    ).fetchall()
+    page_numbers = sorted({1, last_page, *range(max(1, page - 2), min(last_page, page + 2) + 1)})
+    return render_template('products.html', products=items, product_categories=PRODUCT_CATEGORIES,
+                           query=query, category=category, page=page, last_page=last_page,
+                           page_numbers=page_numbers, total=total, offset=offset)
 
 
 @web_bp.get('/catalog')
@@ -222,7 +265,8 @@ def catalog():
         current_app.logger.warning('El catálogo no pudo consultar la base de datos.')
         response = current_app.make_response((render_template('catalog.html', products=[], catalog_error=True), 503))
     else:
-        response = current_app.make_response(render_template('catalog.html', products=products))
+        featured = sorted(products, key=lambda product: product['id'], reverse=True)[:8]
+        response = current_app.make_response(render_template('catalog.html', products=products, featured=featured))
     response.headers['Cache-Control'] = 'no-store'
     return response
 
@@ -311,9 +355,26 @@ def product_publication(product_id):
     flash('Producto publicado en el catálogo.' if value == '1' else 'Producto retirado del catálogo.', 'success')
     return redirect(url_for('web.products'))
 
+
+@web_bp.post('/products/suggest-description')
+@roles_required('admin')
+def suggest_description():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or set(data) - {'name', 'category', 'description'}:
+        return jsonify(error='Revisa los datos del producto.'), 400
+    limits = {'name': 160, 'category': 100, 'description': 2000}
+    if any(not isinstance(data.get(key, ''), str) or len(data.get(key, '')) > size for key, size in limits.items()) or not data.get('name', '').strip():
+        return jsonify(error='Escribe un nombre válido para el producto.'), 400
+    row = {key: data.get(key, '').strip() for key in limits}
+    suggestions, mode = prepare_product_proposal([{'source_row': 1, **row}], current_app.extensions.get('gestortech_ai_provider'))
+    if mode != 'groq' or not suggestions[0]['description']:
+        return jsonify(error='La IA no pudo preparar una descripción. Puedes escribirla o reintentar.'), 503
+    return jsonify(description=suggestions[0]['description'])
+
 @web_bp.route('/products/new',methods=['GET','POST'])
 @roles_required('admin')
 def product_new():
+    existing_product = None
     if request.method == 'POST':
         db = get_db()
         key = None
@@ -324,22 +385,29 @@ def product_new():
             content = prepare_image(request.files.get('image'))
             if content is not None:
                 key = store_image(content)
-            data = {'name': request.form.get('name'), 'description': request.form.get('description'), 'category': request.form.get('category'), 'price': request.form.get('price'), 'stock': request.form.get('stock', '0'), 'user_id': current_user()['id']}
+            publish = request.form.get('publish') == '1'
+            data = {'name': request.form.get('name'), 'description': request.form.get('description'), 'category': request.form.get('category'), 'price': _form_price(request.form.get('price')), 'stock': request.form.get('stock', '0'), 'user_id': current_user()['id']}
             db.execute('BEGIN IMMEDIATE')
             product_id = create_product(db, data, commit=False)
-            db.execute('UPDATE products SET available=?,image_key=? WHERE id=?', (int(available), key, product_id))
+            db.execute('UPDATE products SET available=?,image_key=?,published=? WHERE id=?', (int(available), key, int(publish), product_id))
             db.commit()
-            flash('Producto guardado. Revisa su ficha antes de publicarlo.', 'success')
+            flash('Producto publicado en el catálogo.' if publish else 'Producto guardado en inventario. Aún no está publicado.', 'success')
             return redirect(url_for('web.products'))
         except (DomainError, ValueError) as exc:
             db.rollback()
             _discard_failed_product_image(key)
             flash(getattr(exc, 'message', str(exc)), 'error')
+            if isinstance(exc, DomainError) and exc.status_code == 409:
+                existing_product = db.execute(
+                    'SELECT id FROM products WHERE active=1 AND normalize_inventory_key(name)=normalize_inventory_key(?) '
+                    'AND normalize_inventory_key(category)=normalize_inventory_key(?)',
+                    (request.form.get('name', ''), request.form.get('category', '')),
+                ).fetchone()
         except (OSError, sqlite3.Error):
             db.rollback()
             _discard_failed_product_image(key)
             flash('No se pudo guardar el producto y su imagen. Revisa el archivo e inténtalo nuevamente.', 'error')
-    return render_template('product_form.html')
+    return render_template('product_form.html', existing_product=existing_product, product_categories=PRODUCT_CATEGORIES)
 
 
 @web_bp.route('/products/<int:product_id>/edit',methods=['GET','POST'])
@@ -359,10 +427,11 @@ def product_edit(product_id):
             if content is not None:
                 key = store_image(content)
             db.execute('BEGIN IMMEDIATE')
-            update_product(db, product_id, {'name': request.form.get('name'), 'description': request.form.get('description'), 'category': request.form.get('category'), 'price': request.form.get('price')}, commit=False)
-            db.execute('UPDATE products SET available=?,image_key=? WHERE id=?', (int(available), key or product['image_key'], product_id))
+            publish = request.form.get('publish') == '1'
+            update_product(db, product_id, {'name': request.form.get('name'), 'description': request.form.get('description'), 'category': request.form.get('category'), 'price': _form_price(request.form.get('price'))}, commit=False)
+            db.execute('UPDATE products SET available=?,image_key=COALESCE(?,image_key),published=CASE WHEN ? THEN 1 ELSE published END WHERE id=?', (int(available), key, publish, product_id))
             db.commit()
-            flash('Producto actualizado.', 'success')
+            flash('Producto publicado en el catálogo.' if publish else 'Producto actualizado.', 'success')
             return redirect(url_for('web.products'))
         except (DomainError, ValueError) as exc:
             db.rollback()
@@ -372,7 +441,7 @@ def product_edit(product_id):
             db.rollback()
             _discard_failed_product_image(key)
             flash('No se pudo guardar la ficha y su imagen. Revisa el archivo e inténtalo nuevamente.', 'error')
-    return render_template('product_edit.html', product=product)
+    return render_template('product_edit.html', product=product, product_categories=PRODUCT_CATEGORIES)
 
 
 @web_bp.post('/products/<int:product_id>/movement')
@@ -395,7 +464,21 @@ def product_retire(product_id):
 @web_bp.get('/products/import')
 @roles_required('admin')
 def import_form():
-    return render_template('import.html')
+    return render_template('import.html', assistant_available=current_app.extensions.get('gestortech_ai_provider') is not None)
+
+
+def _stage_import(rows):
+    use_ai = request.form.get('use_ai') == '1'
+    provider = current_app.extensions.get('gestortech_ai_provider') if use_ai else None
+    rows, mode = prepare_product_proposal(rows, provider)
+    batch = secrets.token_urlsafe(18)
+    db = get_db()
+    with db:
+        db.execute("DELETE FROM import_batches WHERE datetime(created_at) < datetime('now','-1 day')")
+        db.execute('INSERT INTO import_batches(id,user_id,payload_json,created_at) VALUES(?,?,?,?)',
+                   (batch, current_user()['id'], json.dumps(rows, ensure_ascii=False), now_iso()))
+    return render_template('import_preview.html', rows=rows, batch=batch, import_mode=mode,
+                           ai_unavailable=use_ai and mode == 'manual')
 
 @web_bp.post('/products/import/preview')
 @roles_required('admin')
@@ -403,22 +486,17 @@ def import_preview():
     try:
         rows=parse_product_upload(request.files.get('file'))
         if not rows: raise ValueError('El archivo no contiene filas para importar.')
-        rows, import_mode = prepare_product_proposal(rows, current_app.extensions.get('gestortech_ai_provider'))
-        batch=secrets.token_urlsafe(18)
-        get_db().execute("DELETE FROM import_batches WHERE datetime(created_at) < datetime('now','-1 day')")
-        get_db().execute('INSERT INTO import_batches(id,user_id,payload_json,created_at) VALUES(?,?,?,?)',(batch,current_user()['id'],json.dumps(rows,ensure_ascii=False),now_iso()))
-        get_db().commit()
-        return render_template('import_preview.html',rows=rows,batch=batch,import_mode=import_mode)
+        return _stage_import(rows)
     except (ValueError,UnicodeDecodeError) as exc:
         flash(str(exc),'error'); return redirect(url_for('web.import_form'))
 
 @web_bp.post('/assistant/import')
 @roles_required('admin')
 def assistant_import():
-    """Extract only selected product fields locally; files never go to the provider."""
+    """Read the file locally and offer optional suggestions for product fields."""
     try:
-        fields = set(request.form.getlist('campos'))
         allowed = {'name', 'description', 'category', 'price', 'stock'}
+        fields = set(request.form.getlist('campos')) or allowed
         if not fields or not fields <= allowed:
             raise ValueError('Selecciona únicamente los campos de producto disponibles.')
         keyword = request.form.get('palabras', '').strip()
@@ -435,12 +513,7 @@ def assistant_import():
                 row['error'] = 'Completa nombre, precio y cantidad antes de aprobar.'
         if not rows:
             raise ValueError('No hay productos que coincidan; revisa el archivo o las palabras clave.')
-        batch = secrets.token_urlsafe(18)
-        db = get_db()
-        db.execute("DELETE FROM import_batches WHERE datetime(created_at) < datetime('now','-1 day')")
-        db.execute('INSERT INTO import_batches(id,user_id,payload_json,created_at) VALUES(?,?,?,?)', (batch, current_user()['id'], json.dumps(rows, ensure_ascii=False), now_iso()))
-        db.commit()
-        return render_template('import_preview.html', rows=rows, batch=batch, import_mode='manual')
+        return _stage_import(rows)
     except (ValueError, UnicodeDecodeError) as exc:
         flash(str(exc), 'error')
         return redirect(url_for('web.assistant'))
@@ -448,26 +521,44 @@ def assistant_import():
 @web_bp.post('/products/import/<batch>/approve')
 @roles_required('admin')
 def import_approve(batch):
-    db=get_db(); staged=db.execute('SELECT * FROM import_batches WHERE id=? AND user_id=?',(batch,current_user()['id'])).fetchone()
-    if not staged: abort(404)
-    rows=json.loads(staged['payload_json'])
-    approved={int(v) for v in request.form.getlist('row') if v.isdigit()}
-    if not approved:
-        flash('Selecciona al menos una fila revisada.','error'); return redirect(url_for('web.import_form'))
+    db = get_db()
+    user_id = current_user()['id']
+    approved = {int(value) for value in request.form.getlist('row') if re.fullmatch(r'[0-9]{1,4}', value)}
+    publish = request.form.get('publish') == '1'
+    failed_row = None
     try:
         db.execute('BEGIN IMMEDIATE')
-        saved=0
-        for idx,row in enumerate(rows):
-            if idx not in approved: continue
-            create_product(db,{'name':request.form.get(f'name_{idx}',row['name']),'description':request.form.get(f'description_{idx}',row['description']),'category':request.form.get(f'category_{idx}',row['category']),'price':request.form.get(f'price_{idx}',row['price']),'stock':request.form.get(f'stock_{idx}',row['stock']),'user_id':current_user()['id']},commit=False)
-            saved+=1
-        db.execute('DELETE FROM import_batches WHERE id=?',(batch,)); db.commit()
-        flash(f'Se guardaron {saved} productos aprobados.','success')
-        return redirect(url_for('web.products'))
-    except Exception:
-        db.rollback(); current_app.logger.error('Falló el guardado de un lote de importación.')
-        flash('No fue posible guardar el lote. Revisa precio y cantidad. No se guardó parcialmente.','error')
-        return redirect(url_for('web.import_form'))
+        staged = db.execute('SELECT payload_json FROM import_batches WHERE id=? AND user_id=?', (batch, user_id)).fetchone()
+        if not staged:
+            abort(404)
+        rows = json.loads(staged['payload_json'])
+        for index, row in enumerate(rows):
+            for key in ('name', 'description', 'category', 'price', 'stock'):
+                row[key] = request.form.get(f'{key}_{index}', row[key])
+        if not approved or max(approved) >= len(rows):
+            raise DomainError('Marca al menos una fila válida antes de guardar.')
+        for index in sorted(approved):
+            failed_row = rows[index]
+            product_id = create_product(db, {**failed_row, 'price': _form_price(failed_row['price']),
+                                              'stock': str(failed_row['stock']).strip(), 'user_id': user_id}, commit=False)
+            if publish:
+                db.execute('UPDATE products SET published=1 WHERE id=?', (product_id,))
+        db.execute('DELETE FROM import_batches WHERE id=?', (batch,))
+        db.commit()
+    except DomainError as exc:
+        db.rollback()
+        if failed_row is not None:
+            failed_row['error'] = exc.message
+        flash((f"Fila {failed_row['source_row']}: " if failed_row is not None else '') + exc.message + ' No se guardó ninguna fila.', 'error')
+        mode = 'groq' if any(row.get('ai_suggested') for row in rows) else 'manual'
+        return render_template('import_preview.html', rows=rows, batch=batch, import_mode=mode,
+                               selected_rows=approved, publish=publish), exc.status_code
+    except sqlite3.Error:
+        db.rollback()
+        current_app.logger.error('Falló el guardado de un lote de importación.')
+        abort(503, description='El inventario no pudo guardar el lote. Verifica que la base esté actualizada e inténtalo de nuevo.')
+    flash(f'{len(approved)} productos publicados en el catálogo.' if publish else f'Se guardaron {len(approved)} productos en inventario. Aún no están publicados.', 'success')
+    return redirect(url_for('web.products'))
 
 @web_bp.route('/users/new',methods=['GET','POST'])
 @roles_required('admin')

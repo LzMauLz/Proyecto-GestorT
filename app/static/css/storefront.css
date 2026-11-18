@@ -10,3 +10,34 @@
 @media(max-width:600px){.store-header-main,.store-navigation,.store-shell{width:calc(100% - 2rem)}.store-topline{font-size:.7rem;padding:.5rem}.store-header-main{gap:.75rem}.store-header .brand-copy strong{font-size:1.08rem}.store-header .brand-copy small{font-size:.68rem}.store-header .brand-logo{width:44px;height:44px}.store-header .button{padding:.55rem .7rem;font-size:.75rem}.store-navigation{gap:1.25rem}.store-promo{grid-template-columns:1fr;padding:1.5rem;min-height:400px}.store-promo h1{font-size:2.7rem;max-width:12ch}.store-promo p{max-width:29ch}.store-promo-art{position:absolute;width:135px;right:-10px;bottom:0;opacity:.32}.store-promo-copy{z-index:2}.store-tracking{display:flex}.store-tracking h2{font-size:1.45rem}.store-tracking>p{margin-bottom:1rem}.store-section-heading{align-items:center}.store-section-heading h2{font-size:1.35rem}.store-section-heading p{font-size:.8rem}.store-product-grid{gap:.7rem}.store-product-card .store-card-body{padding:.75rem}.store-product-card h3{font-size:.95rem}.store-product-fallback{width:60px;height:60px;font-size:2rem}.store-product-fallback-label{font-size:.63rem}.store-product-card .store-price{font-size:1.1rem}.store-carousel{grid-auto-columns:78%}.store-footer{align-items:flex-start;flex-direction:column}.dashboard-shortcuts{grid-template-columns:1fr}}
 .product-media-fields{margin:1.5rem 0 0;padding:1.1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}.product-media-fields legend{padding:0 .4rem;color:var(--ink);font-weight:650}.product-media-fields img{display:block;width:min(100%,260px);height:180px;object-fit:contain;margin:.75rem 0;background:var(--canvas);border-radius:8px}.product-media-fields input[type=file]{min-width:0;font-size:.83rem}.product-media-fields input[type=checkbox]{width:20px;min-height:20px;accent-color:var(--violet)}.availability-form{margin:.65rem 0;display:grid;gap:.35rem}.availability-form small{font-size:.75rem}
 .store-carousel,.store-product-card{position:relative}
+.store-carousel { scroll-padding-inline: .25rem; }
+.store-carousel[data-carousel-ready] { scrollbar-width: none; }
+.store-carousel[data-carousel-ready]::-webkit-scrollbar { display: none; }
+.store-carousel-controls { flex-wrap: wrap; justify-content: flex-end; }
+[data-store-shelf] .store-section-heading { flex-wrap: wrap; }
+
+.store-carousel[data-count="2"] { grid-auto-columns: 62%; }
+.store-carousel[data-count="3"] { grid-auto-columns: 39%; }
+.store-carousel[data-count="4"] { grid-auto-columns: max(29%, 185px); }
+.store-carousel[data-count="1"] { grid-auto-columns: min(100%, 22rem); }
+.assistant-examples { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .8rem; }
+.assistant-composer-footer { justify-content: flex-end; }
+.form-panel .import-option, .import-option { display: flex; align-items: center; gap: .6rem; margin: 1rem 0; min-height: 44px; }
+.form-panel .import-option input, .import-option input { width: 1.15rem; min-height: 0; height: 1.15rem; flex: none; accent-color: var(--violet); }
+.assistant-upload details, .assistant-upload [type="submit"], [data-suggest-description] { margin-top: .8rem; }
+.tracking-page { max-width: 46rem; margin: clamp(1.5rem, 5vw, 4rem) auto; display: grid; gap: 1rem; }
+.tracking-header { display: flex; gap: clamp(.8rem, 3vw, 1.5rem); align-items: center; padding-bottom: .6rem; }
+.tracking-header img { width: clamp(3rem, 11vw, 5.25rem); height: auto; align-self: start; }
+.tracking-header h1 { margin: .15rem 0 .55rem; font-size: clamp(1.8rem, 5vw, 3.4rem); line-height: 1.08; }
+.tracking-header p:not(.eyebrow), .tracking-result-code { color: var(--muted); margin: 0; }
+.tracking-page .track-form { border-top: 1px solid var(--line); }
+.tracking-page .track-form label { margin-top: 0; }
+.tracking-summary { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: .8rem 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+.tracking-summary h2 { margin: .2rem 0 0; }
+.tracking-result-code { min-width: 0; font-size: .85rem; }
+.tracking-result-code .tracking-code { display: block; overflow-wrap: anywhere; margin: .25rem 0 0; }
+.tracking-error { color: #ffb5c4; margin: .75rem 0 0; }
+@media (max-width: 600px) {
+  .store-carousel[data-count="2"], .store-carousel[data-count="3"], .store-carousel[data-count="4"] { grid-auto-columns: 78%; }
+  .tracking-summary { flex-direction: column; }
+}
