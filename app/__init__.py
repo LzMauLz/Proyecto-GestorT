@@ -49,6 +49,14 @@ def create_app(test_config=None):
             raise click.ClickException('No se creó el respaldo: verifica origen, destino nuevo y permisos.') from exc
         click.echo('Respaldo SQLite creado y verificado.')
 
+    @app.get('/health')
+    def health():
+        try:
+            database.get_db().execute('SELECT 1').fetchone()
+        except sqlite3.Error:
+            return jsonify(status='unavailable'), 503
+        return jsonify(status='ok'), 200
+
     @app.after_request
     def security_headers(response):
         response.headers.setdefault('X-Content-Type-Options', 'nosniff')

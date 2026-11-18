@@ -24,7 +24,7 @@ def main():
         root = Path(directory)
         context = root / 'context'
         context.mkdir()
-        for name in ('Dockerfile', 'requirements.txt', 'wsgi.py', 'README.md'):
+        for name in ('Dockerfile', 'requirements.txt', 'wsgi.py', 'railway_entrypoint.py', 'README.md'):
             shutil.copyfile(source / name, context / name)
         for name in ('app', 'config'):
             shutil.copytree(source / name, context / name,
@@ -36,6 +36,8 @@ def main():
             'build': {'context': context.as_posix()},
             'image': project + ':local',
             'ports': ['127.0.0.1:5068:8000'],
+            'user': '0:0',
+            'environment': {'RAILWAY_VOLUME_MOUNT_PATH': '/app/instance'},
             'restart': 'no',
         }}}), encoding='utf-8')
         # Override ports explicitly to avoid also publishing the demo's usual port.
@@ -57,6 +59,10 @@ def main():
             return run(compose + ['exec', '-T', 'gestortech', 'python', '-B', '-'],
                        input=code, capture_output=True).stdout.strip()
 
+        def execute_as_app(code):
+            return run(compose + ['exec', '-T', '--user', '10001:10001', 'gestortech', 'python', '-B', '-'],
+                       input=code, capture_output=True).stdout.strip()
+
         def wait_http():
             for attempt in range(40):
                 try:
@@ -73,7 +79,7 @@ def main():
             run(compose + ['up', '-d', '--no-build'])
             wait_http()
             print('PASS build, inicio y catalogo HTTP 200', flush=True)
-            result = execute("""
+            result = execute_as_app("""
 import os, io
 from PIL import Image
 from werkzeug.security import generate_password_hash
@@ -82,7 +88,7 @@ from app import create_app
 from app.infrastructure.database import get_db
 from app.application.services import create_product
 from app.infrastructure.product_images import prepare_image,store_image
-assert os.getuid()==10001
+assert int(open('/proc/1/status').read().split('Uid:')[1].split()[1])==10001
 try:
     with open('/app/qa-write-denied','w') as stream: stream.write('qa')
 except OSError:
@@ -121,8 +127,10 @@ with app.app_context():
             print('PASS SQLite e imagen sobreviven al reinicio', flush=True)
             container = run(compose + ['ps', '-q', 'gestortech'], capture_output=True).stdout.strip()
             config = run(docker + ['inspect', '--format', '{{.HostConfig.ReadonlyRootfs}} {{.Config.User}}', container], capture_output=True).stdout.strip()
-            assert config == 'true 10001:10001'
-            print('PASS configuracion efectiva read-only y sin root', flush=True)
+            assert config == 'true 0:0'
+            uid = execute("print(open('/proc/1/status').read().split('Uid:')[1].split()[1])")
+            assert uid == '10001'
+            print('PASS filesystem read-only y Gunicorn bajo UID 10001 tras ajustar el volumen Railway', flush=True)
         finally:
             # Only this random QA project's resources are removed, never other volumes.
             run(compose + ['down', '-v', '--remove-orphans'])
