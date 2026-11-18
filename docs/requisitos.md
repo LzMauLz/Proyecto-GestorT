@@ -48,21 +48,23 @@ Como administrador del taller, quiero que cada reparación nueva quede asociada 
 - Dado que un técnico registra una reparación, cuando la guarda, entonces queda asignada a su propio usuario; el backend no acepta una asignación distinta.
 - Dado que falta la asignación o el usuario indicado no es un técnico activo, cuando se intenta guardar la reparación, entonces el sistema rechaza la operación y muestra un mensaje claro.
 
-**Estado:** Pendiente.  
+**Estado:** Implementado y probado localmente para el issue #5; pendiente de validación CI en Python 3.11 e integración.
+
 **Issue relacionada:** [#5 – Corregir bugs de reparaciones e inventario](https://github.com/LzMauLz/Proyecto-GestorT/issues/5).
 
 ### HU-02: Mantener un inventario sin productos duplicados
 
-Como administrador del taller, quiero que GestorTech detecte productos con el mismo nombre normalizado, para evitar registros duplicados y conservar la integridad del inventario.
+Como administrador del taller, quiero que GestorTech detecte productos con el mismo nombre y categoría normalizados, para evitar registros duplicados y conservar la integridad del inventario.
 
-- Dado que existe un producto registrado, cuando se intenta crear otro con el mismo nombre ignorando mayúsculas/minúsculas y espacios innecesarios, entonces el sistema impide el duplicado.
-- Dado que el administrador edita un producto, cuando conserva su propio nombre o utiliza uno que no pertenece a otro producto, entonces la actualización se permite; si coincide con otro registro, se rechaza.
-- Dado que llegan dos solicitudes simultáneas para crear el mismo producto, cuando se persisten, entonces la validación de backend y base de datos evita que ambas generen duplicados.
+- Dado que existe un producto registrado, cuando se intenta crear otro con el mismo nombre y categoría ignorando mayúsculas/minúsculas y espacios exteriores/repetidos en ambos campos, entonces el sistema impide el duplicado. El mismo nombre en otra categoría está permitido.
+- Dado que el administrador edita un producto, cuando conserva su propio nombre/categoría o utiliza una combinación que no pertenece a otro producto, entonces la actualización se permite; si coincide con otro registro, se rechaza.
+- Dado que llegan dos solicitudes simultáneas para crear o editar un producto hacia la misma combinación normalizada de nombre/categoría, cuando se persisten, entonces la validación de backend y base de datos evita que ambas generen duplicados.
 
-**Estado:** Pendiente.  
+**Estado:** Implementado y probado localmente para el issue #5; pendiente de validación CI en Python 3.11 e integración.
+
 **Issue relacionada:** [#5 – Corregir bugs de reparaciones e inventario](https://github.com/LzMauLz/Proyecto-GestorT/issues/5).
 
-**Decisión por confirmar:** la propuesta inicial es que el nombre normalizado sea único globalmente. Antes de implementar debe confirmarse si se permitirá repetir el nombre cuando cambien la marca o la categoría.
+**Decisión confirmada por el usuario (2026-11-15):** unicidad por categoría; normalizar nombre y categoría ignorando case y espacios exteriores/repetidos. La propuesta inicial global queda sustituida por esta decisión explícita. No se añade una entidad marca al modelo.
 
 ### HU-03: Administrar la publicación de productos en el catálogo
 

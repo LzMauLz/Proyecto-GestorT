@@ -4,6 +4,8 @@
 
 ## Implementado
 
+- Issue #5: selección obligatoria de técnico activo, autoasignación para técnicos y protección SQLite; productos únicos por nombre/categoría normalizados, con control de concurrencia. Migración con preflight y rollback verificada solo sobre bases ficticias. Evidencia y límites en [docs/issues/5-integridad.md](docs/issues/5-integridad.md); validación CI en Python 3.11 pendiente.
+
 - Estructura Flask por capas con dominio, aplicación, adaptador SQLite y controladores de página/API.
 - Autenticación de personal con roles administrador/técnico y creación inicial segura de administrador mediante CLI.
 - Reparaciones: asignación, código de seguimiento aleatorio, flujo de estados acordado e historial.
