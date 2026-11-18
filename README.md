@@ -51,19 +51,23 @@ El archivo local `.env` es opcional, está excluido de Git y se carga automátic
 
 ## Ejecución con Docker
 
-El contenedor publica únicamente en `127.0.0.1:8000`, usa un volumen para la base SQLite, ejecuta como usuario sin privilegios y mantiene el filesystem raíz en solo lectura. Es una configuración reproducible para demostración local; `flask run` es el servidor de desarrollo de Flask y no se presenta como servidor de producción.
+El contenedor publica únicamente en `127.0.0.1:8000`, usa un volumen para la base SQLite, ejecuta la aplicación como usuario sin privilegios y mantiene el filesystem raíz en solo lectura. Gunicorn sirve Flask en Docker. La configuración para publicar en Railway está en `railway.json` y `docs/despliegue_railway.md`.
 
 ```powershell
 $env:GESTORTECH_SECRET_KEY = (python -c "import secrets; print(secrets.token_hex(32))")
 docker compose up --build
 ```
 
-Luego crea el administrador dentro del contenedor (`docker compose exec gestortech python -m flask --app wsgi:app auth create-admin`). La validación Docker previa documentó imagen, arranque, puerto y persistencia SQLite; no se repitió durante esta fase y no demuestra preparación para Internet.
+Luego crea el administrador dentro del contenedor (`docker compose exec gestortech python -m flask --app wsgi:app auth create-admin`).
 
 Docker mantiene Groq desactivado aunque exista un `.env` local. Para habilitarlo
 de forma explícita en el contenedor, define `DOCKER_GROQ_ENABLED=true`,
 `DOCKER_GROQ_MODEL` y `DOCKER_GROQ_API_KEY` en el entorno de ejecución. No
 guardes esas variables en archivos versionados.
+
+## Despliegue en Railway
+
+La configuración está en `railway.json`. Conecta el repositorio y despliega desde `develop`. Monta un volumen en `/app/instance` y configura las variables, el dominio y el primer usuario según `docs/despliegue_railway.md`. Railway asigna `PORT`; Gunicorn sirve Flask y `/health` comprueba que la aplicación pueda consultar SQLite.
 
 ## Funcionalidades
 

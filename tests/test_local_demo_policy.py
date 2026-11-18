@@ -23,6 +23,7 @@ def test_local_catalog_and_manual_workflow_do_not_need_provider(demo_app):
     assert demo_app.extensions['gestortech_ai_provider'] is None
     client = demo_app.test_client()
     assert client.get('/catalog').status_code == 200
+    assert client.get('/health').status_code == 200
     with client.session_transaction() as session:
         session['user_id'] = 1
         session['_csrf_token'] = 'demo-csrf'
