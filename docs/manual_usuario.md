@@ -1,27 +1,62 @@
 # Manual de uso de GestorTech
 
-Usa la [demo en PythonAnywhere](https://gestortech.pythonanywhere.com/). Para la sustentación, emplea productos y órdenes ficticias.
-
-## Administrador
-
-1. Abre [Acceso del personal](https://gestortech.pythonanywhere.com/login) e inicia sesión. En **Usuarios** crea un técnico activo si todavía no existe uno.
-2. En **Nueva reparación**, escribe el equipo y el problema, selecciona el técnico responsable y pulsa **Crear reparación**. Entrega al cliente el código que aparece en el detalle.
-3. En la orden, selecciona una transición permitida. Usa el campo de avance público para mensajes que deba ver el cliente y el campo de nota interna para información del taller.
-4. En **Inventario**, busca por nombre o categoría. Al añadir un producto puedes adjuntar una imagen PNG, JPEG o WebP de hasta 2 MB y 12 megapíxeles. **Guardar en inventario** deja la ficha interna. **Guardar y publicar** la hace visible en tienda. Puedes cambiar su disponibilidad o retirarla del catálogo sin borrar el historial.
-5. Registra entradas y salidas desde la fila del producto. El sistema no permite una salida que deje las existencias en negativo.
-6. En **Asistente IA**, pide una ficha indicando nombre, precio y cantidad. Revisa los campos antes de confirmar o cancelar. Adjunta la imagen al completar la ficha y decide si la publicas.
-7. Para importar CSV/XLSX, carga el archivo desde Inventario o Asistente IA, revisa las columnas y las filas de la previsualización, y guarda solo las que hayas seleccionado. La asistencia de IA es opcional.
-
-## Técnico
-
-1. Inicia sesión y abre el **Panel**. Allí aparecen las reparaciones asignadas a tu cuenta.
-2. Abre una reparación asignada y guarda un cambio de estado permitido. Escribe en el campo público únicamente el avance que debe ver el cliente.
-3. Si registras una nueva orden, el sistema la asigna a tu cuenta. Puedes consultar el inventario y el asistente. La publicación, la gestión de stock y la aprobación de propuestas son tareas de administración.
+Usa la [demo pública](https://gestortech.pythonanywhere.com/). Para prácticas y sustentaciones, utiliza productos, usuarios y órdenes ficticias. Las capturas ilustran las pantallas, los nombres y registros de ejemplo que aparecen son demostrativos.
 
 ## Cliente
 
-1. Abre el [catálogo público](https://gestortech.pythonanywhere.com/catalog) para buscar repuestos y consultar su disponibilidad general.
-2. Abre [Consultar reparación](https://gestortech.pythonanywhere.com/track). Introduce el código que empieza por `GT-` y pulsa **Ver estado**. Verás el estado y los avances publicados, sin crear una cuenta.
-3. Si el código no se encuentra, comprueba que lo copiaste completo y solicita al taller que confirme el código.
+### Explorar productos
 
-Consulta [uso responsable de IA](uso_ia.md) y [operación de la demo](entrega_funcional.md).
+Abre el [catálogo](https://gestortech.pythonanywhere.com/catalog). Busca por nombre, repuesto o categoría. La disponibilidad que se muestra es general y puede cambiar.
+
+![Tienda pública y acceso a consulta de reparación](images/manual/01-tienda-publica.png)
+
+### Consultar una reparación
+
+1. Abre [Consultar reparación](https://gestortech.pythonanywhere.com/track).
+2. Escribe el código `GT-` completo que te entregó el taller y pulsa **Ver estado**.
+3. Consulta el estado actual y los avances publicados. No necesitas una cuenta.
+4. Si no aparece, revisa que el código esté completo y pide al taller que lo confirme.
+
+![Formulario público para consultar reparación](images/manual/08-consultar-reparacion.png)
+
+## Personal del taller
+
+Inicia sesión desde [Acceso del personal](https://gestortech.pythonanywhere.com/login) con la cuenta que creó el administrador. No compartas tu contraseña. Si no puedes ingresar, contacta a la persona administradora.
+
+![Acceso del personal](images/manual/02-acceso-personal.png)
+
+### Administrador
+
+- **Panel:** revisa órdenes recientes, productos y alertas de existencias.
+- **Crear reparación:** completa el equipo y el problema, asigna un técnico activo y pulsa **Crear reparación**. Comparte con el cliente el código que aparece al terminar.
+- **Actualizar reparación:** selecciona una transición disponible. Escribe en el avance público solo información que el cliente pueda ver. Reserva las notas internas para el taller.
+- **Inventario:** busca por nombre o categoría. Desde **Añadir producto** completa nombre, descripción, categoría, precio y existencias. Puedes adjuntar imágenes PNG, JPEG o WebP de hasta 2 MB y 12 megapíxeles. Guarda el producto en el inventario y publícalo cuando corresponda. También puedes cambiar su disponibilidad o retirarlo del catálogo.
+- **Movimientos:** registra entradas o salidas desde el producto. El sistema impide dejar existencias negativas.
+- **Usuarios:** crea cuentas del personal y asigna el rol adecuado. Crea un técnico activo antes de registrar reparaciones que deban asignarse.
+
+![Panel de administración](images/manual/03-panel-administracion.png)
+
+![Formulario para registrar una reparación y asignar técnico](images/manual/04-registrar-reparacion.png)
+
+![Inventario, búsqueda, disponibilidad y movimientos](images/manual/05-inventario.png)
+
+![Formulario de creación de usuario](images/manual/07-crear-usuario.png)
+
+### Técnico
+
+- Entra al **Panel** para ver las reparaciones asignadas a tu cuenta.
+- Abre una reparación y guarda el siguiente estado permitido.
+- Usa el avance público únicamente para información destinada al cliente.
+- La publicación de productos, la gestión de existencias y la aprobación de propuestas de catálogo corresponden al administrador.
+
+## Asistente de IA e importaciones
+
+En **Asistente IA**, escribe una solicitud sencilla. Por ejemplo, pide redactar una descripción para un producto indicando su nombre y categoría, o consulta las existencias de un producto. Para crear una propuesta de catálogo, revisa nombre, descripción, categoría, precio y cantidad antes de aprobarla. Adjunta la imagen en el flujo de creación y confirma la publicación manualmente.
+
+![Asistente de inventario e importación CSV/XLSX](images/manual/06-asistente-ia.png)
+
+Para importar CSV o XLSX, selecciona el archivo, revisa la vista previa y las filas detectadas, y aprueba explícitamente qué guardar. Las sugerencias de IA son opcionales. Si la IA no está disponible, usa el formulario manual de inventario. No incluyas información personal de clientes en archivos enviados para análisis de IA.
+
+La IA puede equivocarse. Verifica siempre la descripción y los demás campos. No aceptes valores que no estén respaldados por la información del producto.
+
+Consulta también [capacidades y privacidad de IA](uso_ia.md), [operación de la demo](entrega_funcional.md) y [requisitos del proyecto](requisitos.md).
