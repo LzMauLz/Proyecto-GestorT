@@ -21,9 +21,4 @@ La corrección de redacción quedó registrada en [`3b76032`](https://github.com
 - Sesión, roles, CSRF, transiciones y límites de intentos protegen las operaciones descritas en [la revisión de seguridad](issues/12-seguridad.md). Las cuentas y claves se configuran fuera del repositorio. No se incluyen datos reales, claves ni códigos de seguimiento en este documento.
 - Este despliegue cubre la demo académica. La verificación pública no sustituye pruebas de carga, un ensayo de recuperación de respaldos ni la validación formal de seguridad de producción. Los objetivos de duración y usabilidad de los [requisitos](requisitos.md) siguen pendientes de medición.
 
-## Guion breve de sustentación
 
-1. Abre el catálogo público y muestra una ficha ficticia con imagen y disponibilidad.
-2. Entra como administrador, registra una orden ficticia asignada a un técnico y consulta el código en la vista pública.
-3. Pide una propuesta ficticia a Groq y muestra la revisión antes de cancelarla. Si el proveedor falla, muestra la carga manual con previsualización.
-4. Muestra la [arquitectura](arquitectura.md), [pruebas y evidencias](evidencias.md), [manual](manual-usuario.md) y [límites de IA](uso_ia.md).
