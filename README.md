@@ -52,7 +52,7 @@ La suite usa datos ficticios y bases SQLite temporales. Las pruebas reales del p
 
 - [Requisitos y trazabilidad](docs/requisitos.md) y [decisiones del MVP](docs/decisiones_mvp.md).
 - [Arquitectura, diagramas C4 y ADR](docs/arquitectura.md).
-- [Manual de administrador, técnico y cliente](docs/manual_usuario.md).
+- [Manual de administrador, técnico y cliente](docs/manual-usuario.md).
 - [Capacidades, privacidad y límites de IA](docs/uso_ia.md).
 - [API](docs/api.md) y [OpenAPI JSON](https://gestortech.pythonanywhere.com/api/openapi.json).
 - [Estado del proyecto](PROJECT_STATUS.md).

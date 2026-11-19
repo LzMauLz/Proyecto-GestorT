@@ -201,6 +201,6 @@ Las decisiones confirmadas se aplican a la demo. Los cambios futuros requieren e
 - [Auditoría del estado actual](auditoria_estado_actual.md).
 - [Documentación de API](api.md).
 - [Uso responsable de IA](uso_ia.md).
-- [Manual de usuario](manual_usuario.md).
+- [Manual de usuario](manual-usuario.md).
 - [Entrega y validación](entrega_funcional.md).
 - [Backlog de GitHub](https://github.com/LzMauLz/Proyecto-GestorT/issues).

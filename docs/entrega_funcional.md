@@ -26,4 +26,4 @@ La corrección de redacción quedó registrada en [`3b76032`](https://github.com
 1. Abre el catálogo público y muestra una ficha ficticia con imagen y disponibilidad.
 2. Entra como administrador, registra una orden ficticia asignada a un técnico y consulta el código en la vista pública.
 3. Pide una propuesta ficticia a Groq y muestra la revisión antes de cancelarla. Si el proveedor falla, muestra la carga manual con previsualización.
-4. Muestra la [arquitectura](arquitectura.md), [pruebas y evidencias](evidencias.md), [manual](manual_usuario.md) y [límites de IA](uso_ia.md).
+4. Muestra la [arquitectura](arquitectura.md), [pruebas y evidencias](evidencias.md), [manual](manual-usuario.md) y [límites de IA](uso_ia.md).
