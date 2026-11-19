@@ -7,7 +7,7 @@
 | Disponibilidad | La URL pública abrió por HTTPS. `/health` devolvió `{"status":"ok"}`. |
 | Personal y reparación | Se abrió el panel con una cuenta administradora. Se registró una orden ficticia asignada a un técnico activo. La consulta pública por código mostró «Recibido» y el avance autorizado. La nota interna quedó fuera. |
 | Catálogo e imágenes | Se publicó una ficha ficticia con imagen. La imagen cargó en el catálogo y en destacados, y la ficha mostró «No disponible». |
-| IA desde el panel | Groq respondió al chat, generó una ficha ficticia y esta se canceló sin modificar existencias. Tras corregir el adaptador, el formulario volvió a generar una descripción editable. |
+| IA desde el panel | Groq respondió al chat, generó una ficha ficticia y esta se canceló sin modificar existencias. Tras corregir el adaptador, el formulario volvió a generar una descripción editable. [Evidencia del endpoint en la demo pública](evidencias/sesion-4-groq.md). |
 | Importación y aprobación | Con Groq real y una base temporal, se probaron dos descripciones y dos filas CSV sin descripción. Ambas filas recibieron sugerencias sin guardarse automáticamente. La aprobación de una propuesta ficticia se comprobó por separado en una base temporal. |
 | Regresión | En una copia aislada del código desplegado con el parche pasaron 161 pruebas Pytest y 77 subpruebas. Cubren roles, inventario, imágenes, catálogo, reparaciones y seguimiento. |
 
