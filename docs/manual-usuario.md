@@ -49,10 +49,19 @@ Inicia sesión desde [Acceso del personal](https://gestortech.pythonanywhere.com
 3. Usa **Pendientes** para ver las órdenes en proceso o **Listas para entregar** para ver las que ya pueden retirarse. También puedes cambiar de página con los filtros activos.
 4. Pulsa el nombre del equipo para consultar el historial y registrar un avance. Si atiendes como técnico, verás las órdenes asignadas a tu cuenta.
 
+### Registrar una reparación con los datos del cliente
+
+1. Abre **Nueva reparación**. Escribe el equipo y el problema reportado.
+2. En **Datos del cliente** puedes agregar nombre, teléfono y correo electrónico. Completa solo los datos de contacto disponibles.
+3. Si eres administrador, asigna un técnico activo. Si eres técnico, la orden queda asignada a tu cuenta.
+4. Pulsa **Crear reparación** y comparte el código de seguimiento con el cliente.
+
+Para completar o corregir los datos, abre la orden y usa **Añadir datos del cliente** o **Editar datos del cliente**. El contacto solo se consulta en el detalle interno por administración o por el técnico asignado. La consulta pública muestra el estado y los avances que el taller decidió publicar. Mantén el contacto fuera de las notas públicas y del chat.
+
 ### Administrador
 
 - **Panel:** revisa órdenes recientes, productos y alertas de existencias. **Revisar existencias** abre los productos activos con dos unidades o menos.
-- **Crear reparación:** completa el equipo y el problema, asigna un técnico activo y pulsa **Crear reparación**. Comparte con el cliente el código que aparece al terminar.
+- **Crear reparación:** [registra la orden y los datos de contacto](#registrar-una-reparación-con-los-datos-del-cliente), y asigna un técnico activo.
 - **Actualizar reparación:** selecciona una transición disponible. Escribe en el avance público solo información que el cliente pueda ver. Reserva las notas internas para el taller.
 - **Inventario:** busca por nombre o categoría. Desde **Añadir producto** completa nombre, descripción, categoría, precio y existencias. Puedes adjuntar imágenes PNG, JPEG o WebP de hasta 2 MB y 12 megapíxeles. Guarda el producto en el inventario y publícalo cuando corresponda. También puedes cambiar su disponibilidad o retirarlo del catálogo.
 - Desde la edición del producto, abre **Editar modelos compatibles**. Añade una línea por modelo en el formato `Marca | Modelo`. Por ejemplo, `Samsung | Galaxy A15 5G`. Incluye solo modelos que el taller haya verificado y pulsa **Guardar modelos**.

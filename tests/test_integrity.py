@@ -212,6 +212,8 @@ class LegacyMigrationTests(unittest.TestCase):
         init_db()
         self.assertEqual([tuple(row) for row in self.db.execute('SELECT * FROM repair_history')], before)
         self.assertEqual(self.db.execute('SELECT id FROM repairs').fetchone()[0], 7)
+        contact = self.db.execute('SELECT customer_name, customer_phone, customer_email FROM repairs WHERE id=7').fetchone()
+        self.assertEqual(tuple(contact), ('', '', ''))
         self.assertEqual(next(r['notnull'] for r in self.db.execute('PRAGMA table_info(repairs)') if r['name'] == 'assigned_to'), 1)
         self.assertIsNotNone(self.db.execute("SELECT 1 FROM sqlite_master WHERE name='legacy_device_idx'").fetchone())
         self.assertIsNone(self.db.execute('PRAGMA foreign_key_check').fetchone())

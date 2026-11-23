@@ -10,7 +10,9 @@ from flask import Blueprint, abort, current_app, flash, jsonify, make_response, 
 from openpyxl import load_workbook
 from werkzeug.security import generate_password_hash
 
-from app.application.services import create_product, create_repair, move_stock, now_iso, to_cents, update_product, update_repair_status
+from app.application.services import (
+    create_product, create_repair, move_stock, now_iso, to_cents, update_product, update_repair_contact, update_repair_status,
+)
 from app.application.ai_import import prepare_product_proposal
 from app.application.catalog import (
     MAX_COMPATIBILITY_TEXT, compatibility_ready, filter_catalog, product_compatibilities, public_catalog,
@@ -265,14 +267,23 @@ def repair_new():
     if request.method == 'POST':
         try:
             assigned = request.form.get('assigned_to') or None
-            repair_id, code = create_repair(db, {'device':request.form.get('device'),'issue':request.form.get('issue'),'assigned_to':int(assigned) if assigned else None},user['id'],user['role'])
+            repair_id, code = create_repair(db, {
+                'device': request.form.get('device'),
+                'issue': request.form.get('issue'),
+                'assigned_to': int(assigned) if assigned else None,
+                'customer_name': request.form.get('customer_name', ''),
+                'customer_phone': request.form.get('customer_phone', ''),
+                'customer_email': request.form.get('customer_email', ''),
+            }, user['id'], user['role'])
             flash(f'Reparación registrada. Código de seguimiento: {code}','success')
             return redirect(url_for('web.repair_detail',repair_id=repair_id))
         except (DomainError,ValueError) as exc:
             flash(getattr(exc,'message',str(exc)),'error')
-    return render_template('repair_form.html',technicians=technicians)
+    response = make_response(render_template('repair_form.html', technicians=technicians))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
-@web_bp.get('/repairs/<int:repair_id>')
+@web_bp.route('/repairs/<int:repair_id>', methods=['GET', 'POST'])
 @roles_required('admin','technician')
 def repair_detail(repair_id):
     user=current_user(); db=get_db()
@@ -280,10 +291,25 @@ def repair_detail(repair_id):
     repair=db.execute(query,(repair_id,)).fetchone()
     if not repair: abort(404)
     if user['role']!='admin' and repair['assigned_to'] != user['id']: abort(403)
+    contact_error = None
+    if request.method == 'POST':
+        try:
+            update_repair_contact(db, repair_id, user['id'], user['role'], request.form)
+        except DomainError as exc:
+            if exc.status_code != 400:
+                abort(exc.status_code)
+            contact_error = exc.message
+        else:
+            flash('Datos del cliente actualizados.', 'success')
+            return redirect(url_for('web.repair_detail', repair_id=repair_id, _anchor='repair-client'))
     history=db.execute('SELECT h.*,u.name AS author FROM repair_history h JOIN users u ON u.id=h.user_id WHERE repair_id=? ORDER BY h.id DESC',(repair_id,)).fetchall()
     technicians=db.execute("SELECT id,name FROM users WHERE role='technician' AND active=1 ORDER BY name").fetchall()
-    return render_template('repair_detail.html',repair=repair,history=history,technicians=technicians,
-                           statuses=REPAIR_STATUSES,allowed=TRANSITIONS.get(repair['status'],set()))
+    response = make_response(render_template(
+        'repair_detail.html', repair=repair, history=history, technicians=technicians,
+        statuses=REPAIR_STATUSES, allowed=TRANSITIONS.get(repair['status'], set()), contact_error=contact_error,
+    ), 400 if contact_error else 200)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 @web_bp.post('/repairs/<int:repair_id>/status')
 @roles_required('admin','technician')

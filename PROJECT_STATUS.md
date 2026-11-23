@@ -8,6 +8,12 @@
 
 El [manual de usuario](docs/manual-usuario.md#usar-el-chat-de-productos) explica cómo abrir, minimizar y retomar los chats.
 
+## Datos de contacto en reparaciones
+
+- El personal puede registrar nombre, teléfono y correo electrónico como campos opcionales. Administración y el técnico asignado pueden consultarlos y corregirlos en el detalle de la orden.
+- El contacto queda fuera de los listados, del seguimiento público y del contexto enviado a Groq. El alta existente por API sigue aceptando órdenes sin estos campos.
+- Las bases existentes requieren una [actualización aditiva respaldada](docs/despliegue_pythonanywhere.md#actualizar-una-base-existente-para-usar-contactos-de-reparación). Las órdenes históricas conservan su código, asignación e historial.
+
 ## Ficha pública y búsqueda de repuestos por modelo
 
 - La ficha pública reúne precio, disponibilidad, foto ampliable y los modelos que confirma el taller. El cliente puede compartir con el taller el nombre y la referencia del producto.

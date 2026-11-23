@@ -155,7 +155,7 @@ def staff_chat():
             {'label': 'Abrir el catálogo público', 'url': url_for('web.catalog')},
         ])
 
-    if '@' in message or any(term in text for term in ('telefono', 'datos del cliente', 'nota interna')):
+    if '@' in message or any(term in text for term in ('telefono', 'correo', 'del cliente', 'datos personales', 'nota interna')):
         return _chat_json('Escribe la consulta con datos de inventario y omite los datos personales.', persistent=False)
     provider = current_app.extensions.get('gestortech_ai_provider')
     if provider is None:
@@ -223,7 +223,21 @@ def openapi():
           'post':{'summary':'Registrar entrada o salida (administrador)','parameters':[{'in':'path','name':'id','required':True,'schema':{'type':'integer'}},{'in':'header','name':'X-CSRF-Token','required':True,'schema':{'type':'string'}}],'requestBody':{'required':True,'content':{'application/json':{'schema':{'type':'object','required':['tipo','cantidad'],'properties':{'tipo':{'type':'string','enum':['entrada','salida']},'cantidad':{'type':'integer','minimum':1},'observacion':{'type':'string'}}}}}},'responses':{'201':{'description':'Movimiento registrado'},'409':{'description':'Existencias insuficientes'}}}},
         '/reparaciones':{
           'get':{'summary':'Listar reparaciones visibles según el rol','responses':{'200':{'description':'Reparaciones'}}},
-          'post':{'summary':'Crear reparación (personal autorizado)','parameters':[{'in':'header','name':'X-CSRF-Token','required':True,'schema':{'type':'string'}}],'requestBody':{'required':True,'content':{'application/json':{'schema':{'type':'object','required':['equipo','descripcion_problema'],'properties':{'equipo':{'type':'string'},'descripcion_problema':{'type':'string'},'id_tecnico':{'type':'integer'}}}}}},'responses':{'201':{'description':'Reparación, código de seguimiento y estado inicial'}}}},
+          'post': {
+            'summary': 'Crear reparación (personal autorizado)',
+            'description': 'Los datos opcionales de contacto solo se consultan en el detalle interno.',
+            'parameters': [{'in': 'header', 'name': 'X-CSRF-Token', 'required': True, 'schema': {'type': 'string'}}],
+            'requestBody': {'required': True, 'content': {'application/json': {'schema': {
+              'type': 'object', 'required': ['equipo', 'descripcion_problema'], 'properties': {
+                'equipo': {'type': 'string'}, 'descripcion_problema': {'type': 'string'},
+                'id_tecnico': {'type': 'integer'}, 'nombre_cliente': {'type': 'string', 'maxLength': 120},
+                'telefono_cliente': {'type': 'string', 'maxLength': 32}, 'correo_cliente': {'type': 'string', 'maxLength': 254},
+              },
+            }}}},
+            'responses': {'201': {'description': 'Reparación, código de seguimiento y estado inicial'},
+                          '400': {'description': 'Datos no válidos'}},
+          },
+        },
         '/reparaciones/{id}/estado':{'patch':{'summary':'Cambiar estado permitido y guardar historial','parameters':[{'in':'path','name':'id','required':True,'schema':{'type':'integer'}},{'in':'header','name':'X-CSRF-Token','required':True,'schema':{'type':'string'}}],'requestBody':{'required':True,'content':{'application/json':{'schema':{'type':'object','required':['estado'],'properties':{'estado':{'type':'string'},'nota_interna':{'type':'string'},'comentario_publico':{'type':'string'},'id_tecnico':{'type':'integer'}}}}}},'responses':{'200':{'description':'Estado actualizado'},'403':{'description':'Permiso insuficiente'},'409':{'description':'Transición inválida'}}}},
         '/seguimiento/{codigo}':{'get':{'summary':'Consultar estado e historial expresamente publicado','parameters':[{'in':'path','name':'codigo','required':True,'schema':{'type':'string'}}],'responses':{'200':{'description':'Seguimiento público, sin notas internas'},'404':{'description':'Código no encontrado'}}}},
         '/ia/importacion/propuesta':{'post':{'summary':'Validar CSV/XLSX y proponer campos opcionales para revisión humana (administrador); sin proveedor disponible, mantiene modo manual','parameters':[{'in':'header','name':'X-CSRF-Token','required':True,'schema':{'type':'string'}}],'requestBody':{'required':True,'content':{'multipart/form-data':{'schema':{'type':'object','required':['archivo'],'properties':{'archivo':{'type':'string','format':'binary'}}}}}},'responses':{'200':{'description':'Filas normalizadas en modo manual o sugerencias validadas, siempre para revisión humana'},'400':{'description':'Archivo o formato inválido'},'401':{'description':'Autenticación requerida'}}}},
@@ -284,7 +298,14 @@ def repairs_list():
 def repair_create():
     user=actor(('admin','technician')); data=body()
     try:
-        repair_id,code=create_repair(get_db(),{'device':data.get('equipo'),'issue':data.get('descripcion_problema'),'assigned_to':data.get('id_tecnico')},user['id'],user['role'])
+        repair_id, code = create_repair(get_db(), {
+            'device': data.get('equipo'),
+            'issue': data.get('descripcion_problema'),
+            'assigned_to': data.get('id_tecnico'),
+            'customer_name': data.get('nombre_cliente', ''),
+            'customer_phone': data.get('telefono_cliente', ''),
+            'customer_email': data.get('correo_cliente', ''),
+        }, user['id'], user['role'])
         return jsonify({'id_reparacion':repair_id,'codigo_seguimiento':code,'estado':'Recibido'}),201
     except DomainError as exc: api_error(exc)
 
