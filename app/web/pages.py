@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash
 
 from app.application.services import create_product, create_repair, move_stock, now_iso, to_cents, update_product, update_repair_status
 from app.application.ai_import import prepare_product_proposal
-from app.application.catalog import public_catalog, set_publication, set_availability
+from app.application.catalog import filter_catalog, public_catalog, set_publication, set_availability
 from app.infrastructure.product_images import prepare_image, store_image, discard_image, image_path
 from app.domain.models import DomainError, PRODUCT_CATEGORIES, REPAIR_STATUSES, TRANSITIONS
 from app.infrastructure.database import get_db, normalize_inventory_key
@@ -225,27 +225,40 @@ def repair_status(repair_id):
         flash(getattr(exc,'message',str(exc)),'error')
     return redirect(url_for('web.repair_detail',repair_id=repair_id))
 
+def _inventory_view():
+    category = request.args.get('category')
+    page = request.args.get('page', 1, type=int)
+    return {
+        'q': request.args.get('q', '').strip()[:160] or None,
+        'category': category if category in PRODUCT_CATEGORIES else None,
+        'stock': 'low' if request.args.get('stock') == 'low' else None,
+        'page': page if page > 1 else None,
+    }
+
+
 @web_bp.get('/products')
 @roles_required('admin','technician')
 def products():
-    query = request.args.get('q', '').strip()[:160]
-    category = request.args.get('category', '')
+    view = _inventory_view()
+    query = view['q'] or ''
+    category = view['category'] or ''
     conditions = ['active=1']
     parameters = []
     if query:
         conditions.append('instr(normalize_inventory_key(name), ?) > 0')
         parameters.append(normalize_inventory_key(query))
-    if category in PRODUCT_CATEGORIES:
+    if category:
         key = normalize_inventory_key(category)
         conditions.append('normalize_inventory_key(category) IN (?, ?)')
         parameters.extend((key, key + 's'))
-    else:
-        category = ''
+    if view['stock']:
+        conditions.append('stock <= 2')
     where = ' AND '.join(conditions)
     db = get_db()
     total = db.execute(f'SELECT COUNT(*) FROM products WHERE {where}', parameters).fetchone()[0]
     last_page = max(1, (total + PRODUCTS_PER_PAGE - 1) // PRODUCTS_PER_PAGE)
-    page = min(last_page, max(1, request.args.get('page', 1, type=int)))
+    page = min(last_page, view['page'] or 1)
+    view['page'] = page if page > 1 else None
     offset = (page - 1) * PRODUCTS_PER_PAGE
     items = db.execute(
         f'SELECT * FROM products WHERE {where} ORDER BY normalize_inventory_key(name), id LIMIT ? OFFSET ?',
@@ -253,7 +266,7 @@ def products():
     ).fetchall()
     page_numbers = sorted({1, last_page, *range(max(1, page - 2), min(last_page, page + 2) + 1)})
     return render_template('products.html', products=items, product_categories=PRODUCT_CATEGORIES,
-                           query=query, category=category, page=page, last_page=last_page,
+                           query=query, category=category, view=view, page=page, last_page=last_page,
                            page_numbers=page_numbers, total=total, offset=offset)
 
 
@@ -265,8 +278,17 @@ def catalog():
         current_app.logger.warning('El catálogo no pudo consultar la base de datos.')
         response = current_app.make_response((render_template('catalog.html', products=[], catalog_error=True), 503))
     else:
-        featured = sorted(products, key=lambda product: product['id'], reverse=True)[:8]
-        response = current_app.make_response(render_template('catalog.html', products=products, featured=featured))
+        query = request.args.get('q', '').strip()[:160]
+        category = request.args.get('category', '').strip()[:100]
+        available_only = request.args.get('available') == '1'
+        filtered = bool(query or category or available_only)
+        featured = [] if filtered else sorted(products, key=lambda product: product['id'], reverse=True)[:8]
+        categories = sorted({p['category'] or 'General' for p in products}, key=str.casefold)
+        response = current_app.make_response(render_template(
+            'catalog.html', products=filter_catalog(products, query, category, available_only),
+            featured=featured, categories=categories, catalog_query=query, catalog_category=category,
+            available_only=available_only, filtered=filtered,
+        ))
     response.headers['Cache-Control'] = 'no-store'
     return response
 
@@ -339,7 +361,7 @@ def product_availability(product_id):
     except DomainError as exc:
         abort(exc.status_code, description=exc.message)
     flash('Disponibilidad comercial actualizada.', 'success')
-    return redirect(url_for('web.products'))
+    return redirect(url_for('web.products', **_inventory_view()))
 
 
 @web_bp.post('/products/<int:product_id>/publication')
@@ -353,7 +375,7 @@ def product_publication(product_id):
     except DomainError as exc:
         abort(exc.status_code, description=exc.message)
     flash('Producto publicado en el catálogo.' if value == '1' else 'Producto retirado del catálogo.', 'success')
-    return redirect(url_for('web.products'))
+    return redirect(url_for('web.products', **_inventory_view()))
 
 
 @web_bp.post('/products/suggest-description')
@@ -432,7 +454,7 @@ def product_edit(product_id):
             db.execute('UPDATE products SET available=?,image_key=COALESCE(?,image_key),published=CASE WHEN ? THEN 1 ELSE published END WHERE id=?', (int(available), key, publish, product_id))
             db.commit()
             flash('Producto publicado en el catálogo.' if publish else 'Producto actualizado.', 'success')
-            return redirect(url_for('web.products'))
+            return redirect(url_for('web.products', **_inventory_view()))
         except (DomainError, ValueError) as exc:
             db.rollback()
             _discard_failed_product_image(key)
@@ -441,7 +463,7 @@ def product_edit(product_id):
             db.rollback()
             _discard_failed_product_image(key)
             flash('No se pudo guardar la ficha y su imagen. Revisa el archivo e inténtalo nuevamente.', 'error')
-    return render_template('product_edit.html', product=product, product_categories=PRODUCT_CATEGORIES)
+    return render_template('product_edit.html', product=product, product_categories=PRODUCT_CATEGORIES, view=_inventory_view())
 
 
 @web_bp.post('/products/<int:product_id>/movement')
@@ -451,7 +473,7 @@ def product_movement(product_id):
         move_stock(get_db(),product_id,current_user()['id'],request.form.get('kind'),request.form.get('quantity'),request.form.get('note',''))
         flash('Movimiento de inventario guardado.','success')
     except DomainError as exc: flash(exc.message,'error')
-    return redirect(url_for('web.products'))
+    return redirect(url_for('web.products', **_inventory_view()))
 
 @web_bp.post('/products/<int:product_id>/retire')
 @roles_required('admin')
@@ -459,7 +481,7 @@ def product_retire(product_id):
     db=get_db(); cursor=db.execute('UPDATE products SET active=0 WHERE id=? AND active=1',(product_id,)); db.commit()
     if cursor.rowcount == 0: abort(404)
     flash('Producto dado de baja. El historial de movimientos se conserva.','success')
-    return redirect(url_for('web.products'))
+    return redirect(url_for('web.products', **_inventory_view()))
 
 @web_bp.get('/products/import')
 @roles_required('admin')

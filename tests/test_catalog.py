@@ -1,5 +1,7 @@
 import io
 import json
+from urllib.parse import parse_qs, urlsplit
+
 import pytest
 
 from app import create_app
@@ -136,3 +138,61 @@ def test_ai_approved_product_is_not_automatically_public(catalog_app):
         assert result['status'] == 'approved'
         assert db.execute('SELECT published FROM products').fetchone()[0] == 0
         assert public_catalog(db) == []
+
+
+def test_public_catalog_combines_filters_without_exposing_private_products(catalog_app):
+    cases = [
+        ('Cable USB trenzado', 'Accesorio', 1, 1, 1),
+        ('Cable USB agotado', 'Accesorio', 0, 1, 1),
+        ('Placa USB', 'Repuesto', 1, 1, 1),
+        ('Funda rígida', 'Accesorio', 1, 1, 1),
+        ('Pieza interna', 'Categoría privada', 1, 0, 1),
+        ('Pieza retirada', 'Categoría retirada', 1, 1, 0),
+    ]
+    with catalog_app.app_context():
+        db = get_db()
+        for name, category, available, published, active in cases:
+            product_id = create_product(db, {'name': name, 'category': category, 'price': 1, 'stock': 0})
+            db.execute('UPDATE products SET available=?, published=?, active=? WHERE id=?',
+                       (available, published, active, product_id))
+        db.commit()
+
+    client = catalog_app.test_client()
+    response = client.get('/catalog', query_string={'q': 'Usb', 'category': 'Accesorio', 'available': '1'})
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'Cable USB trenzado' in html
+    for text in ('Cable USB agotado', 'Placa USB', 'Funda rígida', 'Categoría privada', 'Categoría retirada',
+                 'Pieza interna', 'Pieza retirada', 'Productos destacados'):
+        assert text not in html
+    empty = client.get('/catalog', query_string={'q': 'sin resultados'}).get_data(as_text=True)
+    assert 'No encontramos coincidencias' in empty and 'Limpiar filtros' in empty
+
+
+def test_low_stock_filter_keeps_inventory_context_after_retirement(integration_app, admin_client):
+    client, headers = admin_client
+    with integration_app.app_context():
+        db = get_db()
+        for index in range(9):
+            last_id = create_product(db, {'name': f'Cable modelo {index}', 'category': 'Accesorio',
+                                         'price': 10, 'stock': 2, 'user_id': 1})
+        for name, category, stock in [('Cable con stock alto', 'Accesorio', 3),
+                                      ('Cable de repuesto', 'Repuesto', 1),
+                                      ('Teclado', 'Accesorio', 0)]:
+            create_product(db, {'name': name, 'category': category, 'stock': stock, 'user_id': 1})
+
+    assert '/products?stock=low' in client.get('/dashboard').get_data(as_text=True)
+    filters = {'q': 'cable', 'category': 'Accesorio', 'stock': 'low', 'page': '2'}
+    html = client.get('/products', query_string=filters).get_data(as_text=True)
+    assert 'Cable modelo 8' in html and 'Cable modelo 7' not in html
+    for excluded in ('Cable con stock alto', 'Cable de repuesto', 'Teclado'):
+        assert excluded not in html
+
+    response = client.post(f'/products/{last_id}/retire', headers=headers,
+                           query_string={**filters, 'next': 'https://example.test/'})
+    assert response.status_code == 302
+    target = urlsplit(response.location)
+    assert target.netloc == '' and target.path == '/products'
+    assert parse_qs(target.query) == {key: [value] for key, value in filters.items()}
+    html = client.get(response.location).get_data(as_text=True)
+    assert 'Cable modelo 7' in html and 'Cable modelo 8' not in html

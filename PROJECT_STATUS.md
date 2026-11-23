@@ -1,5 +1,7 @@
 # Estado de GestorTech
 
+**Catálogo e inventario · 22 de noviembre de 2026.** La búsqueda pública combina texto, categoría y disponibilidad mediante una URL compartible. El panel abre el inventario con existencias bajas y conserva la vista tras operar sobre un producto. Se probaron 163 casos y 77 subpruebas con SQLite temporal. En Edge se verificaron búsqueda, filtros y recuperación de resultados a 375 y 1440 px, con JavaScript activo y desactivado. El carrusel utiliza desplazamiento nativo y controles con teclado siguiendo la [guía de Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance/blob/main/skills/modern-web-guidance/guides/ui-components/carousel.md).
+
 **Corrección de importación con IA.** El CSV de ejemplo con seis productos reproducía un error `json_validate_failed` de Groq que dejaba la vista previa en modo manual. El adaptador pide ahora un esquema de respuesta estricto en modelos compatibles. La prueba con Groq real generó las seis descripciones en una vista previa editable de una base temporal.
 
 **Inventario y destacados.** El inventario pagina de ocho en ocho y conserva la búsqueda por nombre y la categoría al navegar. Accesorio, Repuesto e Insumo están disponibles en formularios y propuestas. El carrusel tiene avance automático cada 20 segundos, pausa y flechas. Se verificó la navegación con 18 productos ficticios, el selector del asistente con un proveedor de prueba y el movimiento del carrusel en navegador. Pasaron 84 pruebas y 47 subpruebas relacionadas.
