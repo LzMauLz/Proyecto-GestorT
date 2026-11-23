@@ -1,0 +1,42 @@
+{% set chat_title = 'Asistente del taller' if staff_shell else 'Chat de productos' %}
+<aside class="docked-chat" aria-label="{{ chat_title }}"
+       data-assistant data-docked-chat data-scope="{{ 'staff' if staff_shell else 'public' }}"
+       data-thread="{{ staff_chat_session() if staff_shell else 'catalog' }}"
+       data-endpoint="{{ url_for('api.staff_chat') if staff_shell else url_for('api.catalog_chat') }}"
+       data-categories='{{ product_categories_for_chat|tojson }}'>
+  <section class="docked-chat-panel" id="docked-chat-panel" aria-labelledby="docked-chat-title" hidden>
+    <header class="docked-chat-header">
+      <div><h2 id="docked-chat-title">{{ chat_title }}</h2><p>{{ 'Inventario y reparaciones' if staff_shell else 'Precios, disponibilidad y compatibilidad' }}</p></div>
+      <button type="button" class="chat-minimize" data-chat-close aria-label="Minimizar chat">−</button>
+    </header>
+    <div class="assistant-messages" data-messages role="log" aria-label="Conversación" aria-live="polite" aria-relevant="additions text">
+      <div class="assistant-message"><p>{{ '¿Qué necesitas consultar en el taller?' if staff_shell else '¿Qué producto o repuesto buscas?' }}</p></div>
+    </div>
+    <form class="assistant-composer" data-composer>
+      <div class="chat-examples" aria-label="Consultas sugeridas">
+        {% if staff_shell %}
+        <button type="button" data-assistant-example="¿Qué reparaciones están pendientes?">Reparaciones pendientes</button>
+        <button type="button" data-assistant-example="¿Qué productos tienen pocas unidades disponibles?">Revisar existencias</button>
+        {% else %}
+        <button type="button" data-assistant-example="Muéstrame repuestos disponibles">Ver repuestos</button>
+        <button type="button" data-assistant-example="¿Qué repuestos tienen para Samsung Galaxy S25 Ultra?" data-model-example>Consultar compatibilidad</button>
+        {% endif %}
+      </div>
+      {% if not staff_shell %}
+      <label class="chat-mode"><input type="checkbox" data-chat-mode> Buscar por modelo con IA</label>
+      {% endif %}
+      <div class="chat-input-row">
+        <label class="sr-only" for="docked-chat-input">Escribe tu consulta</label>
+        <textarea id="docked-chat-input" data-input required rows="2" maxlength="{{ 2000 if staff_shell else 140 }}"
+                  placeholder="{{ 'Escribe una consulta' if staff_shell else 'Ej. ¿Cuánto cuesta la pantalla S25 Ultra?' }}"
+                  aria-describedby="docked-chat-help"></textarea>
+        <button class="button primary" type="submit">Enviar</button>
+      </div>
+      <p id="docked-chat-help">{{ 'Para consultas con IA usa datos de inventario y omite datos personales.' if staff_shell else 'La búsqueda por modelo con IA envía tu consulta a Groq. Usa solo datos del equipo.' }}</p>
+    </form>
+  </section>
+  <button type="button" class="chat-launcher" data-chat-toggle aria-expanded="false" aria-controls="docked-chat-panel" hidden>
+    <span class="chat-launcher-icon" aria-hidden="true"></span>{{ chat_title }}
+  </button>
+  <noscript><a class="chat-launcher" href="{{ url_for('web.products') if staff_shell else url_for('catalog_search.find') }}">{{ 'Consultar inventario' if staff_shell else 'Buscar por modelo' }}</a></noscript>
+</aside>

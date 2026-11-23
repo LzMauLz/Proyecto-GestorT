@@ -4,9 +4,21 @@
 {% block content %}
 {% if not filtered %}
 <section class="storefront-hero" aria-label="Tienda y servicio técnico">
-  <div class="store-promo">
-    <div class="store-promo-copy"><p class="store-promo-title">Repuestos para seguir conectado.</p><a class="button" href="#catalog-results">Explorar catálogo</a></div>
+  <div class="store-promo shop-feature">
+    <div class="store-promo-copy">
+      <p class="store-promo-title">Encuentra el repuesto que necesitas.</p>
+      <div class="shop-actions">
+        <a class="button" href="#catalog-results">Explorar catálogo</a>
+        <button class="button shop-chat-link" type="button" data-open-chat hidden>Preguntar por un repuesto</button>
+      </div>
+    </div>
+    {% if featured and featured[0].image_key %}
+    <a class="shop-feature-item" href="{{ url_for('web.catalog_product', product_id=featured[0].id) }}">
+      {{ product_media(featured[0]) }}<span>{{ featured[0].name }}</span>
+    </a>
+    {% else %}
     <img class="store-promo-art" src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="" width="400" height="400">
+    {% endif %}
   </div>
   <aside class="store-tracking" aria-labelledby="store-tracking-title">
     <p class="store-tracking-title" id="store-tracking-title">Consulta el estado de tu reparación</p>
@@ -28,12 +40,15 @@
     {% if filtered %}<a class="catalog-reset" href="{{ url_for('web.catalog', _anchor='catalog-results') }}">Limpiar filtros</a>
     {% elif featured %}<a class="catalog-featured-link" href="#productos-destacados">Ver destacados</a>{% endif %}
   </div>
+  <div class="shop-controls">
   <nav class="catalog-tools" aria-label="Filtrar por categoría">
     {% for label in [''] + categories %}
     <a class="category-chip" href="{{ url_for('web.catalog', q=catalog_query or none, category=label or none, available='1' if available_only else none, _anchor='catalog-results') }}"
        {% if catalog_category == label %}aria-current="true"{% endif %}>{{ label or 'Todas las categorías' }}</a>
     {% endfor %}
   </nav>
+    <button class="shop-help" type="button" data-open-chat hidden>Preguntar al chat</button>
+  </div>
   <div class="catalog-result-bar">
     <p class="catalog-results-status">{{ products|length }} {{ 'producto' if products|length == 1 else 'productos' }}{% if catalog_query %} para «{{ catalog_query }}»{% endif %}</p>
     <a class="catalog-stock-filter" href="{{ url_for('web.catalog', q=catalog_query or none, category=catalog_category or none, available=none if available_only else '1', _anchor='catalog-results') }}">{{ 'Mostrar también los no disponibles' if available_only else 'Ver solo disponibles' }}</a>

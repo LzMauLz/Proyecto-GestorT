@@ -1,11 +1,19 @@
-from flask import Blueprint, abort, current_app, jsonify, request
+from flask import Blueprint, abort, current_app, jsonify, request, url_for
+from werkzeug.exceptions import TooManyRequests
+
 from app.application.ai_import import prepare_product_proposal
 from app.application.ai_assistant import request_assistant, resolve_proposal
+from app.application.catalog import catalog_text
+from app.application.chat_queries import (
+    ACCOUNT_TOPIC, REPAIR_CODE, REPAIR_TOPIC, public_chat_blocked, public_product_search, staff_repair_summary,
+)
+from app.application.compatibility_search import find_compatible_parts, interpret_device_query, prepare_ai_query
 from app.application.ports import AIProviderError
 from app.application.services import create_product, create_repair, move_stock, public_repair, update_product, update_repair_status
 from app.domain.models import DomainError
 from app.infrastructure.database import get_db
 from app.web.auth import current_user
+from app.web.request_limits import enforce_catalog_ai_limits
 
 api_bp = Blueprint('api', __name__)
 
@@ -26,6 +34,144 @@ def body():
 def api_error(error):
     abort(error.status_code,description=error.message)
 
+
+def _chat_json(message, **data):
+    response = jsonify(message=message, **data)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+def _public_cards(products):
+    return [
+        {
+            'name': entry['name'],
+            'price_cents': entry['price_cents'],
+            'available': bool(entry['available']),
+            'url': url_for('web.catalog_product', product_id=entry['id']),
+        }
+        for entry in products[:6]
+    ]
+
+
+@api_bp.post('/catalogo/chat')
+def catalog_chat():
+    data = body()
+    raw = data.get('mensaje')
+    if not isinstance(raw, str):
+        abort(400, description='Escribe una consulta de productos.')
+    if public_chat_blocked(raw):
+        return _chat_json('Puedo ayudarte a encontrar productos, precios y repuestos compatibles.', persistent=False)
+    try:
+        text = prepare_ai_query(raw)
+    except ValueError as exc:
+        return _chat_json(str(exc), persistent=False)
+
+    db = get_db()
+    if data.get('mode') == 'model':
+        manual = [{'label': 'Buscar por modelo manualmente', 'url': url_for('catalog_search.find')}]
+        provider = current_app.extensions.get('gestortech_ai_provider')
+        if provider is None:
+            return _chat_json('Por ahora puedes consultar la compatibilidad en la búsqueda manual.', links=manual)
+        try:
+            enforce_catalog_ai_limits()
+            brand, model = interpret_device_query(provider, text)
+        except TooManyRequests:
+            return _chat_json('Se alcanzó el límite de consultas con IA. Usa la búsqueda manual.', links=manual)
+        except (AIProviderError, TimeoutError, OSError, ValueError, KeyError, TypeError, RuntimeError):
+            return _chat_json('Escribe la marca y la variante del equipo en la búsqueda manual.', links=manual)
+        products, choices = find_compatible_parts(db, brand, model, require_confirmation=not brand) if model else ([], [])
+        if choices:
+            links = [
+                {'label': f"{choice['brand']} {choice['model']}",
+                 'url': url_for('catalog_search.find', brand=choice['brand'], model=choice['model'], exact='1')}
+                for choice in choices[:6]
+            ]
+            return _chat_json('Elige el modelo exacto de tu equipo para continuar.', links=links)
+        if products:
+            return _chat_json('Estos repuestos están disponibles y tienen compatibilidad confirmada.', products=_public_cards(products))
+        return _chat_json('No encontré repuestos disponibles con compatibilidad confirmada. Verifica el modelo y su variante.', links=manual)
+
+    products = public_product_search(db, text)
+    if products:
+        return _chat_json('Estas fichas coinciden con tu búsqueda.', products=_public_cards(products))
+    return _chat_json('No encontré coincidencias. Prueba el nombre del producto o usa el modo Por modelo para consultar compatibilidad.')
+
+
+@api_bp.post('/taller/chat')
+def staff_chat():
+    user = actor(('admin', 'technician'))
+    data = body()
+    message = data.get('mensaje')
+    if not isinstance(message, str) or not message.strip() or len(message) > 2000:
+        abort(400, description='Escribe una solicitud de hasta 2.000 caracteres.')
+    text = catalog_text(message)
+    db = get_db()
+
+    if ACCOUNT_TOPIC.search(text) and (not REPAIR_TOPIC.search(text) or any(term in text for term in ('contrasena', 'credencial'))):
+        if user['role'] != 'admin':
+            return _chat_json('La gestión de usuarios está disponible para administración.', persistent=False)
+        if any(word in text for word in ('contrasena', 'credencial')):
+            return _chat_json('Usa el proceso de acceso correspondiente para gestionar credenciales.', persistent=False)
+        count = db.execute('SELECT COUNT(*) FROM users WHERE active=1').fetchone()[0]
+        return _chat_json(f'Usuarios activos en el taller: {count}.', persistent=False,
+                          links=[{'label': 'Crear usuario', 'url': url_for('web.user_new')}])
+
+    if REPAIR_CODE.search(message) or REPAIR_TOPIC.search(text):
+        if not REPAIR_CODE.search(message) and any(term in text for term in ('crear', 'registrar', 'nueva')):
+            return _chat_json('Abre el formulario para registrar una reparación.', links=[
+                {'label': 'Nueva reparación', 'url': url_for('web.repair_new')},
+            ])
+        reply, repair_id, filters = staff_repair_summary(db, user, message)
+        link = (
+            {'label': 'Abrir reparación', 'url': url_for('web.repair_detail', repair_id=repair_id)}
+            if repair_id else {'label': 'Abrir bandeja', 'url': url_for('web.repairs', **(filters or {}))}
+        )
+        return _chat_json(reply, persistent=False, links=[link])
+
+    if 'importar' in text or 'xlsx' in text or 'csv' in text:
+        if user['role'] != 'admin':
+            return _chat_json('La importación está disponible para administración.')
+        return _chat_json('Abre el formulario de importación para cargar y revisar el archivo.', links=[
+            {'label': 'Importar productos', 'url': url_for('web.import_form')},
+        ])
+
+    if ('stock' in text or 'existencias' in text or 'unidades' in text) and ('pocas' in text or 'bajo' in text):
+        count = db.execute('SELECT COUNT(*) FROM products WHERE active=1 AND stock<=2').fetchone()[0]
+        return _chat_json(f'Productos activos con dos unidades o menos: {count}.', links=[
+            {'label': 'Revisar existencias', 'url': url_for('web.products', stock='low')},
+        ])
+
+    if 'que puedes hacer' in text or text.strip(' ¿?!') == 'ayuda':
+        return _chat_json('Puedo consultar reparaciones y existencias, y guiarte en las tareas del taller según tu rol.', links=[
+            {'label': 'Reparaciones', 'url': url_for('web.repairs')},
+            {'label': 'Inventario', 'url': url_for('web.products')},
+        ])
+
+    if 'catalogo' in text and any(term in text for term in ('publicar', 'retirar', 'compatib', 'foto', 'imagen')):
+        if user['role'] != 'admin':
+            return _chat_json('Administración gestiona la publicación, las fotos y la compatibilidad del catálogo.')
+        return _chat_json('En Inventario, localiza el producto. Desde ahí puedes publicarlo o retirarlo. Abre su edición para gestionar la foto y los modelos compatibles.', links=[
+            {'label': 'Gestionar productos en Inventario', 'url': url_for('web.products')},
+            {'label': 'Abrir el catálogo público', 'url': url_for('web.catalog')},
+        ])
+
+    if '@' in message or any(term in text for term in ('telefono', 'datos del cliente', 'nota interna')):
+        return _chat_json('Escribe la consulta con datos de inventario y omite los datos personales.', persistent=False)
+    provider = current_app.extensions.get('gestortech_ai_provider')
+    if provider is None:
+        return _chat_json('Puedes consultar los productos desde Inventario mientras la IA está desactivada.', links=[
+            {'label': 'Abrir inventario', 'url': url_for('web.products')},
+        ])
+    try:
+        result = request_assistant(db, provider, user, message, data.get('historial', []))
+    except AIProviderError:
+        current_app.logger.warning('El chat del taller no pudo completar la solicitud de inventario.')
+        return _chat_json('La IA no pudo procesar la consulta. Puedes seguir trabajando en Inventario.', links=[
+            {'label': 'Abrir inventario', 'url': url_for('web.products')},
+        ], persistent=False)
+    return _chat_json(**result, inventory_history=True)
+
+
 @api_bp.get('/csrf')
 def csrf():
     from app.web.auth import csrf_token
@@ -37,6 +183,37 @@ def openapi():
       'openapi':'3.1.0','info':{'title':'API de GestorTech','version':'0.1.0'},'servers':[{'url':'/api'}],
       'components':{'securitySchemes':{'sessionCookie':{'type':'apiKey','in':'cookie','name':'session'},'csrfHeader':{'type':'apiKey','in':'header','name':'X-CSRF-Token'}},'schemas':{'Error':{'type':'object','properties':{'error':{'type':'string'}}}}},
       'paths':{
+        '/catalogo/chat': {
+          'post': {
+            'summary': 'Consultar productos y compatibilidad del catálogo público',
+            'parameters': [{'in': 'header', 'name': 'X-CSRF-Token', 'required': True, 'schema': {'type': 'string'}}],
+            'requestBody': {'required': True, 'content': {'application/json': {'schema': {
+              'type': 'object', 'required': ['mensaje'], 'properties': {
+                'mensaje': {'type': 'string', 'maxLength': 140},
+                'mode': {'type': 'string', 'enum': ['product', 'model']},
+              },
+            }}}},
+            'responses': {'200': {'description': 'Respuesta comercial, fichas públicas o enlaces para precisar el modelo'},
+                          '400': {'description': 'Solicitud o CSRF inválido'}},
+          },
+        },
+        '/taller/chat': {
+          'post': {
+            'summary': 'Consultar el taller y preparar propuestas de inventario según los permisos del usuario',
+            'security': [{'sessionCookie': []}],
+            'parameters': [{'in': 'header', 'name': 'X-CSRF-Token', 'required': True, 'schema': {'type': 'string'}}],
+            'requestBody': {'required': True, 'content': {'application/json': {'schema': {
+              'type': 'object', 'required': ['mensaje'], 'properties': {
+                'mensaje': {'type': 'string', 'maxLength': 2000},
+                'historial': {'type': 'array', 'items': {'type': 'object'}},
+              },
+            }}}},
+            'responses': {'200': {'description': 'Respuesta operativa o propuesta pendiente'},
+                          '400': {'description': 'Solicitud o CSRF inválido'},
+                          '401': {'description': 'Autenticación requerida'},
+                          '403': {'description': 'Permiso insuficiente'}},
+          },
+        },
         '/productos':{
           'get':{'summary':'Listar productos activos (administrador o técnico)','responses':{'200':{'description':'Lista de productos'},'401':{'description':'Autenticación requerida'}}},
           'post':{'summary':'Registrar producto (administrador)','parameters':[{'in':'header','name':'X-CSRF-Token','required':True,'schema':{'type':'string'}}],'requestBody':{'required':True,'content':{'application/json':{'schema':{'type':'object','required':['nombre','precio'],'properties':{'nombre':{'type':'string'},'descripcion':{'type':'string'},'categoria':{'type':'string'},'precio':{'type':'number','minimum':0},'cantidad_stock':{'type':'integer','minimum':0}}}}}},'responses':{'201':{'description':'Producto registrado'},'400':{'description':'Datos inválidos'},'401':{'description':'No autenticado'},'403':{'description':'Permiso insuficiente'}}}},

@@ -21,6 +21,12 @@ En el celular, encontrarás los filtros y los productos debajo del buscador. Pul
 
 La búsqueda devuelve repuestos disponibles con compatibilidad registrada para el modelo elegido. Si una ficha indica que su compatibilidad está por confirmar, consulta al taller con la referencia del producto.
 
+### Usar el chat de productos
+
+Pulsa **Chat de productos** para buscar repuestos, consultar su precio o ver si están disponibles. Activa **Buscar por modelo con IA** para consultar compatibilidad en lenguaje natural y abrir la ficha desde el resultado. El chat público usa las fichas del catálogo y los modelos confirmados por el taller.
+
+Puedes minimizarlo con **−** o pulsando Escape dentro de la ventana. El botón y la conversación siguen disponibles al cambiar entre el catálogo, las fichas y el seguimiento en la misma pestaña.
+
 ### Consultar una reparación
 
 1. Abre [Consultar reparación](https://gestortech.pythonanywhere.com/track).
@@ -70,7 +76,9 @@ Inicia sesión desde [Acceso del personal](https://gestortech.pythonanywhere.com
 
 ## Asistente de IA e importaciones
 
-En **Asistente IA**, escribe una solicitud sencilla. Por ejemplo, pide redactar una descripción para un producto indicando su nombre y categoría, o consulta las existencias de un producto. Para crear una propuesta de catálogo, revisa nombre, descripción, categoría, precio y cantidad antes de aprobarla. Adjunta la imagen en el flujo de creación y confirma la publicación manualmente.
+Abre **Asistente del taller** desde el botón disponible en las pantallas del personal. Al navegar por el panel en la misma pestaña, el chat conserva su estado abierto o minimizado y permite retomar propuestas. Pide, por ejemplo, las reparaciones pendientes, el estado de una orden por código o los productos con pocas unidades. Si tienes acceso de administración, también puedes consultar cuántos usuarios activos hay, abrir la importación o preguntar cómo publicar una ficha, añadir una foto o registrar modelos compatibles.
+
+Para preparar una propuesta de catálogo, escribe el nombre, la categoría, el precio y la cantidad. Revisa la descripción y los demás campos antes de aprobarla. Adjunta la imagen en el flujo de creación y confirma la publicación manualmente.
 
 ![Asistente de inventario e importación CSV/XLSX](images/manual/06-asistente-ia.png)
 
