@@ -6,7 +6,7 @@ import re
 import zipfile
 import sqlite3
 from decimal import Decimal, InvalidOperation
-from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for, send_file
+from flask import Blueprint, abort, current_app, flash, jsonify, make_response, redirect, render_template, request, url_for, send_file
 from openpyxl import load_workbook
 from werkzeug.security import generate_password_hash
 
@@ -23,6 +23,11 @@ MAX_ROWS = 1000
 MAX_COLUMNS = 30
 MAX_UNCOMPRESSED_XLSX = 20 * 1024 * 1024
 PRODUCTS_PER_PAGE = 8
+REPAIRS_PER_PAGE = 20
+READY_REPAIR_STATUS = 'Listo para entregar'
+PENDING_REPAIR_STATUSES = tuple(
+    status for status in REPAIR_STATUSES if TRANSITIONS[status] and status != READY_REPAIR_STATUS
+)
 
 
 def _header_key(value):
@@ -183,6 +188,71 @@ def dashboard():
 def assistant():
     return render_template('assistant.html', assistant_available=current_app.extensions.get('gestortech_ai_provider') is not None,
                            product_categories=PRODUCT_CATEGORIES)
+
+
+@web_bp.get('/repairs')
+@roles_required('admin', 'technician')
+def repairs():
+    user = current_user()
+    db = get_db()
+    query = request.args.get('q', '').strip()[:160]
+    status = request.args.get('status', '')
+    if not status:
+        status = {'pending': 'pending', 'ready': READY_REPAIR_STATUS}.get(request.args.get('view'), '')
+    conditions = []
+    parameters = []
+    technicians = []
+    technician_id = None
+
+    if user['role'] == 'admin':
+        technicians = db.execute("SELECT id,name,active FROM users WHERE role='technician' ORDER BY name,id").fetchall()
+        requested_technician = request.args.get('technician', type=int)
+        if any(technician['id'] == requested_technician for technician in technicians):
+            technician_id = requested_technician
+    else:
+        technician_id = user['id']
+    if technician_id is not None:
+        conditions.append('r.assigned_to=?')
+        parameters.append(technician_id)
+
+    if query:
+        normalized_query = normalize_inventory_key(query)
+        conditions.append('(instr(normalize_inventory_key(r.device), ?) > 0 OR instr(lower(r.tracking_code), ?) > 0)')
+        parameters.extend((normalized_query, normalized_query))
+    if status == 'pending':
+        placeholders = ','.join('?' for _ in PENDING_REPAIR_STATUSES)
+        conditions.append(f'r.status IN ({placeholders})')
+        parameters.extend(PENDING_REPAIR_STATUSES)
+    elif status in REPAIR_STATUSES:
+        conditions.append('r.status=?')
+        parameters.append(status)
+    else:
+        status = ''
+
+    where = (' WHERE ' + ' AND '.join(conditions)) if conditions else ''
+    total = db.execute(f'SELECT COUNT(*) FROM repairs r{where}', parameters).fetchone()[0]
+    last_page = max(1, (total + REPAIRS_PER_PAGE - 1) // REPAIRS_PER_PAGE)
+    page = min(last_page, max(1, request.args.get('page', 1, type=int)))
+    offset = (page - 1) * REPAIRS_PER_PAGE
+    orders = db.execute(
+        'SELECT r.id,r.device,r.status,r.tracking_code,r.updated_at,u.name AS technician '
+        f'FROM repairs r LEFT JOIN users u ON u.id=r.assigned_to{where} '
+        'ORDER BY r.updated_at DESC,r.id DESC LIMIT ? OFFSET ?',
+        (*parameters, REPAIRS_PER_PAGE, offset),
+    ).fetchall()
+    filters = {
+        'q': query or None,
+        'status': status or None,
+        'technician': technician_id if user['role'] == 'admin' else None,
+    }
+    response = make_response(render_template(
+        'repairs.html', repairs=orders, statuses=REPAIR_STATUSES, ready_status=READY_REPAIR_STATUS,
+        technicians=technicians, filters=filters, page=page, last_page=last_page, total=total, offset=offset,
+    ))
+    response.headers['Cache-Control'] = 'no-store'
+    response.headers['Referrer-Policy'] = 'no-referrer'
+    return response
+
 
 @web_bp.route('/repairs/new', methods=['GET','POST'])
 @roles_required('admin','technician')

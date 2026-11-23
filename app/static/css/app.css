@@ -290,4 +290,6 @@ code { color: #d6c9ff; font-family: ui-monospace, SFMono-Regular, Consolas, mono
 .inventory-results { color: var(--muted); margin: 0 0 .65rem; }
 .inventory-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 1rem 0; }
 .inventory-pagination .button { min-width: 44px; min-height: 44px; justify-content: center; }
+.repair-views { margin-bottom: 1rem; }
+.repair-views [aria-current] { font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
 @media (max-width: 720px) { .inventory-search { grid-template-columns: minmax(0, 1fr); } }

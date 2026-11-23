@@ -1,5 +1,8 @@
 import os
 import sqlite3
+from hashlib import sha256
+from pathlib import Path
+
 import click
 from flask import Flask, abort, jsonify, request
 from config.settings import Config
@@ -32,6 +35,22 @@ def create_app(test_config=None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(web_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
+
+    # Keep the static paths valid for PythonAnywhere and cache each version separately.
+    static_folder = Path(app.static_folder)
+    asset_versions = {
+        path.relative_to(static_folder).as_posix(): sha256(path.read_bytes()).hexdigest()[:12]
+        for pattern in ('css/**/*.css', 'js/**/*.js')
+        for path in static_folder.glob(pattern)
+        if path.is_file()
+    }
+
+    @app.url_defaults
+    def version_static_url(endpoint, values):
+        if endpoint == 'static':
+            version = asset_versions.get(values.get('filename'))
+            if version is not None:
+                values.setdefault('v', version)
 
     @app.cli.command('init-db')
     def init_db_command():

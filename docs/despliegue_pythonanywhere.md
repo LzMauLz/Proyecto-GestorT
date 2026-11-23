@@ -72,6 +72,8 @@ Configura el archivo WSGI para usar el entorno virtual anterior. En **Static fil
 
 Comprueba la URL, `/health`, inicio de sesión, catálogo, seguimiento ficticio y carga de una imagen de prueba. Mantén los datos reales de clientes fuera de la demostración inicial.
 
+Después de subir el código de una versión nueva, recarga la aplicación. En el catálogo, comprueba que la URL de `/static/js/storefront.js` incluya el parámetro `v` y responda con HTTP 200. Flask calcula esa versión al arrancar a partir del contenido del archivo. Mantén el mapeo de `/static/` apuntando a la misma copia de código que usa WSGI.
+
 ## 5. Groq y operación gratuita
 
 La cuenta gratuita limita el tráfico saliente a una lista permitida. `api.groq.com` aparece actualmente en la lista de PythonAnywhere. Si activas el asistente, añade `GROQ_ENABLED=true`, `GROQ_MODEL` y `GROQ_API_KEY` al `.env` privado y recarga la app. Envía únicamente datos ficticios de productos en la prueba.
