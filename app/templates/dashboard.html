@@ -6,7 +6,7 @@
 <section class="stats-strip" aria-label="Resumen operativo">
   <article><span>Órdenes registradas</span><strong>{{ counts.repairs }}</strong><a href="#recent-repairs">Ver reparaciones recientes</a></article>
   <article><span>Productos activos</span><strong>{{ counts.products }}</strong><a href="{{ url_for('web.products') }}">Abrir inventario</a></article>
-  <article><span>Stock bajo · 2 unidades o menos</span><strong>{{ counts.low_stock }}</strong><a href="{{ url_for('web.products') }}">Revisar existencias</a></article>
+  <article><span>Stock bajo · 2 unidades o menos</span><strong>{{ counts.low_stock }}</strong><a href="{{ url_for('web.products', stock='low') }}">Revisar existencias</a></article>
 </section>
 {% endif %}
 <section class="dashboard-shortcuts" aria-label="Acciones del taller">

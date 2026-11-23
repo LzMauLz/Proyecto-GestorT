@@ -6,7 +6,7 @@ Usa la [demo pública](https://gestortech.pythonanywhere.com/). Para prácticas 
 
 ### Explorar productos
 
-Abre el [catálogo](https://gestortech.pythonanywhere.com/catalog). Busca por nombre, repuesto o categoría. La disponibilidad que se muestra es general y puede cambiar.
+Abre el [catálogo](https://gestortech.pythonanywhere.com/catalog). Escribe el nombre o una característica del producto y pulsa **Buscar** o Intro. Puedes elegir una categoría y pulsar **Ver solo disponibles**. Copia la dirección si quieres compartir esos resultados. **Limpiar filtros** muestra el catálogo completo. Abre **Ver descripción** en una ficha para leer más sobre el producto.
 
 ![Tienda pública y acceso a consulta de reparación](images/manual/01-tienda-publica.png)
 
@@ -27,11 +27,11 @@ Inicia sesión desde [Acceso del personal](https://gestortech.pythonanywhere.com
 
 ### Administrador
 
-- **Panel:** revisa órdenes recientes, productos y alertas de existencias.
+- **Panel:** revisa órdenes recientes, productos y alertas de existencias. **Revisar existencias** abre los productos activos con dos unidades o menos.
 - **Crear reparación:** completa el equipo y el problema, asigna un técnico activo y pulsa **Crear reparación**. Comparte con el cliente el código que aparece al terminar.
 - **Actualizar reparación:** selecciona una transición disponible. Escribe en el avance público solo información que el cliente pueda ver. Reserva las notas internas para el taller.
 - **Inventario:** busca por nombre o categoría. Desde **Añadir producto** completa nombre, descripción, categoría, precio y existencias. Puedes adjuntar imágenes PNG, JPEG o WebP de hasta 2 MB y 12 megapíxeles. Guarda el producto en el inventario y publícalo cuando corresponda. También puedes cambiar su disponibilidad o retirarlo del catálogo.
-- **Movimientos:** registra entradas o salidas desde el producto. El sistema impide dejar existencias negativas.
+- **Movimientos:** registra entradas o salidas desde el producto. Al aplicar el movimiento vuelves a la lista con los mismos filtros. Si la última página quedó vacía, verás la anterior. El sistema impide dejar existencias negativas.
 - **Usuarios:** crea cuentas del personal y asigna el rol adecuado. Crea un técnico activo antes de registrar reparaciones que deban asignarse.
 
 ![Panel de administración](images/manual/03-panel-administracion.png)

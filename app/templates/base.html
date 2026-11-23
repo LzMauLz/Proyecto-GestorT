@@ -49,7 +49,10 @@
   <header class="store-header">
     <div class="store-header-main">
       <a class="brand" href="{{ url_for('web.catalog') }}" aria-label="GestorTech, tienda"><img src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="GestorTech" class="brand-logo"><span class="brand-copy"><strong>GestorTech</strong><small>Tu tecnología sigue aquí</small></span></a>
-      <form class="store-search" role="search" action="{{ url_for('web.catalog') }}" method="get" data-store-search><label class="sr-only" for="catalog-search">Buscar en el catálogo</label><input id="catalog-search" type="search" name="q" value="{{ request.args.get('q','') }}" placeholder="Busca un producto, repuesto o categoría" maxlength="160"><button type="submit">Buscar</button></form>
+      <form class="store-search" role="search" action="{{ url_for('web.catalog', _anchor='catalog-results') }}" method="get">
+        {% if catalog_category %}<input type="hidden" name="category" value="{{ catalog_category }}">{% endif %}
+        {% if available_only %}<input type="hidden" name="available" value="1">{% endif %}
+        <label class="sr-only" for="catalog-search">Buscar en el catálogo</label><input id="catalog-search" type="search" name="q" value="{{ catalog_query|default('') }}" placeholder="Busca un producto, repuesto o categoría" maxlength="160"><button type="submit">Buscar</button></form>
       {% if current_user() %}<a class="button secondary" href="{{ url_for('web.dashboard') }}">Ir al panel</a>{% else %}<a class="button secondary" href="{{ url_for('auth.login') }}">Acceso del personal</a>{% endif %}
     </div>
     <nav class="store-navigation" aria-label="Navegación pública"><a href="{{ url_for('web.catalog') }}" {% if request.endpoint == 'web.catalog' %}aria-current="page"{% endif %}>Catálogo</a><a href="{{ url_for('web.track') }}" {% if request.endpoint == 'web.track' %}aria-current="page"{% endif %}>Consultar reparación</a></nav>
