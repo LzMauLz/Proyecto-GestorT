@@ -3,11 +3,12 @@
   <a href="{{ url_for('web.dashboard') }}" {% if request.endpoint == 'web.dashboard' %}aria-current="page"{% endif %}>{{ nav_icon('panel') }}Panel</a>
   <a href="{{ url_for('web.repairs') }}" {% if request.endpoint == 'web.repairs' %}aria-current="page"{% endif %}>{{ nav_icon('repair') }}Reparaciones</a>
   <a href="{{ url_for('web.repair_new') }}" {% if request.endpoint == 'web.repair_new' %}aria-current="page"{% endif %}>{{ nav_icon('repair') }}Nueva reparación</a>
-  <a href="{{ url_for('web.products') }}" {% if request.endpoint in ['web.products','web.product_new','web.product_edit','web.import_form','web.import_preview','web.import_approve'] %}aria-current="page"{% endif %}>{{ nav_icon('stock') }}Inventario</a>
+  <a href="{{ url_for('web.products') }}" {% if request.endpoint in ['web.products','web.product_new','web.product_edit','web.product_compatibility','web.import_form','web.import_preview','web.import_approve'] %}aria-current="page"{% endif %}>{{ nav_icon('stock') }}Inventario</a>
   <a href="{{ url_for('web.assistant') }}" {% if request.endpoint == 'web.assistant' %}aria-current="page"{% endif %}>{{ nav_icon('ai') }}Asistente IA</a>
   {% if current_user()['role'] == 'admin' %}<a href="{{ url_for('web.user_new') }}" {% if request.endpoint == 'web.user_new' %}aria-current="page"{% endif %}>{{ nav_icon('users') }}Usuarios</a>{% endif %}
 {% endmacro %}
-{% set staff_shell = current_user() and request.endpoint not in ['web.catalog','web.track','auth.login'] %}
+{% set public_catalog_page = request.endpoint in ['web.catalog','web.catalog_product','catalog_search.find'] %}
+{% set staff_shell = current_user() and not public_catalog_page and request.endpoint not in ['web.track','auth.login'] %}
 <!doctype html>
 <html lang="es">
 <head>
@@ -56,9 +57,13 @@
         <label class="sr-only" for="catalog-search">Buscar en el catálogo</label><input id="catalog-search" type="search" name="q" value="{{ catalog_query|default('') }}" placeholder="Busca un producto, repuesto o categoría" maxlength="160"><button type="submit">Buscar</button></form>
       {% if current_user() %}<a class="button secondary" href="{{ url_for('web.dashboard') }}">Ir al panel</a>{% else %}<a class="button secondary" href="{{ url_for('auth.login') }}">Acceso del personal</a>{% endif %}
     </div>
-    <nav class="store-navigation" aria-label="Navegación pública"><a href="{{ url_for('web.catalog') }}" {% if request.endpoint == 'web.catalog' %}aria-current="page"{% endif %}>Catálogo</a><a href="{{ url_for('web.track') }}" {% if request.endpoint == 'web.track' %}aria-current="page"{% endif %}>Consultar reparación</a></nav>
+    <nav class="store-navigation" aria-label="Navegación pública">
+      <a href="{{ url_for('web.catalog') }}" {% if request.endpoint == 'web.catalog' %}aria-current="page"{% endif %}>Catálogo</a>
+      <a href="{{ url_for('catalog_search.find') }}" {% if request.endpoint == 'catalog_search.find' %}aria-current="page"{% endif %}>Buscar por modelo</a>
+      <a href="{{ url_for('web.track') }}" {% if request.endpoint == 'web.track' %}aria-current="page"{% endif %}>Consultar reparación</a>
+    </nav>
   </header>
-  <main id="main" class="page-shell public-shell {% if request.endpoint == 'web.catalog' %}store-shell{% endif %}" tabindex="-1">
+  <main id="main" class="page-shell public-shell {% if public_catalog_page %}store-shell{% endif %}" tabindex="-1">
   {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}<div id="form-feedback" class="flash-stack" role="region" aria-label="Mensajes de la operación" aria-live="polite" tabindex="-1">{% for category,message in messages %}<p class="flash {{ category }}">{{ message }}</p>{% endfor %}</div>{% endwith %}
     {% block content %}{% endblock %}

@@ -22,6 +22,13 @@ CREATE TABLE IF NOT EXISTS products (
     created_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS product_compatibility (
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    brand TEXT NOT NULL CHECK(length(trim(brand)) BETWEEN 1 AND 80),
+    model TEXT NOT NULL CHECK(length(trim(model)) BETWEEN 1 AND 120),
+    PRIMARY KEY (product_id, brand, model)
+);
+
 CREATE TABLE IF NOT EXISTS inventory_movements (
     id INTEGER PRIMARY KEY,
     product_id INTEGER NOT NULL REFERENCES products(id),

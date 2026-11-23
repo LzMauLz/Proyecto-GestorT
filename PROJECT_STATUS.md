@@ -1,5 +1,12 @@
 # Estado de GestorTech
 
+## Ficha pública y búsqueda de repuestos por modelo
+
+- La ficha pública reúne precio, disponibilidad, foto ampliable y los modelos que confirma el taller. El cliente puede compartir con el taller el nombre y la referencia del producto.
+- Administración registra la marca, el modelo y la variante desde Inventario. El buscador público ofrece consulta manual y una opción de texto con Groq, con límites de uso. SQLite cruza los resultados con compatibilidades registradas y productos disponibles.
+- El cambio incorpora una tabla adicional a SQLite. La activación en una instalación existente sigue el [procedimiento de respaldo y actualización](docs/despliegue_pythonanywhere.md#actualizar-una-base-existente-para-usar-compatibilidades). Los pasos de uso están en el [manual](docs/manual-usuario.md#ver-una-ficha-y-buscar-por-modelo).
+- En SQLite temporal pasaron 185 pruebas y 77 subpruebas. Las pruebas del buscador incluyen el adaptador Groq con una respuesta HTTP simulada. En Edge se verificaron la ficha, las variantes y la actualización administrativa con productos ficticios.
+
 ## Catálogo móvil y bandeja de reparaciones · 22 de noviembre de 2026
 
 - El catálogo muestra los filtros y las fichas debajo del buscador en pantallas de hasta 900 px. **Ver destacados** abre el carrusel al final de la lista. **Consultar reparación** sigue disponible desde la navegación pública.

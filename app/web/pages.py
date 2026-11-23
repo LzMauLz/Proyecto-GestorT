@@ -12,7 +12,10 @@ from werkzeug.security import generate_password_hash
 
 from app.application.services import create_product, create_repair, move_stock, now_iso, to_cents, update_product, update_repair_status
 from app.application.ai_import import prepare_product_proposal
-from app.application.catalog import filter_catalog, public_catalog, set_publication, set_availability
+from app.application.catalog import (
+    MAX_COMPATIBILITY_TEXT, compatibility_ready, filter_catalog, product_compatibilities, public_catalog,
+    public_product, save_product_compatibilities, set_publication, set_availability,
+)
 from app.infrastructure.product_images import prepare_image, store_image, discard_image, image_path
 from app.domain.models import DomainError, PRODUCT_CATEGORIES, REPAIR_STATUSES, TRANSITIONS
 from app.infrastructure.database import get_db, normalize_inventory_key
@@ -363,6 +366,18 @@ def catalog():
     return response
 
 
+@web_bp.get('/catalog/products/<int:product_id>')
+def catalog_product(product_id):
+    db = get_db()
+    product = public_product(db, product_id)
+    if not product:
+        abort(404)
+    response = make_response(render_template(
+        'catalog_product.html', product=product, models=product_compatibilities(db, product_id),
+    ))
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
 
 def _image_response(image_key):
     try:
@@ -534,6 +549,40 @@ def product_edit(product_id):
             _discard_failed_product_image(key)
             flash('No se pudo guardar la ficha y su imagen. Revisa el archivo e inténtalo nuevamente.', 'error')
     return render_template('product_edit.html', product=product, product_categories=PRODUCT_CATEGORIES, view=_inventory_view())
+
+
+@web_bp.route('/products/<int:product_id>/compatibility', methods=['GET', 'POST'])
+@roles_required('admin')
+def product_compatibility(product_id):
+    if not 0 < product_id < 2**63:
+        abort(404)
+    db = get_db()
+    product = db.execute('SELECT id,name FROM products WHERE id=? AND active=1', (product_id,)).fetchone()
+    if not product:
+        abort(404)
+    ready = compatibility_ready(db)
+    error = ''
+    status = 200
+    fields = request.form.getlist('compatibilities') if request.method == 'POST' else []
+    if len(fields) == 1:
+        value = fields[0]
+        try:
+            save_product_compatibilities(db, product_id, value)
+        except DomainError as exc:
+            if exc.status_code == 404:
+                abort(404)
+            error, status = exc.message, exc.status_code
+        else:
+            flash('Modelos compatibles actualizados.', 'success')
+            return redirect(url_for('web.product_edit', product_id=product_id, **_inventory_view()), code=303)
+    else:
+        value = '\n'.join(f"{entry['brand']} | {entry['model']}" for entry in product_compatibilities(db, product_id))
+        if request.method == 'POST':
+            error, status = 'Envía la lista de modelos compatibles para guardar los cambios.', 400
+    return render_template(
+        'product_compatibility.html', product=product, value=value[:MAX_COMPATIBILITY_TEXT], ready=ready,
+        error=error, max_length=MAX_COMPATIBILITY_TEXT, view=_inventory_view(),
+    ), status
 
 
 @web_bp.post('/products/<int:product_id>/movement')
