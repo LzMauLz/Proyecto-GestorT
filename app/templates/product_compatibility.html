@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Modelos compatibles · GestorTech{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><h1>Modelos compatibles</h1><p>{{ product.name }}</p></div>
+</section>
+{% if ready %}
+<form class="form-panel narrow" method="post" action="{{ url_for('web.product_compatibility', product_id=product.id, **view) }}">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label for="compatibilities">Marca y modelo</label>
+  <p id="compatibility-help">Escribe un modelo confirmado por línea con el formato <strong>Marca | Modelo</strong>. Incluye la variante cuando corresponda. Puedes indicar hasta 40 modelos. Para retirar todos, deja la lista vacía.</p>
+  {% if error %}<p id="compatibility-error" class="text-danger" role="alert">{{ error }}</p>{% endif %}
+  <textarea id="compatibilities" name="compatibilities" rows="8" maxlength="{{ max_length }}" spellcheck="false" placeholder="Samsung | Galaxy A15 5G" aria-describedby="compatibility-help{% if error %} compatibility-error{% endif %}" {% if error %}aria-invalid="true"{% endif %}>{{ value }}</textarea>
+  <div class="form-actions">
+    <a class="button quiet" href="{{ url_for('web.product_edit', product_id=product.id, **view) }}">Cancelar</a>
+    <button class="button primary" type="submit">Guardar modelos</button>
+  </div>
+</form>
+{% else %}
+<p role="status">La edición de compatibilidades estará disponible tras actualizar la base de datos.</p>
+<a class="button quiet" href="{{ url_for('web.product_edit', product_id=product.id, **view) }}">Volver al producto</a>
+{% endif %}
+{% endblock %}

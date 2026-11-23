@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% from 'catalog_components.html' import product_media, product_price, product_available %}
+{% block title %}Buscar repuestos por modelo · GestorTech{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <h1>Buscar repuestos por modelo</h1>
+    <p>Consulta qué repuestos disponibles tienen compatibilidad confirmada por el taller.</p>
+  </div>
+  <a class="button quiet" href="{{ url_for('web.catalog') }}">Volver al catálogo</a>
+</section>
+
+{% if message %}<p class="callout" role="status">{{ message }}</p>{% endif %}
+<form class="form-panel inventory-search" action="{{ url_for('catalog_search.find') }}" method="get" role="search" aria-label="Búsqueda manual por modelo">
+  <div>
+    <label for="device-brand">Marca <span class="optional">opcional</span></label>
+    <input id="device-brand" name="brand" value="{{ brand }}" maxlength="{{ max_brand_length }}" placeholder="Ej. Samsung">
+  </div>
+  <div>
+    <label for="device-model">Modelo</label>
+    <input id="device-model" name="model" value="{{ model }}" maxlength="{{ max_model_length }}" placeholder="Ej. Galaxy A15 5G" required>
+  </div>
+  <button class="button primary" type="submit">Buscar compatibles</button>
+</form>
+
+{% if searched %}
+<section aria-labelledby="compatibility-results">
+  <h2 id="compatibility-results">Resultados</h2>
+  {% if choices %}
+  <p>Selecciona el modelo exacto para ver sus repuestos.</p>
+  <nav class="button-row catalog-tools" aria-label="Modelos para confirmar">
+    {% for choice in choices %}
+    <a class="button quiet" href="{{ url_for('catalog_search.find', brand=choice.brand, model=choice.model, exact='1') }}">
+      {{ choice.brand }} {{ choice.model }}
+    </a>
+    {% endfor %}
+  </nav>
+  {% elif products %}
+  <p>{{ products|length }} {{ 'repuesto compatible' if products|length == 1 else 'repuestos compatibles' }} para {{ brand }} {{ model }}.</p>
+  <ul class="store-product-grid" aria-label="Repuestos compatibles disponibles">
+    {% for product in products %}
+    <li class="store-product-card">
+      {{ product_media(product) }}
+      <div class="store-card-body">
+        <span class="store-category">{{ product.category or 'General' }}</span>
+        <h3><a href="{{ url_for('web.catalog_product', product_id=product.id) }}">{{ product.name }}</a></h3>
+        {{ product_available(product) }}
+        {{ product_price(product) }}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="store-empty">
+    <h3>No encontramos repuestos compatibles disponibles</h3>
+    <p>Verifica el modelo y la variante de tu equipo, como 4G o 5G.</p>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if ai_available %}
+<form class="form-panel" action="{{ url_for('catalog_search.find') }}" method="post" aria-labelledby="device-ai-title">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <h2 id="device-ai-title">Interpretar con IA</h2>
+  <label for="device-query">Escribe el equipo para el que buscas repuestos</label>
+  <input id="device-query" name="q" value="{{ query }}" maxlength="{{ max_query_length }}" aria-describedby="device-private-help" placeholder="Ej. ¿Qué repuestos tienen para Samsung Galaxy A15 5G?" required>
+  <p class="muted" id="device-private-help">Esta consulta se envía a Groq. Escribe solo información del equipo y evita nombres, teléfonos u otros datos personales.</p>
+  <button class="button secondary" type="submit">Interpretar con IA</button>
+</form>
+{% endif %}
+{% endblock %}

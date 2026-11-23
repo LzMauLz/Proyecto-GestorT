@@ -12,6 +12,15 @@ En el celular, encontrarás los filtros y los productos debajo del buscador. Pul
 
 ![Tienda pública y acceso a consulta de reparación](images/manual/01-tienda-publica.png)
 
+### Ver una ficha y buscar por modelo
+
+1. Abre la ficha de un producto para ver su precio, disponibilidad y compatibilidad. Si tiene una foto, puedes abrirla en tamaño completo.
+2. En **Consultar al taller** encontrarás la referencia y el nombre que identifican el repuesto.
+3. En **Buscar por modelo**, introduce el modelo de tu equipo y, si la conoces, la marca. Si aparecen variantes como 4G y 5G, elige la que figura en tu equipo.
+4. Si está disponible la búsqueda con IA, puedes escribir una pregunta breve como «¿Qué repuestos tienen para Samsung Galaxy A15 5G?». Escribe solo información del equipo, ya que la pregunta se envía a Groq para interpretar el modelo. Si la IA no responde o alcanza su límite, usa la búsqueda manual.
+
+La búsqueda devuelve repuestos disponibles con compatibilidad registrada para el modelo elegido. Si una ficha indica que su compatibilidad está por confirmar, consulta al taller con la referencia del producto.
+
 ### Consultar una reparación
 
 1. Abre [Consultar reparación](https://gestortech.pythonanywhere.com/track).
@@ -40,6 +49,7 @@ Inicia sesión desde [Acceso del personal](https://gestortech.pythonanywhere.com
 - **Crear reparación:** completa el equipo y el problema, asigna un técnico activo y pulsa **Crear reparación**. Comparte con el cliente el código que aparece al terminar.
 - **Actualizar reparación:** selecciona una transición disponible. Escribe en el avance público solo información que el cliente pueda ver. Reserva las notas internas para el taller.
 - **Inventario:** busca por nombre o categoría. Desde **Añadir producto** completa nombre, descripción, categoría, precio y existencias. Puedes adjuntar imágenes PNG, JPEG o WebP de hasta 2 MB y 12 megapíxeles. Guarda el producto en el inventario y publícalo cuando corresponda. También puedes cambiar su disponibilidad o retirarlo del catálogo.
+- Desde la edición del producto, abre **Editar modelos compatibles**. Añade una línea por modelo en el formato `Marca | Modelo`. Por ejemplo, `Samsung | Galaxy A15 5G`. Incluye solo modelos que el taller haya verificado y pulsa **Guardar modelos**.
 - **Movimientos:** registra entradas o salidas desde el producto. Al aplicar el movimiento vuelves a la lista con los mismos filtros. Si la última página quedó vacía, verás la anterior. El sistema impide dejar existencias negativas.
 - **Usuarios:** crea cuentas del personal y asigna el rol adecuado. Crea un técnico activo antes de registrar reparaciones que deban asignarse.
 

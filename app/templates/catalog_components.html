@@ -1,0 +1,8 @@
+{% macro product_media(product) %}
+  <div class="store-product-media">
+    {% if product.image_key %}<img src="{{ url_for('web.catalog_image', image_key=product.image_key) }}" alt="" loading="lazy" width="400" height="300">
+    {% else %}<span class="store-product-fallback" aria-hidden="true">{{ product.name[:1]|upper }}</span><span class="store-product-fallback-label">Sin foto</span>{% endif %}
+  </div>
+{% endmacro %}
+{% macro product_price(product) %}<p class="store-price">{% if product.price_cents is not none %}<small>COP</small>${{ '{:,}'.format(product.price_cents // 100)|replace(',','.') }}{% if product.price_cents % 100 %},{{ '%02d'|format(product.price_cents % 100) }}{% endif %}{% else %}Consulta el precio{% endif %}</p>{% endmacro %}
+{% macro product_available(product) %}<span class="product-availability {% if not product.available %}is-unavailable{% endif %}">{{ 'Disponible' if product.available else 'No disponible' }}</span>{% endmacro %}

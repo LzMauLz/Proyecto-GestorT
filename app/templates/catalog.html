@@ -1,13 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Catálogo · GestorTech{% endblock %}
-{% macro product_media(product) %}
-  <div class="store-product-media">
-    {% if product.image_key %}<img src="{{ url_for('web.catalog_image', image_key=product.image_key) }}" alt="" loading="lazy" width="400" height="300">
-    {% else %}<span class="store-product-fallback" aria-hidden="true">{{ product.name[:1]|upper }}</span><span class="store-product-fallback-label">Sin foto</span>{% endif %}
-  </div>
-{% endmacro %}
-{% macro product_price(product) %}<p class="store-price">{% if product.price_cents is not none %}<small>COP</small>${{ '{:,}'.format(product.price_cents // 100)|replace(',','.') }}{% if product.price_cents % 100 %},{{ '%02d'|format(product.price_cents % 100) }}{% endif %}{% else %}Consulta el precio{% endif %}</p>{% endmacro %}
-{% macro product_available(product) %}<span class="product-availability {% if not product.available %}is-unavailable{% endif %}">{{ 'Disponible' if product.available else 'No disponible' }}</span>{% endmacro %}
+{% from 'catalog_components.html' import product_media, product_price, product_available %}
 {% block content %}
 {% if not filtered %}
 <section class="storefront-hero" aria-label="Tienda y servicio técnico">
@@ -47,7 +40,7 @@
   </div>
   {% if products %}
   <ul class="store-product-grid" aria-label="Productos publicados">
-    {% for product in products %}<li class="store-product-card" id="producto-{{ product.id }}" data-product-card>{{ product_media(product) }}<div class="store-card-body"><span class="store-category">{{ product.category or 'General' }}</span><h2>{{ product.name }}</h2>{{ product_available(product) }}{{ product_price(product) }}{% if product.description %}<details><summary>Ver descripción<span class="sr-only"> de {{ product.name }}</span></summary><p>{{ product.description }}</p></details>{% endif %}</div></li>{% endfor %}
+    {% for product in products %}<li class="store-product-card" id="producto-{{ product.id }}" data-product-card>{{ product_media(product) }}<div class="store-card-body"><span class="store-category">{{ product.category or 'General' }}</span><h2>{{ product.name }}</h2>{{ product_available(product) }}{{ product_price(product) }}<a class="store-card-detail" href="{{ url_for('web.catalog_product', product_id=product.id) }}">Ver ficha<span class="sr-only"> de {{ product.name }}</span></a>{% if product.description %}<details><summary>Ver descripción<span class="sr-only"> de {{ product.name }}</span></summary><p>{{ product.description }}</p></details>{% endif %}</div></li>{% endfor %}
   </ul>
   {% else %}
   <div class="store-empty"><h2>No encontramos coincidencias</h2><p>Prueba otro nombre, cambia la categoría o limpia los filtros para ver todos los productos.</p></div>
@@ -64,7 +57,7 @@
     </div>
   </div>
   <div id="store-carousel" class="store-carousel" data-store-carousel data-count="{{ featured|length }}" role="group" aria-label="Productos destacados" tabindex="0">
-    {% for product in featured %}<div class="store-shelf-card" data-shelf-card role="group" aria-roledescription="diapositiva" aria-label="{{ loop.index }} de {{ loop.length }}">{{ product_media(product) }}<div class="store-shelf-content">{{ product_available(product) }}<h3>{{ product.name }}</h3>{{ product_price(product) }}<a href="#producto-{{ product.id }}">Ver en catálogo<span class="sr-only">: {{ product.name }}</span></a></div></div>{% endfor %}
+    {% for product in featured %}<div class="store-shelf-card" data-shelf-card role="group" aria-roledescription="diapositiva" aria-label="{{ loop.index }} de {{ loop.length }}">{{ product_media(product) }}<div class="store-shelf-content">{{ product_available(product) }}<h3>{{ product.name }}</h3>{{ product_price(product) }}<a href="{{ url_for('web.catalog_product', product_id=product.id) }}">Ver ficha<span class="sr-only"> de {{ product.name }}</span></a></div></div>{% endfor %}
   </div>
   <p class="sr-only" role="status" data-carousel-status></p>
 </section>

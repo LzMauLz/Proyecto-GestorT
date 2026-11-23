@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% from 'catalog_components.html' import product_media, product_price, product_available %}
+{% block title %}{{ product.name }} · GestorTech{% endblock %}
+{% block content %}
+<article class="catalog-product-page" aria-labelledby="product-title">
+  <a class="button quiet" href="{{ url_for('web.catalog', _anchor='catalog-results') }}">← Volver al catálogo</a>
+  <div class="catalog-product-layout">
+    <header class="catalog-product-summary">
+      <p class="store-category">{{ product.category or 'General' }}</p>
+      <h1 id="product-title">{{ product.name }}</h1>
+      {{ product_available(product) }}
+      {{ product_price(product) }}
+      {% if product.description %}<p class="catalog-product-description">{{ product.description }}</p>{% endif %}
+      <a class="button primary" href="#consulta-producto">Consultar al taller</a>
+    </header>
+    <div class="catalog-product-image">
+      {% if product.image_key %}
+      <a class="store-product-media" href="{{ url_for('web.catalog_image', image_key=product.image_key) }}">
+        <img src="{{ url_for('web.catalog_image', image_key=product.image_key) }}" alt="Foto de {{ product.name }}" width="600" height="450">
+        <span class="catalog-image-hint">Ampliar foto</span>
+      </a>
+      {% else %}{{ product_media(product) }}{% endif %}
+    </div>
+  </div>
+  <section class="catalog-product-panel" aria-labelledby="models-title">
+    <h2 id="models-title">Modelos compatibles</h2>
+    {% if models %}
+    <ul class="catalog-model-list">
+      {% for item in models %}<li><strong>{{ item.brand }}</strong> {{ item.model }}</li>{% endfor %}
+    </ul>
+    {% else %}
+    <p>El taller aún no ha confirmado modelos compatibles para este producto.</p>
+    {% endif %}
+  </section>
+  <section class="catalog-product-panel" id="consulta-producto" aria-labelledby="consulta-title" tabindex="-1">
+    <h2 id="consulta-title">Consultar al taller</h2>
+    <p>Comparte el nombre y la referencia del producto cuando contactes al taller.</p>
+    <p>{{ product.name }} <span aria-hidden="true">·</span> <strong>GT-P{{ product.id }}</strong></p>
+  </section>
+</article>
+{% endblock %}

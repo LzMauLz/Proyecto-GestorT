@@ -82,6 +82,12 @@ El plan gratis tiene un trabajador y una cuota de almacenamiento total de 512 Mi
 
 Fuentes oficiales consultadas: [Planes PythonAnywhere](https://www.pythonanywhere.com/pricing/), [límites de cuentas gratuitas](https://help.pythonanywhere.com/pages/FreeAccountsFeatures/), [configuración Flask](https://help.pythonanywhere.com/pages/Flask/), [variables de entorno en WSGI](https://help.pythonanywhere.com/pages/EnvironmentVariables/) y [lista de sitios permitidos](https://www.pythonanywhere.com/whitelist/).
 
+## Actualizar una base existente para usar compatibilidades
+
+Antes de desplegar esta función, sigue el [procedimiento de respaldo y actualización](operacion_demo_local.md#actualización-de-una-base-existente) con el entorno virtual de GestorTech y la ruta de la base del sitio. La inicialización crea la tabla de compatibilidades y deja los productos existentes con su lista de modelos vacía hasta que el taller la complete. Puedes repetir la inicialización sin perder las compatibilidades ya registradas.
+
+La búsqueda por modelo funciona en modo manual. Si Groq está configurado, la consulta pública de texto cuenta con un máximo de 6 solicitudes por IP y 12 para toda la aplicación en una ventana de 60 segundos, además de 120 solicitudes para toda la aplicación en una ventana de 24 horas. Al llegar a un límite, la búsqueda manual sigue disponible.
+
 ## Evidencia de entrega
 
 Consulta [los flujos verificados y los límites de la demo](entrega_funcional.md).

@@ -8,6 +8,7 @@ from flask import Flask, abort, jsonify, request
 from config.settings import Config
 from app.infrastructure import database
 from app.web.auth import auth_bp, enforce_csrf
+from app.web.catalog_search import catalog_search_bp
 from app.web.pages import web_bp
 from app.web.api import api_bp
 from app.web.request_limits import enforce_request_limits
@@ -34,6 +35,7 @@ def create_app(test_config=None):
     app.extensions['gestortech_ai_provider'] = provider if provider.available else None
     app.register_blueprint(auth_bp)
     app.register_blueprint(web_bp)
+    app.register_blueprint(catalog_search_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
 
     # Keep the static paths valid for PythonAnywhere and cache each version separately.

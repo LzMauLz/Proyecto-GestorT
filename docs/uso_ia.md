@@ -21,6 +21,10 @@ Las propuestas requieren confirmación. El backend aplica roles, propiedad de la
 
 ## Configuración y verificación
 
+El catálogo ofrece **Buscar por modelo**. La modalidad con IA usa una pregunta breve para extraer la marca y el modelo que escribió el cliente. Solo se envía a Groq esa pregunta, hasta 140 caracteres. El formulario pide excluir datos personales y la aplicación bloquea patrones comunes de correos, teléfonos y enlaces.
+
+GestorTech compara la marca y el modelo con la compatibilidad registrada por el taller. Si hace falta una variante o falta confirmar la marca, presenta las opciones para que el cliente elija. La búsqueda manual sigue disponible ante límites, respuestas inválidas o fallos de Groq.
+
 `GROQ_ENABLED=false` mantiene el flujo manual. Para habilitar IA en un entorno autorizado, configura `GROQ_ENABLED=true`, `GROQ_MODEL` y `GROQ_API_KEY` de forma privada. `GROQ_TIMEOUT` admite de 1 a 60 segundos y por defecto usa 12. Evita compartir claves en Git, capturas, mensajes o prácticas de sustentación.
 
 Rutas: `/assistant`, `POST /api/asistente/mensaje`, `POST /api/asistente/propuestas/<id>/confirmar`, `POST /api/asistente/propuestas/<id>/cancelar`, `POST /products/suggest-description` y `POST /api/ia/importacion/propuesta`. Consulta [la API](api.md) y [la evidencia real](entrega_funcional.md).
