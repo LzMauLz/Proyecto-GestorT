@@ -140,8 +140,10 @@ class AssistantWorkflowTests(unittest.TestCase):
         self.assertEqual(get_db().execute('SELECT COUNT(*) FROM products').fetchone()[0], 0)
 
     def test_file_route_rejects_unknown_fields_and_roles(self):
-        response = self.client.post('/assistant/import', headers=self.headers, data={'campos': ['email']})
-        self.assertEqual(response.status_code, 302)
+        response = self.client.post('/assistant/import', headers=self.headers, data={'campos': ['email']}, follow_redirects=True)
+        self.assertEqual(response.request.path, '/dashboard')
+        self.assertIn('data-chat-start="import"', response.get_data(as_text=True))
+        self.assertIn('Selecciona únicamente los campos de producto disponibles.', response.get_data(as_text=True))
         self.headers = self.login(2)
         self.assertEqual(self.client.post('/assistant/import', headers=self.headers).status_code, 403)
         self.login(1)
@@ -178,8 +180,10 @@ class AssistantWorkflowTests(unittest.TestCase):
         self.assertNotIn('Nombre, precio o cantidad faltante', response.get_data(as_text=True))
 
     def test_disabled_provider_keeps_upload_and_manual_link(self):
-        response = self.client.get('/assistant')
+        response = self.client.get('/assistant', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.request.path, '/dashboard')
+        self.assertIn('data-chat-start="open"', response.get_data(as_text=True))
         self.assertIn('/assistant/import', response.get_data(as_text=True))
         self.assertIn('Registrar producto manualmente', response.get_data(as_text=True))
         self.assertEqual(self.client.post('/api/asistente/mensaje', json={'mensaje': 'Hola'}, headers=self.headers).status_code, 503)

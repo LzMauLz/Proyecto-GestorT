@@ -131,8 +131,8 @@ def staff_chat():
     if 'importar' in text or 'xlsx' in text or 'csv' in text:
         if user['role'] != 'admin':
             return _chat_json('La importación está disponible para administración.')
-        return _chat_json('Abre el formulario de importación para cargar y revisar el archivo.', links=[
-            {'label': 'Importar productos', 'url': url_for('web.import_form')},
+        return _chat_json('Abre la importación del chat para cargar y revisar el archivo.', links=[
+            {'label': 'Importar desde el chat', 'url': url_for('web.dashboard', chat='import')},
         ])
 
     if ('stock' in text or 'existencias' in text or 'unidades' in text) and ('pocas' in text or 'bajo' in text):

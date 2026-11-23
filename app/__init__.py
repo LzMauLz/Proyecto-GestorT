@@ -39,6 +39,7 @@ def create_app(test_config=None):
     app.register_blueprint(catalog_search_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     app.jinja_env.globals['product_categories_for_chat'] = PRODUCT_CATEGORIES
+    app.jinja_env.globals['chat_ai_available'] = lambda: app.extensions['gestortech_ai_provider'] is not None
 
     # Keep the static paths valid for PythonAnywhere and cache each version separately.
     static_folder = Path(app.static_folder)

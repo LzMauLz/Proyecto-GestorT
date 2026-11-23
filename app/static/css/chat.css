@@ -1,5 +1,4 @@
 .docked-chat {
-  --chat-accent: #e0fc73;
   position: fixed;
   z-index: 20;
   inset-inline-end: max(1rem, env(safe-area-inset-right));
@@ -7,28 +6,32 @@
   display: grid;
   justify-items: end;
   gap: .55rem;
-  max-width: calc(100vw - 2rem);
+  width: min(390px, calc(100% - 2rem));
+  pointer-events: none;
 }
-.staff-view .docked-chat { --chat-accent: #d8baff; }
 .chat-launcher {
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   gap: .65rem;
   min-height: 48px;
-  padding: .72rem 1.1rem;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: var(--chat-accent);
-  color: #20142c;
+  padding: .65rem 1.05rem .65rem .72rem;
+  border: 1px solid #bd91fa;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #7139c1, #512398);
+  color: #fff;
+  cursor: pointer;
   font-weight: 800;
   line-height: 1.2;
   box-shadow: 0 5px 18px #0e071b80;
 }
+.chat-launcher:hover, .chat-launcher[aria-expanded="true"] { background: #6632b3; }
+.chat-launcher:focus-visible { outline: 2px solid #f4e9ff; outline-offset: 4px; }
 .chat-launcher-icon {
-  width: 17px;
-  height: 13px;
+  width: 21px;
+  height: 16px;
   border: 2px solid currentColor;
-  border-radius: 4px;
+  border-radius: 6px;
   position: relative;
 }
 .chat-launcher-icon::after {
@@ -42,9 +45,10 @@
   transform: skewY(-35deg);
 }
 .docked-chat-panel {
+  pointer-events: auto;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  width: min(390px, calc(100vw - 2rem));
+  width: 100%;
   height: min(550px, calc(100vh - 84px));
   height: min(550px, calc(100dvh - 84px));
   overflow: hidden;
@@ -64,7 +68,7 @@
   background: #3a235e;
   color: #fff;
 }
-.docked-chat-header h2 { margin: 0; font-size: 1.05rem; }
+.docked-chat-header h2 { margin: 0; color: #f9f0ff; font-size: 1.15rem; line-height: 1.2; letter-spacing: -.02em; }
 .docked-chat-header p { margin: .2rem 0 0; color: #e1d3f2; font-size: .78rem; }
 .chat-minimize {
   min-width: 44px;
@@ -89,6 +93,21 @@
   color: #f4ebfc;
   font-size: .75rem;
 }
+.chat-examples button:hover { border-color: #c9a4f7; }
+.chat-import {
+  min-height: 0;
+  padding: .85rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.chat-import h3 { margin: .65rem 0 .3rem; color: #f4e9ff; font-size: 1.15rem; }
+.chat-import .chat-import-form { padding: .75rem; box-shadow: none; }
+.chat-import-form > label:first-of-type { margin-top: 0; }
+.chat-import-form input[type="file"] { min-width: 0; font-size: .78rem; }
+.chat-import-form details, .chat-import-form button, .chat-import-form a { margin-top: .7rem; }
+.chat-import-form summary, .chat-import-form a { min-height: 44px; padding-block: .62rem; }
+.chat-import-form summary { cursor: pointer; }
+.chat-import-form a { display: inline-flex; align-items: center; }
 .docked-chat .assistant-composer .chat-mode {
   display: flex;
   align-items: center;
@@ -115,6 +134,5 @@
   text-underline-offset: .12em;
 }
 @media (max-width: 600px) {
-  .docked-chat { max-width: calc(100vw - 1.3rem); inset-inline-end: max(.65rem, env(safe-area-inset-right)); inset-block-end: max(.65rem, env(safe-area-inset-bottom)); }
-  .docked-chat-panel { width: min(390px, calc(100vw - 1.3rem)); }
+  .docked-chat { width: min(390px, calc(100% - 1.3rem)); inset-inline-end: max(.65rem, env(safe-area-inset-right)); inset-block-end: max(.65rem, env(safe-area-inset-bottom)); }
 }
