@@ -5,6 +5,30 @@ from PIL import Image
 from app.infrastructure.database import get_db
 
 
+def test_featured_precedes_results_and_catalog_filters_keep_other_selections(integration_app):
+    with integration_app.app_context():
+        db = get_db()
+        db.executemany(
+            'INSERT INTO products(name,category,price_cents,available,published,created_at) VALUES (?,?,1000,?,1,?)',
+            [('Cable flexible disponible', 'Repuesto', 1, '2026-11-22'),
+             ('Cable flexible agotado', 'Repuesto', 0, '2026-11-22'),
+             ('Cable auxiliar', 'Accesorio', 1, '2026-11-22')],
+        )
+        db.commit()
+    client = integration_app.test_client()
+    home = client.get('/catalog').get_data(as_text=True)
+    assert home.index('id="productos-destacados"') < home.index('id="catalog-results"')
+    assert 'aria-current="true">Todos los estados' in home
+
+    filtered = client.get('/catalog?q=cable&category=repuesto&available=1').get_data(as_text=True)
+    assert 'id="productos-destacados"' not in filtered
+    assert 'aria-current="true">Repuesto' in filtered and 'aria-current="true">Solo disponibles' in filtered
+    assert 'Cable flexible disponible' in filtered
+    assert 'Cable flexible agotado' not in filtered and 'Cable auxiliar' not in filtered
+    assert 'q=cable&amp;category=Repuesto#catalog-results' in filtered
+    assert 'q=cable&amp;category=Accesorio&amp;available=1#catalog-results' in filtered
+
+
 def test_accept_image_publish_availability_and_revoke(integration_app, admin_client, tmp_path):
     integration_app.config['PRODUCT_IMAGE_DIRECTORY'] = str(tmp_path / 'images')
 

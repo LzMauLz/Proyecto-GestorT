@@ -1,14 +1,40 @@
 {% set chat_title = 'Asistente del taller' if staff_shell else 'Chat de productos' %}
+{% set chat_admin = staff_shell and current_user()['role'] == 'admin' %}
+{% set chat_start = request.args.get('chat', '') if staff_shell and request.endpoint == 'web.dashboard' else '' %}
 <aside class="docked-chat" aria-label="{{ chat_title }}"
        data-assistant data-docked-chat data-scope="{{ 'staff' if staff_shell else 'public' }}"
+       data-chat-start="{{ 'import' if chat_admin and chat_start == 'import' else 'open' if chat_start == 'open' else '' }}"
        data-thread="{{ staff_chat_session() if staff_shell else 'catalog' }}"
        data-endpoint="{{ url_for('api.staff_chat') if staff_shell else url_for('api.catalog_chat') }}"
        data-categories='{{ product_categories_for_chat|tojson }}'>
   <section class="docked-chat-panel" id="docked-chat-panel" aria-labelledby="docked-chat-title" hidden>
     <header class="docked-chat-header">
-      <div><h2 id="docked-chat-title">{{ chat_title }}</h2><p>{{ 'Inventario y reparaciones' if staff_shell else 'Precios, disponibilidad y compatibilidad' }}</p></div>
+      <div>
+        <h2 id="docked-chat-title">{{ chat_title }}</h2>
+        <p>{{ ('IA disponible' if chat_ai_available() else 'Modo manual disponible') if staff_shell else 'Precios, disponibilidad y compatibilidad' }}</p>
+      </div>
       <button type="button" class="chat-minimize" data-chat-close aria-label="Minimizar chat">−</button>
     </header>
+    {% if chat_admin %}
+    <section class="chat-import" id="docked-chat-import" aria-labelledby="chat-import-title" data-chat-import hidden>
+      <button class="button quiet" type="button" data-chat-import-back>Volver a la conversación</button>
+      <h3 id="chat-import-title" tabindex="-1">Importar productos</h3>
+      {% for category,message in flash_messages if category == 'chat-import-error' %}<p class="flash error" role="alert">{{ message }}</p>{% endfor %}
+      <form class="form-panel chat-import-form" method="post" enctype="multipart/form-data" action="{{ url_for('web.assistant_import') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <label for="chat-import-file">Archivo CSV o XLSX</label>
+        <input id="chat-import-file" type="file" name="archivo" accept=".csv,.xlsx" required aria-describedby="chat-import-help">
+        <small id="chat-import-help">Hasta 5 MB, 1.000 filas y 30 columnas. Revisa los productos antes de guardarlos.</small>
+        {% with assistant_available=chat_ai_available(), import_ai_help_id='chat-import-ai-help' %}{% include 'import_ai_option.html' %}{% endwith %}
+        <details><summary>Filtrar productos del archivo</summary>
+          <label for="chat-import-keywords">Palabras clave</label>
+          <input id="chat-import-keywords" name="palabras" maxlength="100" placeholder="Ej. cable USB">
+        </details>
+        <button class="button primary full" type="submit">Revisar productos</button>
+        <a href="{{ url_for('web.product_new') }}">Registrar producto manualmente</a>
+      </form>
+    </section>
+    {% endif %}
     <div class="assistant-messages" data-messages role="log" aria-label="Conversación" aria-live="polite" aria-relevant="additions text">
       <div class="assistant-message"><p>{{ '¿Qué necesitas consultar en el taller?' if staff_shell else '¿Qué producto o repuesto buscas?' }}</p></div>
     </div>
@@ -17,6 +43,11 @@
         {% if staff_shell %}
         <button type="button" data-assistant-example="¿Qué reparaciones están pendientes?">Reparaciones pendientes</button>
         <button type="button" data-assistant-example="¿Qué productos tienen pocas unidades disponibles?">Revisar existencias</button>
+        {% if chat_admin %}
+        <button type="button" data-assistant-example="Prepara una ficha para un soporte de escritorio, categoría Accesorio, a 35000 pesos, con 3 unidades.">Preparar ficha</button>
+        <button type="button" data-assistant-example="Redacta una descripción para un soporte plegable de escritorio. Usa solo ese detalle.">Redactar descripción</button>
+        <button type="button" data-chat-import-open aria-controls="docked-chat-import">Importar CSV/XLSX</button>
+        {% endif %}
         {% else %}
         <button type="button" data-assistant-example="Muéstrame repuestos disponibles">Ver repuestos</button>
         <button type="button" data-assistant-example="¿Qué repuestos tienen para Samsung Galaxy S25 Ultra?" data-model-example>Consultar compatibilidad</button>

@@ -15,7 +15,7 @@ from app.application.services import (
 )
 from app.application.ai_import import prepare_product_proposal
 from app.application.catalog import (
-    MAX_COMPATIBILITY_TEXT, compatibility_ready, filter_catalog, product_compatibilities, public_catalog,
+    MAX_COMPATIBILITY_TEXT, catalog_text, compatibility_ready, filter_catalog, product_compatibilities, public_catalog,
     public_product, save_product_compatibilities, set_publication, set_availability,
 )
 from app.infrastructure.product_images import prepare_image, store_image, discard_image, image_path
@@ -191,8 +191,7 @@ def dashboard():
 @web_bp.get('/assistant')
 @roles_required('admin', 'technician')
 def assistant():
-    return render_template('assistant.html', assistant_available=current_app.extensions.get('gestortech_ai_provider') is not None,
-                           product_categories=PRODUCT_CATEGORIES)
+    return redirect(url_for('web.dashboard', chat='open'))
 
 
 @web_bp.get('/repairs')
@@ -383,6 +382,7 @@ def catalog():
         filtered = bool(query or category or available_only)
         featured = [] if filtered else sorted(products, key=lambda product: product['id'], reverse=True)[:8]
         categories = sorted({p['category'] or 'General' for p in products}, key=str.casefold)
+        category = next((item for item in categories if catalog_text(item) == catalog_text(category)), category)
         response = current_app.make_response(render_template(
             'catalog.html', products=filter_catalog(products, query, category, available_only),
             featured=featured, categories=categories, catalog_query=query, catalog_category=category,
@@ -682,8 +682,8 @@ def assistant_import():
             raise ValueError('No hay productos que coincidan; revisa el archivo o las palabras clave.')
         return _stage_import(rows)
     except (ValueError, UnicodeDecodeError) as exc:
-        flash(str(exc), 'error')
-        return redirect(url_for('web.assistant'))
+        flash(str(exc), 'chat-import-error')
+        return redirect(url_for('web.dashboard', chat='import'))
 
 @web_bp.post('/products/import/<batch>/approve')
 @roles_required('admin')

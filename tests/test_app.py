@@ -187,7 +187,7 @@ class GestorTechTests(unittest.TestCase):
 
     def test_staff_pages_render(self):
         self.session_as(1)
-        for path in ['/dashboard','/products','/products/new','/products/import','/repairs/new','/users/new','/assistant']:
+        for path in ['/dashboard','/products','/products/new','/products/import','/repairs/new','/users/new']:
             with self.subTest(path=path):
                 response=self.client.get(path)
                 self.assertEqual(response.status_code,200,response.get_data(as_text=True)[:500])

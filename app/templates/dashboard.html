@@ -11,7 +11,6 @@
 {% endif %}
 <section class="dashboard-shortcuts" aria-label="Acciones del taller">
   <a class="dashboard-shortcut" href="{{ url_for('web.products') }}"><strong>Repuestos y accesorios</strong><p>{{ 'Actualiza productos y decide qué mostrar en la tienda.' if current_user()['role']=='admin' else 'Consulta los productos disponibles en el inventario.' }}</p><span aria-hidden="true">↗</span></a>
-  <a class="dashboard-shortcut" href="{{ url_for('web.assistant') }}"><strong>Asistente de inventario</strong><p>{{ 'Prepara una propuesta y revisa los datos antes de confirmar.' if current_user()['role']=='admin' else 'Consulta información del inventario desde el asistente.' }}</p><span aria-hidden="true">↗</span></a>
 </section>
 <section class="section-heading" id="recent-repairs"><div><h2>Reparaciones recientes</h2><p class="muted">{{ 'Órdenes visibles para administración.' if current_user()['role']=='admin' else 'Órdenes asignadas a tu usuario.' }}</p></div><div class="button-row"><a class="text-link" href="{{ url_for('web.repairs', view='pending') }}">Pendientes</a><a class="text-link" href="{{ url_for('web.repairs', view='ready') }}">Listas para entregar</a><a class="text-link" href="{{ url_for('web.track') }}">Abrir seguimiento público</a></div></section>
 {% if repairs %}

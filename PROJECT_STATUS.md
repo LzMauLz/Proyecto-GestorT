@@ -1,5 +1,10 @@
 # Estado de GestorTech
 
+## Asistente unificado y ajustes del catálogo
+
+- El botón morado del chat es el acceso al asistente desde el panel. El chat mantiene las consultas, las propuestas editables y, para administración, la importación CSV/XLSX con revisión. La ruta anterior del asistente abre el chat en el panel.
+- El carrusel abre el catálogo sin filtros. Los filtros de categoría y disponibilidad muestran la selección actual y conservan el término buscado.
+
 ## Catálogo y chats de GestorTech
 
 - La tienda presenta el producto destacado, filtros y accesos a fichas con la identidad visual de GestorTech.

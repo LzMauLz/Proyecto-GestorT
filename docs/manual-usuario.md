@@ -6,9 +6,9 @@ Usa la [demo pública](https://gestortech.pythonanywhere.com/). Para prácticas 
 
 ### Explorar productos
 
-Abre el [catálogo](https://gestortech.pythonanywhere.com/catalog). Escribe el nombre o una característica del producto y pulsa **Buscar** o Intro. Puedes elegir una categoría y pulsar **Ver solo disponibles**. Copia la dirección si quieres compartir esos resultados. **Limpiar filtros** muestra el catálogo completo. Abre **Ver descripción** en una ficha para leer más sobre el producto.
+Abre el [catálogo](https://gestortech.pythonanywhere.com/catalog). El carrusel de **Productos destacados** aparece primero. Usa sus flechas para ver más productos y **Pausar** para detener el movimiento automático.
 
-En el celular, encontrarás los filtros y los productos debajo del buscador. Pulsa **Ver destacados** para saltar al carrusel. Usa **Consultar reparación** en la navegación superior para entrar al formulario de seguimiento.
+Escribe el nombre o una característica en el buscador y pulsa **Buscar**. Puedes combinar el texto con **Categoría** y **Disponibilidad**. Elige **Solo disponibles** para ocultar los productos que el taller marcó como no disponibles. **Todos los estados** conserva la categoría y el texto. **Limpiar filtros** vuelve al catálogo completo. Abre **Ver ficha** para consultar los detalles. Puedes ir al seguimiento desde **Consultar reparación** en la navegación superior.
 
 ![Tienda pública y acceso a consulta de reparación](images/manual/01-tienda-publica.png)
 
@@ -85,13 +85,11 @@ Para completar o corregir los datos, abre la orden y usa **Añadir datos del cli
 
 ## Asistente de IA e importaciones
 
-Abre **Asistente del taller** desde el botón disponible en las pantallas del personal. Al navegar por el panel en la misma pestaña, el chat conserva su estado abierto o minimizado y permite retomar propuestas. Pide, por ejemplo, las reparaciones pendientes, el estado de una orden por código o los productos con pocas unidades. Si tienes acceso de administración, también puedes consultar cuántos usuarios activos hay, abrir la importación o preguntar cómo publicar una ficha, añadir una foto o registrar modelos compatibles.
+Abre **Asistente del taller** con el botón morado de la esquina inferior. Al navegar por el panel en la misma pestaña, el chat conserva su estado abierto o minimizado y permite retomar propuestas. Pide, por ejemplo, las reparaciones pendientes, el estado de una orden por código o los productos con pocas unidades. Si tienes acceso de administración, usa **Preparar ficha**, **Redactar descripción** o **Importar CSV/XLSX** directamente en el chat.
 
 Para preparar una propuesta de catálogo, escribe el nombre, la categoría, el precio y la cantidad. Revisa la descripción y los demás campos antes de aprobarla. Adjunta la imagen en el flujo de creación y confirma la publicación manualmente.
 
-![Asistente de inventario e importación CSV/XLSX](images/manual/06-asistente-ia.png)
-
-Para importar CSV o XLSX, selecciona el archivo, revisa la vista previa y las filas detectadas, y aprueba explícitamente qué guardar. Las sugerencias de IA son opcionales. Si la IA no está disponible, usa el formulario manual de inventario. No incluyas información personal de clientes en archivos enviados para análisis de IA.
+En **Importar CSV/XLSX**, selecciona el archivo, revisa las filas detectadas y aprueba explícitamente qué guardar. Puedes solicitar sugerencias de IA o revisar el archivo manualmente. El formulario manual de inventario también sigue disponible. Incluye en el archivo únicamente datos comerciales de los productos.
 
 La IA puede equivocarse. Verifica siempre la descripción y los demás campos. No aceptes valores que no estén respaldados por la información del producto.
 

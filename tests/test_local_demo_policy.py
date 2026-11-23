@@ -27,7 +27,7 @@ def test_local_catalog_and_manual_workflow_do_not_need_provider(demo_app):
     with client.session_transaction() as session:
         session['user_id'] = 1
         session['_csrf_token'] = 'demo-csrf'
-    assert client.get('/assistant').status_code == 200
+    assert client.get('/assistant', follow_redirects=True).status_code == 200
     response = client.post('/api/asistente/mensaje', json={'mensaje': 'Consulta de prueba'},
                            headers={'X-CSRF-Token': 'demo-csrf'})
     assert response.status_code == 503

@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const panel = shell.querySelector('.docked-chat-panel');
   const launcher = shell.querySelector('[data-chat-toggle]');
   const mode = shell.querySelector('[data-chat-mode]');
+  const importPanel = shell.querySelector('[data-chat-import]');
+  const importHeading = importPanel?.querySelector('h3');
   const staff = shell.dataset.scope === 'staff';
   const storageKey = staff ? 'gestortech:staff-chat' : 'gestortech:catalog-chat';
   const thread = shell.dataset.thread;
@@ -33,10 +35,20 @@ document.addEventListener('DOMContentLoaded', () => {
     state.open = isOpen;
     panel.hidden = !isOpen;
     launcher.setAttribute('aria-expanded', String(isOpen));
-    if (focus) (isOpen ? input : launcher).focus();
+    if (focus) (isOpen ? (importPanel && !importPanel.hidden ? importHeading : input) : launcher).focus();
     if (isOpen) messages.scrollTop = messages.scrollHeight;
     save();
   };
+  if (importPanel) {
+    const changeView = (showImport, focus = true) => {
+      importPanel.hidden = !showImport;
+      composer.hidden = messages.hidden = showImport;
+      if (focus) (showImport ? importHeading : shell.querySelector('[data-chat-import-open]')).focus();
+    };
+    shell.querySelector('[data-chat-import-open]').addEventListener('click', () => changeView(true));
+    shell.querySelector('[data-chat-import-back]').addEventListener('click', () => changeView(false));
+    if (shell.dataset.chatStart === 'import') changeView(true, false);
+  }
   launcher.hidden = false;
   launcher.addEventListener('click', () => setOpen(!state.open));
   shell.querySelector('[data-chat-close]').addEventListener('click', () => setOpen(false));
@@ -176,7 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
     messages.append(item); messages.scrollTop = messages.scrollHeight;
   };
   state.entries.forEach(addMessage);
-  setOpen(state.open, false);
+  const startFromLink = Boolean(shell.dataset.chatStart);
+  setOpen(state.open || startFromLink, startFromLink);
+  if (startFromLink) {
+    const url = new URL(location.href);
+    url.searchParams.delete('chat');
+    history.replaceState(history.state, '', url);
+  }
   const send = async () => {
     const text = input.value.trim();
     if (!text || sending) return;
@@ -203,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       save();
     } catch (error) { pending.remove(); addMessage({role:'error', text:error.message || 'No se pudo responder.'}); }
-    finally { sending = false; button.disabled = false; composer.removeAttribute('aria-busy'); if (state.open) input.focus(); }
+    finally { sending = false; button.disabled = false; composer.removeAttribute('aria-busy'); if (state.open && !composer.hidden) input.focus(); }
   };
   composer.addEventListener('submit', event => { event.preventDefault(); send(); });
   composer.querySelectorAll('[data-assistant-example]').forEach(example => {

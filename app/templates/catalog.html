@@ -2,69 +2,10 @@
 {% block title %}Catálogo · GestorTech{% endblock %}
 {% from 'catalog_components.html' import product_media, product_price, product_available %}
 {% block content %}
-{% if not filtered %}
-<section class="storefront-hero" aria-label="Tienda y servicio técnico">
-  <div class="store-promo shop-feature">
-    <div class="store-promo-copy">
-      <p class="store-promo-title">Encuentra el repuesto que necesitas.</p>
-      <div class="shop-actions">
-        <a class="button" href="#catalog-results">Explorar catálogo</a>
-        <button class="button shop-chat-link" type="button" data-open-chat hidden>Preguntar por un repuesto</button>
-      </div>
-    </div>
-    {% if featured and featured[0].image_key %}
-    <a class="shop-feature-item" href="{{ url_for('web.catalog_product', product_id=featured[0].id) }}">
-      {{ product_media(featured[0]) }}<span>{{ featured[0].name }}</span>
-    </a>
-    {% else %}
-    <img class="store-promo-art" src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="" width="400" height="400">
-    {% endif %}
-  </div>
-  <aside class="store-tracking" aria-labelledby="store-tracking-title">
-    <p class="store-tracking-title" id="store-tracking-title">Consulta el estado de tu reparación</p>
-    <form action="{{ url_for('web.track') }}" method="post">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <label for="store-tracking-code">Código de seguimiento</label>
-      <input id="store-tracking-code" name="code" spellcheck="false" autocapitalize="characters" required maxlength="40" autocomplete="off" placeholder="GT-…">
-      <button class="button primary" type="submit">Consultar reparación</button>
-    </form>
-  </aside>
-</section>
-{% endif %}
-{% if catalog_error %}
-<section class="store-empty" role="alert" id="catalog-results"><h1>No pudimos cargar el catálogo</h1><p>Inténtalo de nuevo en unos momentos o consulta al taller.</p><a class="button secondary" href="{{ url_for('web.catalog') }}">Volver a intentar</a></section>
-{% elif products or filtered %}
-<section id="catalog-results" aria-labelledby="catalog-heading" data-store-catalog>
-  <div class="store-section-heading">
-    <h1 id="catalog-heading">{{ 'Resultados del catálogo' if filtered else 'Catálogo del taller' }}</h1>
-    {% if filtered %}<a class="catalog-reset" href="{{ url_for('web.catalog', _anchor='catalog-results') }}">Limpiar filtros</a>
-    {% elif featured %}<a class="catalog-featured-link" href="#productos-destacados">Ver destacados</a>{% endif %}
-  </div>
-  <div class="shop-controls">
-  <nav class="catalog-tools" aria-label="Filtrar por categoría">
-    {% for label in [''] + categories %}
-    <a class="category-chip" href="{{ url_for('web.catalog', q=catalog_query or none, category=label or none, available='1' if available_only else none, _anchor='catalog-results') }}"
-       {% if catalog_category == label %}aria-current="true"{% endif %}>{{ label or 'Todas las categorías' }}</a>
-    {% endfor %}
-  </nav>
-    <button class="shop-help" type="button" data-open-chat hidden>Preguntar al chat</button>
-  </div>
-  <div class="catalog-result-bar">
-    <p class="catalog-results-status">{{ products|length }} {{ 'producto' if products|length == 1 else 'productos' }}{% if catalog_query %} para «{{ catalog_query }}»{% endif %}</p>
-    <a class="catalog-stock-filter" href="{{ url_for('web.catalog', q=catalog_query or none, category=catalog_category or none, available=none if available_only else '1', _anchor='catalog-results') }}">{{ 'Mostrar también los no disponibles' if available_only else 'Ver solo disponibles' }}</a>
-  </div>
-  {% if products %}
-  <ul class="store-product-grid" aria-label="Productos publicados">
-    {% for product in products %}<li class="store-product-card" id="producto-{{ product.id }}" data-product-card>{{ product_media(product) }}<div class="store-card-body"><span class="store-category">{{ product.category or 'General' }}</span><h2>{{ product.name }}</h2>{{ product_available(product) }}{{ product_price(product) }}<a class="store-card-detail" href="{{ url_for('web.catalog_product', product_id=product.id) }}">Ver ficha<span class="sr-only"> de {{ product.name }}</span></a>{% if product.description %}<details><summary>Ver descripción<span class="sr-only"> de {{ product.name }}</span></summary><p>{{ product.description }}</p></details>{% endif %}</div></li>{% endfor %}
-  </ul>
-  {% else %}
-  <div class="store-empty"><h2>No encontramos coincidencias</h2><p>Prueba otro nombre, cambia la categoría o limpia los filtros para ver todos los productos.</p></div>
-  {% endif %}
-</section>
 {% if featured %}
-<section id="productos-destacados" data-store-shelf aria-roledescription="carrusel" aria-labelledby="store-shelf-title" tabindex="-1">
+<section id="productos-destacados" class="catalog-featured" data-store-shelf aria-roledescription="carrusel" aria-labelledby="store-shelf-title" tabindex="-1">
   <div class="store-section-heading">
-    <h2 id="store-shelf-title">Productos destacados</h2>
+    <h1 class="catalog-title" id="store-shelf-title">Productos destacados</h1>
     <div class="store-carousel-controls" data-carousel-controls hidden>
       <button class="button quiet" type="button" data-carousel-toggle aria-controls="store-carousel">Pausar</button>
       <button class="store-arrow" type="button" data-carousel-prev aria-label="Ver productos anteriores" aria-controls="store-carousel">←</button>
@@ -72,9 +13,65 @@
     </div>
   </div>
   <div id="store-carousel" class="store-carousel" data-store-carousel data-count="{{ featured|length }}" role="group" aria-label="Productos destacados" tabindex="0">
-    {% for product in featured %}<div class="store-shelf-card" data-shelf-card role="group" aria-roledescription="diapositiva" aria-label="{{ loop.index }} de {{ loop.length }}">{{ product_media(product) }}<div class="store-shelf-content">{{ product_available(product) }}<h3>{{ product.name }}</h3>{{ product_price(product) }}<a href="{{ url_for('web.catalog_product', product_id=product.id) }}">Ver ficha<span class="sr-only"> de {{ product.name }}</span></a></div></div>{% endfor %}
+    {% for product in featured %}
+    <div class="store-shelf-card" data-shelf-card role="group" aria-roledescription="diapositiva" aria-label="{{ loop.index }} de {{ loop.length }}">
+      {{ product_media(product) }}
+      <div class="store-shelf-content">{{ product_available(product) }}<h2>{{ product.name }}</h2>{{ product_price(product) }}<a href="{{ url_for('web.catalog_product', product_id=product.id) }}">Ver ficha<span class="sr-only"> de {{ product.name }}</span></a></div>
+    </div>
+    {% endfor %}
   </div>
   <p class="sr-only" role="status" data-carousel-status></p>
+</section>
+{% endif %}
+{% if catalog_error %}
+<section class="store-empty" role="alert" id="catalog-results"><h1>No pudimos cargar el catálogo</h1><p>Inténtalo de nuevo en unos momentos o consulta al taller.</p><a class="button secondary" href="{{ url_for('web.catalog') }}">Volver a intentar</a></section>
+{% elif products or filtered %}
+<section id="catalog-results" aria-labelledby="catalog-heading" data-store-catalog tabindex="-1">
+  <div class="store-section-heading">
+    {% set catalog_level = 'h2' if featured else 'h1' %}
+    <{{ catalog_level }} class="catalog-title" id="catalog-heading">{{ 'Resultados del catálogo' if filtered else 'Catálogo del taller' }}</{{ catalog_level }}>
+    {% if filtered %}<a class="catalog-reset" href="{{ url_for('web.catalog', _anchor='catalog-results') }}">Limpiar filtros</a>
+    {% endif %}
+  </div>
+  <div class="catalog-filters">
+    <nav class="catalog-filter" aria-label="Filtrar por categoría">
+      <span class="catalog-filter-label">Categoría</span>
+      <div class="catalog-tools">
+        {% for label in [''] + categories %}
+        <a class="category-chip" href="{{ url_for('web.catalog', q=catalog_query or none, category=label or none, available='1' if available_only else none, _anchor='catalog-results') }}"
+           {% if catalog_category == label %}aria-current="true"{% endif %}>{{ label or 'Todas las categorías' }}</a>
+        {% endfor %}
+      </div>
+    </nav>
+    <nav class="catalog-filter" aria-label="Filtrar por disponibilidad">
+      <span class="catalog-filter-label">Disponibilidad</span>
+      <div class="catalog-tools">
+        <a class="category-chip" href="{{ url_for('web.catalog', q=catalog_query or none, category=catalog_category or none, _anchor='catalog-results') }}" {% if not available_only %}aria-current="true"{% endif %}>Todos los estados</a>
+        <a class="category-chip" href="{{ url_for('web.catalog', q=catalog_query or none, category=catalog_category or none, available='1', _anchor='catalog-results') }}" {% if available_only %}aria-current="true"{% endif %}>Solo disponibles</a>
+      </div>
+    </nav>
+  </div>
+  <div class="catalog-result-bar">
+    <p class="catalog-results-status">{{ products|length }} {{ 'producto' if products|length == 1 else 'productos' }}{% if catalog_query %} para «{{ catalog_query }}»{% endif %}</p>
+  </div>
+  {% if products %}
+  <ul class="store-product-grid" aria-label="Productos publicados">
+    {% set product_level = 'h3' if featured else 'h2' %}
+    {% for product in products %}<li class="store-product-card" id="producto-{{ product.id }}" data-product-card>{{ product_media(product) }}<div class="store-card-body"><span class="store-category">{{ product.category or 'General' }}</span><{{ product_level }} class="store-product-title">{{ product.name }}</{{ product_level }}>{{ product_available(product) }}{{ product_price(product) }}<a class="store-card-detail" href="{{ url_for('web.catalog_product', product_id=product.id) }}">Ver ficha<span class="sr-only"> de {{ product.name }}</span></a>{% if product.description %}<details><summary>Ver descripción<span class="sr-only"> de {{ product.name }}</span></summary><p>{{ product.description }}</p></details>{% endif %}</div></li>{% endfor %}
+  </ul>
+  {% else %}
+  <div class="store-empty"><h2>No encontramos coincidencias</h2><p>Prueba otro nombre, cambia la categoría o limpia los filtros para ver todos los productos.</p></div>
+  {% endif %}
+</section>
+{% if not filtered %}
+<section class="store-tracking" aria-labelledby="store-tracking-title">
+  <h2 class="store-tracking-title" id="store-tracking-title">Consulta tu reparación</h2>
+  <form action="{{ url_for('web.track') }}" method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label for="store-tracking-code">Código de seguimiento</label>
+    <input id="store-tracking-code" name="code" spellcheck="false" autocapitalize="characters" required maxlength="40" autocomplete="off" placeholder="GT-…">
+    <button class="button primary" type="submit">Consultar reparación</button>
+  </form>
 </section>
 {% endif %}
 {% else %}

@@ -83,7 +83,10 @@ def test_staff_widget_scope_and_session_remain_stable(integration_app, admin_cli
         thread = session['_staff_chat_session']
     assert f'data-thread="{thread}"' in client.get('/products').get_data(as_text=True)
     assert public.count('data-docked-chat') == 1 and thread not in public
-    assert client.get('/assistant').get_data(as_text=True).count('data-docked-chat') == 1
+    dashboard = client.get('/dashboard').get_data(as_text=True)
+    assert dashboard.count('data-docked-chat') == 1
+    assert 'href="/assistant"' not in dashboard and 'Asistente de inventario' not in dashboard
+    assert 'data-chat-import-open' in dashboard and 'action="/assistant/import"' in dashboard
     response = client.post('/api/taller/chat', headers=headers, json={'mensaje': '¿Cuántos usuarios activos hay?'})
     assert response.json['links'][0]['url'] == '/users/new' and response.json['persistent'] is False
     guidance = client.post('/api/taller/chat', headers=headers, json={'mensaje': '¿Cómo agrego una foto al catálogo?'})
