@@ -1,0 +1,10 @@
+<fieldset class="repair-contact-fields" aria-describedby="repair-contact-help">
+  <legend>Datos del cliente</legend>
+  <small id="repair-contact-help">Estos datos son opcionales y solo se ven en la orden interna.</small>
+  <label for="customer-name">Nombre</label>
+  <input id="customer-name" name="customer_name" autocomplete="off" maxlength="120" value="{{ contact['customer_name']|default('') }}">
+  <label for="customer-phone">Teléfono</label>
+  <input id="customer-phone" name="customer_phone" type="tel" autocomplete="off" maxlength="32" value="{{ contact['customer_phone']|default('') }}">
+  <label for="customer-email">Correo electrónico</label>
+  <input id="customer-email" name="customer_email" type="email" autocomplete="off" maxlength="254" value="{{ contact['customer_email']|default('') }}">
+</fieldset>

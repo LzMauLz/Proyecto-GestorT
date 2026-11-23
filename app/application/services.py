@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+import re
 import secrets
 import sqlite3
 
@@ -124,6 +125,26 @@ def move_stock(db, product_id, user_id, kind, quantity, note='', commit=True):
     return new_stock
 
 
+def _repair_contact(data):
+    fields = (
+        ('customer_name', 'nombre del cliente', 120),
+        ('customer_phone', 'teléfono del cliente', 32),
+        ('customer_email', 'correo del cliente', 254),
+    )
+    values = []
+    for field, label, limit in fields:
+        value = data.get(field, '')
+        if not isinstance(value, str) or len(value.strip()) > limit or any(ord(char) < 32 or ord(char) == 127 for char in value):
+            raise DomainError(f'Revisa el {label}. Admite hasta {limit} caracteres en una línea.')
+        values.append(value.strip())
+    name, phone, email = values
+    if phone and (not re.fullmatch(r'\+?[0-9 .()-]+', phone) or not 7 <= sum(char.isdigit() for char in phone) <= 15):
+        raise DomainError('Escribe un teléfono válido con entre 7 y 15 dígitos.')
+    if email and not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
+        raise DomainError('Escribe un correo electrónico válido para el cliente.')
+    return name, phone, email
+
+
 def create_repair(db, data, user_id, role):
     device = data.get('device', '')
     issue = data.get('issue', '')
@@ -135,6 +156,7 @@ def create_repair(db, data, user_id, role):
         raise DomainError('Indica el equipo y una descripción del problema (máximo 2000 caracteres).')
     if role not in ('admin', 'technician'):
         raise DomainError('No tienes permiso para registrar reparaciones.', 403)
+    contact = _repair_contact(data)
     assigned = data.get('assigned_to') if role == 'admin' else user_id
     try:
         assigned = _to_integer(assigned)
@@ -149,8 +171,11 @@ def create_repair(db, data, user_id, role):
     stamp = now_iso()
     try:
         with db:
-            cur = db.execute('INSERT INTO repairs(tracking_code,device,issue,status,assigned_to,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)',
-                             (code,device,issue,'Recibido',assigned,user_id,stamp,stamp))
+            cur = db.execute(
+                'INSERT INTO repairs(tracking_code,device,issue,status,assigned_to,created_by,created_at,updated_at,'
+                'customer_name,customer_phone,customer_email) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                (code, device, issue, 'Recibido', assigned, user_id, stamp, stamp, *contact),
+            )
             db.execute('INSERT INTO repair_history(repair_id,user_id,status,public_note,public_visible,created_at) VALUES(?,?,?,?,?,?)',
                        (cur.lastrowid,user_id,'Recibido','Reparación recibida.',1,stamp))
     except sqlite3.IntegrityError as exc:
@@ -158,6 +183,22 @@ def create_repair(db, data, user_id, role):
             raise DomainError('Técnico asignado no válido.') from exc
         raise
     return cur.lastrowid, code
+
+
+def update_repair_contact(db, repair_id, user_id, role, data):
+    if role not in ('admin', 'technician'):
+        raise DomainError('No tienes permiso para editar esta reparación.', 403)
+    contact = _repair_contact(data)
+    with db:
+        update = db.execute(
+            "UPDATE repairs SET customer_name=?, customer_phone=?, customer_email=? "
+            "WHERE id=? AND (? = 'admin' OR assigned_to=?)",
+            (*contact, repair_id, role, user_id),
+        )
+        if not update.rowcount:
+            if not db.execute('SELECT 1 FROM repairs WHERE id=?', (repair_id,)).fetchone():
+                raise DomainError('Reparación no encontrada.', 404)
+            raise DomainError('No tienes permiso para editar esta reparación.', 403)
 
 
 def update_repair_status(db, repair_id, actor_id, role, status, internal_note='', public_note='', assigned_to=None):

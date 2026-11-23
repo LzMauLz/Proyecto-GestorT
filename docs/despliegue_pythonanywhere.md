@@ -88,6 +88,10 @@ Antes de desplegar esta función, sigue el [procedimiento de respaldo y actualiz
 
 La búsqueda por modelo funciona en modo manual. Si Groq está configurado, la consulta pública de texto cuenta con un máximo de 6 solicitudes por IP y 12 para toda la aplicación en una ventana de 60 segundos, además de 120 solicitudes para toda la aplicación en una ventana de 24 horas. Al llegar a un límite, la búsqueda manual sigue disponible.
 
+## Actualizar una base existente para usar contactos de reparación
+
+Antes de cargar esta versión en una instalación existente, realiza el [respaldo y la actualización de SQLite](operacion_demo_local.md#actualización-de-una-base-existente) desde el entorno y directorio de GestorTech. `init-db` añade los tres campos de contacto sin cambiar códigos, asignaciones ni avances. Los contactos quedan vacíos en las reparaciones anteriores. Si necesitas volver a la versión previa del código, puedes conservar el esquema aditivo. Trata el respaldo como información privada.
+
 ## Evidencia de entrega
 
 Consulta [los flujos verificados y los límites de la demo](entrega_funcional.md).

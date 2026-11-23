@@ -50,6 +50,15 @@ def csrf_token():
     return token
 
 
+@auth_bp.app_template_global()
+def staff_chat_session():
+    thread = session.get('_staff_chat_session')
+    if not thread:
+        thread = secrets.token_urlsafe(18)
+        session['_staff_chat_session'] = thread
+    return thread
+
+
 def enforce_csrf():
     if request.method in {'POST','PUT','PATCH','DELETE'}:
         expected = session.get('_csrf_token','')

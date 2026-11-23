@@ -1,5 +1,19 @@
 # Estado de GestorTech
 
+## Catálogo y chats de GestorTech
+
+- La tienda presenta el producto destacado, filtros y accesos a fichas con la identidad visual de GestorTech.
+- El chat público consulta precios, disponibilidad y compatibilidad registrada. Groq se usa en el modo por modelo; las fichas y sus datos vienen del catálogo público.
+- El chat del personal consulta reparaciones y existencias según el rol. Administración puede consultar el total de usuarios activos y confirmar propuestas de inventario. Los chats recuerdan su estado dentro de la misma pestaña. Las consultas privadas de reparaciones y usuarios quedan fuera del historial que se conserva al navegar.
+
+El [manual de usuario](docs/manual-usuario.md#usar-el-chat-de-productos) explica cómo abrir, minimizar y retomar los chats.
+
+## Datos de contacto en reparaciones
+
+- El personal puede registrar nombre, teléfono y correo electrónico como campos opcionales. Administración y el técnico asignado pueden consultarlos y corregirlos en el detalle de la orden.
+- El contacto queda fuera de los listados, del seguimiento público y del contexto enviado a Groq. El alta existente por API sigue aceptando órdenes sin estos campos.
+- Las bases existentes requieren una [actualización aditiva respaldada](docs/despliegue_pythonanywhere.md#actualizar-una-base-existente-para-usar-contactos-de-reparación). Las órdenes históricas conservan su código, asignación e historial.
+
 ## Ficha pública y búsqueda de repuestos por modelo
 
 - La ficha pública reúne precio, disponibilidad, foto ampliable y los modelos que confirma el taller. El cliente puede compartir con el taller el nombre y la referencia del producto.

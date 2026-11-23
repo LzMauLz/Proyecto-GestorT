@@ -144,6 +144,13 @@ code { color: #d6c9ff; font-family: ui-monospace, SFMono-Regular, Consolas, mono
 .repair-meta > div { padding: 1rem 1.1rem; background: var(--panel); }
 .repair-meta span { display: block; color: var(--muted); font-size: .72rem; }
 .repair-meta strong { display: block; margin-top: .35rem; font-size: .82rem; overflow-wrap: anywhere; }
+.repair-contact-fields { margin: 1.3rem 0 0; padding: 0; border: 0; min-inline-size: 0; }
+.repair-contact-fields legend { padding: 0; color: var(--ink); font-weight: 750; }
+.repair-contact-card { margin-bottom: 2rem; }
+.repair-contact-card summary { width: fit-content; min-height: 44px; padding-block: .7rem; cursor: pointer; color: var(--ink); }
+.repair-contact-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: .85rem 1.3rem; }
+.repair-contact-summary dt { color: var(--muted); font-size: .84rem; }
+.repair-contact-summary dd { margin: .2rem 0 0; overflow-wrap: anywhere; }
 .detail-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, .6fr); gap: clamp(2rem, 5vw, 5rem); align-items: start; }
 .timeline, .public-timeline { margin: .8rem 0; padding: 0; list-style: none; }
 .timeline li { position: relative; display: grid; grid-template-columns: 20px 1fr; gap: .8rem; padding-bottom: 1.5rem; }

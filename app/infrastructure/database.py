@@ -96,6 +96,10 @@ def init_db():
             db.execute('ALTER TABLE products ADD COLUMN available INTEGER NOT NULL DEFAULT 1 CHECK(available IN (0,1))')
         if 'image_key' not in columns:
             db.execute('ALTER TABLE products ADD COLUMN image_key TEXT')
+        repair_columns = {row['name'] for row in db.execute('PRAGMA table_info(repairs)')}
+        for column in ('customer_name', 'customer_phone', 'customer_email'):
+            if column not in repair_columns:
+                db.execute(f"ALTER TABLE repairs ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
         if 'proposal_id' not in {row['name'] for row in db.execute('PRAGMA table_info(ai_operations)')}:
             db.execute('ALTER TABLE ai_operations ADD COLUMN proposal_id TEXT REFERENCES ai_proposals(id)')
         db.execute('CREATE INDEX IF NOT EXISTS idx_ai_operations_proposal ON ai_operations(proposal_id)')

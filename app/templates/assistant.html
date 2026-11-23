@@ -5,21 +5,12 @@
   <div><p class="eyebrow">Operaciones del taller</p><h1>Asistente del taller</h1><p>Pregunta por las existencias, prepara una ficha o carga una lista de productos.</p></div>
   <span class="assistant-status {% if assistant_available %}is-ready{% endif %}"><span aria-hidden="true"></span>{{ 'IA disponible' if assistant_available else 'Modo manual disponible' }}</span>
 </section>
-<section class="assistant-shell" data-assistant data-available="{{ 'true' if assistant_available else 'false' }}" data-categories='{{ product_categories|tojson }}'>
-  <div class="assistant-chat">
-    <div class="assistant-messages" data-messages role="log" aria-label="Conversación del asistente" aria-live="polite" aria-relevant="additions text">
-      <div class="assistant-message assistant-message-ai"><strong>GestorTech</strong><p>{% if current_user()['role'] == 'admin' %}Para preparar una ficha, dime el nombre, el precio y cuántas unidades tienes. Yo redacto la descripción. Tú revisas la ficha y decides si la publicas.{% else %}Pregúntame por precios, existencias o movimientos del inventario.{% endif %}</p></div>
-    </div>
-    <form class="assistant-composer" data-composer>
-      {% if assistant_available %}<div class="assistant-examples" aria-label="Ejemplos para empezar">
-        {% if current_user()['role'] == 'admin' %}<button type="button" class="button quiet" data-assistant-example="Prepara una ficha para un cable USB-C de 1 metro. Precio 18000 pesos, cantidad inicial 3. Redacta la descripción.">Preparar una ficha</button><button type="button" class="button quiet" data-assistant-example="Redacta una descripción breve para el catálogo de un soporte ajustable para portátil.">Redactar descripción</button>{% endif %}
-        <button type="button" class="button quiet" data-assistant-example="¿Qué productos tienen pocas unidades disponibles?">Consultar existencias</button>
-      </div>{% endif %}
-      <label for="assistant-message">Tu solicitud</label>
-      <textarea id="assistant-message" data-input rows="3" maxlength="2000" aria-describedby="assistant-help" placeholder="Ej. Prepara para catálogo un cable USB-C reforzado a 18000 pesos, cantidad inicial 3" {% if not assistant_available %}disabled{% endif %}></textarea>
-      <p id="assistant-help" class="muted">Envía solo datos de productos. No incluyas nombres, teléfonos ni información de clientes. {% if not assistant_available %}Puedes cargar un archivo o registrar un producto manualmente.{% endif %}</p>
-      <div class="assistant-composer-footer"><button class="button primary" type="submit" {% if not assistant_available %}disabled{% endif %}>Enviar solicitud</button></div>
-    </form>
+<section class="assistant-shell">
+  <div class="assistant-panel">
+    <h2>Consulta el taller</h2>
+    <p>Abre el asistente para revisar existencias, consultar órdenes y preparar propuestas.</p>
+    <button type="button" class="button primary" data-open-chat hidden>Abrir asistente</button>
+    <noscript><a class="button secondary" href="{{ url_for('web.products') }}">Abrir inventario</a></noscript>
   </div>
   <aside class="assistant-side">
     {% if current_user()['role'] == 'admin' %}

@@ -6,6 +6,7 @@
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
   <label for="device">Equipo</label><input id="device" name="device" required maxlength="160" placeholder="Ej. Portátil Lenovo ThinkPad" value="{{ request.form.get('device','') }}">
   <label for="issue">Problema reportado</label><textarea id="issue" name="issue" rows="4" required maxlength="2000" placeholder="Describe el motivo de ingreso">{{ request.form.get('issue','') }}</textarea>
+  {% with contact=request.form %}{% include 'repair_contact_fields.html' %}{% endwith %}
   {% if current_user()['role']=='admin' %}
   <label for="assigned_to">Técnico responsable</label>
   <select id="assigned_to" name="assigned_to" required {% if not technicians %}disabled aria-describedby="technician-help"{% endif %}>

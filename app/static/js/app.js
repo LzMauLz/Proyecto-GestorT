@@ -4,12 +4,56 @@ document.addEventListener('submit', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  const shell = document.querySelector('[data-assistant]');
+  const shell = document.querySelector('[data-docked-chat]');
   if (!shell) return;
   const composer = shell.querySelector('[data-composer]');
   const input = shell.querySelector('[data-input]');
   const messages = shell.querySelector('[data-messages]');
-  const history = [];
+  const panel = shell.querySelector('.docked-chat-panel');
+  const launcher = shell.querySelector('[data-chat-toggle]');
+  const mode = shell.querySelector('[data-chat-mode]');
+  const staff = shell.dataset.scope === 'staff';
+  const storageKey = staff ? 'gestortech:staff-chat' : 'gestortech:catalog-chat';
+  const thread = shell.dataset.thread;
+  const state = {thread, open: false, entries: [], history: []};
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(storageKey));
+    if (saved?.thread === thread) {
+      state.open = saved.open === true;
+      state.entries = Array.isArray(saved.entries) ? saved.entries.slice(-16) : [];
+      state.history = Array.isArray(saved.history) ? saved.history.slice(-10) : [];
+    }
+  } catch {}
+  const save = () => {
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(state));
+    } catch {}
+  };
+  const setOpen = (isOpen, focus = true) => {
+    state.open = isOpen;
+    panel.hidden = !isOpen;
+    launcher.setAttribute('aria-expanded', String(isOpen));
+    if (focus) (isOpen ? input : launcher).focus();
+    if (isOpen) messages.scrollTop = messages.scrollHeight;
+    save();
+  };
+  launcher.hidden = false;
+  launcher.addEventListener('click', () => setOpen(!state.open));
+  shell.querySelector('[data-chat-close]').addEventListener('click', () => setOpen(false));
+  shell.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && state.open) setOpen(false);
+  });
+  document.querySelectorAll('[data-open-chat]').forEach(button => {
+    button.hidden = false;
+    button.addEventListener('click', () => setOpen(true));
+  });
+  if (staff) {
+    document.querySelectorAll('form[action="/logout"]').forEach(form => {
+      form.addEventListener('submit', () => {
+        try { sessionStorage.removeItem(storageKey); } catch {}
+      });
+    });
+  }
   const categories = JSON.parse(shell.dataset.categories);
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
   let sending = false;
@@ -19,7 +63,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!response.ok) throw new Error(data.error || 'No se pudo completar la solicitud.');
     return data;
   };
-  const addMessage = (role, text, proposal) => {
+  const currency = new Intl.NumberFormat('es-CO', {style:'currency', currency:'COP', minimumFractionDigits:0});
+  function appendLink(parent, label, href) {
+    if (typeof label !== 'string' || typeof href !== 'string' || !href.startsWith('/')) return;
+    const url = new URL(href, location.origin);
+    if (url.origin !== location.origin || url.protocol !== location.protocol) return;
+    const link = document.createElement('a');
+    link.href = url.href;
+    link.textContent = label;
+    parent.append(link);
+  }
+  const addMessage = (entry) => {
+    const {role, text, proposal, links = [], products = []} = entry;
     const item = document.createElement('div');
     item.className = `assistant-message assistant-message-${role}`;
     const title = document.createElement('strong');
@@ -27,7 +82,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const paragraph = document.createElement('p');
     paragraph.textContent = text;
     item.append(title, paragraph);
-    if (proposal?.id) {
+    if (links.length || products.length) {
+      const results = document.createElement('div');
+      results.className = 'chat-results';
+      links.forEach(link => appendLink(results, link.label, link.url));
+      products.forEach(product => {
+        const price = Number.isSafeInteger(product.price_cents) ? currency.format(product.price_cents / 100) : 'Consulta el precio';
+        appendLink(results, `${product.name} · ${price} · ${product.available ? 'Disponible' : 'No disponible'}`, product.url);
+      });
+      item.append(results);
+    }
+    if (staff && proposal?.id) {
       const review = document.createElement('form');
       review.className = 'assistant-proposal';
       const products = proposal.operation === 'product_create';
@@ -80,21 +145,26 @@ document.addEventListener('DOMContentLoaded', () => {
           const result = await readResponse(await fetch(`/api/asistente/propuestas/${encodeURIComponent(proposal.id)}/${approve ? 'confirmar' : 'cancelar'}`, options));
           status.textContent = approve ? 'Operación confirmada. Los datos se guardaron.' : 'Propuesta cancelada. No se cambió el inventario.';
           groups.forEach(group => { group.disabled = true; });
+          entry.proposal = null;
           if (approve && products) {
             status.textContent = 'Productos guardados sin publicar. Ahora adjunta una imagen local y revisa su disponibilidad antes de publicarlos.';
             const nextSteps = document.createElement('div');
             nextSteps.className = 'button-row';
             const ids = result.product_ids || [result.product_id];
+            entry.links = [];
             ids.filter(id => Number.isSafeInteger(id) && id > 0).forEach((id, index) => {
               const link = document.createElement('a');
               link.className = 'button secondary';
               link.href = `/products/${id}/edit`;
               link.textContent = `Adjuntar imagen y revisar: ${values[index]?.name || 'producto ' + id}`;
               nextSteps.append(link);
+              entry.links.push({url: link.getAttribute('href'), label: link.textContent});
             });
             review.append(nextSteps);
             nextSteps.querySelector('a')?.focus();
           }
+          entry.text = status.textContent;
+          save();
         } catch (error) {
           status.textContent = error.message || 'No se pudo guardar la decisión. Puedes reintentar.';
           confirm.disabled = cancel.disabled = false;
@@ -105,27 +175,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     messages.append(item); messages.scrollTop = messages.scrollHeight;
   };
+  state.entries.forEach(addMessage);
+  setOpen(state.open, false);
   const send = async () => {
     const text = input.value.trim();
     if (!text || sending) return;
     sending = true;
     const button = composer.querySelector('button[type="submit"]'); button.disabled = true; composer.setAttribute('aria-busy','true');
-    addMessage('user', text);
+    const question = {role:'user', text};
+    addMessage(question);
     const pending = document.createElement('p'); pending.className = 'assistant-pending'; pending.textContent = 'Preparando respuesta…'; messages.append(pending);
     try {
-      const data = await readResponse(await fetch('/api/asistente/mensaje', {
+      const payload = {mensaje:text};
+      if (staff) payload.historial = state.history;
+      else payload.mode = mode.checked ? 'model' : 'product';
+      const data = await readResponse(await fetch(shell.dataset.endpoint, {
         method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},
-        body:JSON.stringify({mensaje:text,historial:history.slice(-10)})
+        body:JSON.stringify(payload)
       }));
-      input.value = ''; pending.remove(); addMessage('ai', data.message, data.proposal);
-      history.push({role:'user',content:text},{role:'assistant',content:data.message});
-    } catch (error) { pending.remove(); addMessage('error', (error.message || 'No se pudo responder.') + ' Puedes usar la revisión manual del archivo o registrar el producto desde Inventario.'); }
-    finally { sending = false; button.disabled = false; composer.removeAttribute('aria-busy'); input.focus(); }
+      input.value = '';
+      pending.remove();
+      const answer = {role:'ai', text:data.message, proposal:data.proposal, links:data.links, products:data.products};
+      addMessage(answer);
+      if (data.persistent !== false) state.entries = [...state.entries, question, answer].slice(-16);
+      if (data.inventory_history) {
+        state.history = [...state.history, {role:'user',content:text}, {role:'assistant',content:data.message}].slice(-10);
+      }
+      save();
+    } catch (error) { pending.remove(); addMessage({role:'error', text:error.message || 'No se pudo responder.'}); }
+    finally { sending = false; button.disabled = false; composer.removeAttribute('aria-busy'); if (state.open) input.focus(); }
   };
   composer.addEventListener('submit', event => { event.preventDefault(); send(); });
   composer.querySelectorAll('[data-assistant-example]').forEach(example => {
     example.addEventListener('click', () => {
       input.value = example.dataset.assistantExample;
+      if (mode) mode.checked = example.hasAttribute('data-model-example');
       input.focus();
     });
   });

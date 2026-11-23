@@ -9,6 +9,7 @@
 {% endmacro %}
 {% set public_catalog_page = request.endpoint in ['web.catalog','web.catalog_product','catalog_search.find'] %}
 {% set staff_shell = current_user() and not public_catalog_page and request.endpoint not in ['web.track','auth.login'] %}
+{% set show_chat = staff_shell or public_catalog_page or request.endpoint == 'web.track' %}
 <!doctype html>
 <html lang="es">
 <head>
@@ -19,6 +20,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/gestortech-theme.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/catalog.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/storefront.css') }}">
+  {% if show_chat %}<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">{% endif %}
   <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/ui.js') }}"></script>
   {% if request.endpoint == 'web.catalog' %}<script defer src="{{ url_for('static', filename='js/storefront.js') }}"></script>{% endif %}
@@ -74,5 +76,6 @@
   {% else %}
   </main><footer class="store-footer"><span><strong>GestorTech</strong> · Tecnología y servicio técnico</span><nav aria-label="Enlaces del pie"><a href="{{ url_for('web.catalog') }}">Catálogo</a><a href="{{ url_for('web.track') }}">Seguimiento</a></nav></footer>
   {% endif %}
+  {% if show_chat %}{% include 'docked_chat.html' %}{% endif %}
 </body>
 </html>
