@@ -12,17 +12,49 @@
 {% if not filtered %}
 <section class="storefront-hero" aria-label="Tienda y servicio técnico">
   <div class="store-promo">
-    <div class="store-promo-copy"><p class="store-kicker">Bienvenido a GestorTech</p><h1>Repuestos para seguir conectado.</h1><p>Explora los productos del taller y encuentra lo que necesita tu equipo.</p><a class="button" href="#catalog-results">Explorar catálogo</a></div>
-    <img class="store-promo-art" src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="Mascota oficial de GestorTech" width="400" height="400">
+    <div class="store-promo-copy"><p class="store-promo-title">Repuestos para seguir conectado.</p><a class="button" href="#catalog-results">Explorar catálogo</a></div>
+    <img class="store-promo-art" src="{{ url_for('static', filename='images/gestortech-mascot.png') }}" alt="" width="400" height="400">
   </div>
-  <aside class="store-tracking"><p class="tracking-label">Tu reparación, paso a paso</p><h2>¿Tu equipo está en el taller?</h2><p>Ingresa el código de tu comprobante para ver el estado de tu equipo.</p><form action="{{ url_for('web.track') }}" method="post"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><label for="store-tracking-code">Código de seguimiento</label><input id="store-tracking-code" name="code" spellcheck="false" autocapitalize="characters" required maxlength="40" autocomplete="off" placeholder="GT-…"><button class="button primary" type="submit">Consultar reparación</button></form><small>No necesitas una cuenta para consultar.</small></aside>
+  <aside class="store-tracking" aria-labelledby="store-tracking-title">
+    <p class="store-tracking-title" id="store-tracking-title">Consulta el estado de tu reparación</p>
+    <form action="{{ url_for('web.track') }}" method="post">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <label for="store-tracking-code">Código de seguimiento</label>
+      <input id="store-tracking-code" name="code" spellcheck="false" autocapitalize="characters" required maxlength="40" autocomplete="off" placeholder="GT-…">
+      <button class="button primary" type="submit">Consultar reparación</button>
+    </form>
+  </aside>
 </section>
 {% endif %}
 {% if catalog_error %}
-<section class="store-empty" role="alert" id="catalog-results"><h2>No pudimos cargar el catálogo</h2><p>Inténtalo de nuevo en unos momentos o consulta al taller.</p><a class="button secondary" href="{{ url_for('web.catalog') }}">Volver a intentar</a></section>
+<section class="store-empty" role="alert" id="catalog-results"><h1>No pudimos cargar el catálogo</h1><p>Inténtalo de nuevo en unos momentos o consulta al taller.</p><a class="button secondary" href="{{ url_for('web.catalog') }}">Volver a intentar</a></section>
 {% elif products or filtered %}
+<section id="catalog-results" aria-labelledby="catalog-heading" data-store-catalog>
+  <div class="store-section-heading">
+    <h1 id="catalog-heading">{{ 'Resultados del catálogo' if filtered else 'Catálogo del taller' }}</h1>
+    {% if filtered %}<a class="catalog-reset" href="{{ url_for('web.catalog', _anchor='catalog-results') }}">Limpiar filtros</a>
+    {% elif featured %}<a class="catalog-featured-link" href="#productos-destacados">Ver destacados</a>{% endif %}
+  </div>
+  <nav class="catalog-tools" aria-label="Filtrar por categoría">
+    {% for label in [''] + categories %}
+    <a class="category-chip" href="{{ url_for('web.catalog', q=catalog_query or none, category=label or none, available='1' if available_only else none, _anchor='catalog-results') }}"
+       {% if catalog_category == label %}aria-current="true"{% endif %}>{{ label or 'Todas las categorías' }}</a>
+    {% endfor %}
+  </nav>
+  <div class="catalog-result-bar">
+    <p class="catalog-results-status">{{ products|length }} {{ 'producto' if products|length == 1 else 'productos' }}{% if catalog_query %} para «{{ catalog_query }}»{% endif %}</p>
+    <a class="catalog-stock-filter" href="{{ url_for('web.catalog', q=catalog_query or none, category=catalog_category or none, available=none if available_only else '1', _anchor='catalog-results') }}">{{ 'Mostrar también los no disponibles' if available_only else 'Ver solo disponibles' }}</a>
+  </div>
+  {% if products %}
+  <ul class="store-product-grid" aria-label="Productos publicados">
+    {% for product in products %}<li class="store-product-card" id="producto-{{ product.id }}" data-product-card>{{ product_media(product) }}<div class="store-card-body"><span class="store-category">{{ product.category or 'General' }}</span><h2>{{ product.name }}</h2>{{ product_available(product) }}{{ product_price(product) }}{% if product.description %}<details><summary>Ver descripción<span class="sr-only"> de {{ product.name }}</span></summary><p>{{ product.description }}</p></details>{% endif %}</div></li>{% endfor %}
+  </ul>
+  {% else %}
+  <div class="store-empty"><h2>No encontramos coincidencias</h2><p>Prueba otro nombre, cambia la categoría o limpia los filtros para ver todos los productos.</p></div>
+  {% endif %}
+</section>
 {% if featured %}
-<section data-store-shelf aria-roledescription="carrusel" aria-labelledby="store-shelf-title">
+<section id="productos-destacados" data-store-shelf aria-roledescription="carrusel" aria-labelledby="store-shelf-title" tabindex="-1">
   <div class="store-section-heading">
     <h2 id="store-shelf-title">Productos destacados</h2>
     <div class="store-carousel-controls" data-carousel-controls hidden>
@@ -37,30 +69,7 @@
   <p class="sr-only" role="status" data-carousel-status></p>
 </section>
 {% endif %}
-<section id="catalog-results" aria-labelledby="catalog-heading" data-store-catalog>
-  <div class="store-section-heading">
-    {% if filtered %}<h1 id="catalog-heading">Resultados del catálogo</h1>{% else %}<h2 id="catalog-heading">Catálogo del taller</h2>{% endif %}
-    {% if filtered %}<a class="catalog-reset" href="{{ url_for('web.catalog', _anchor='catalog-results') }}">Limpiar filtros</a>{% endif %}
-  </div>
-  <nav class="catalog-tools" aria-label="Filtrar por categoría">
-    {% for label in [''] + categories %}
-    <a class="category-chip" href="{{ url_for('web.catalog', q=catalog_query or none, category=label or none, available='1' if available_only else none, _anchor='catalog-results') }}"
-       {% if catalog_category == label %}aria-current="true"{% endif %}>{{ label or 'Todas las categorías' }}</a>
-    {% endfor %}
-  </nav>
-  <div class="catalog-result-bar">
-    <p class="catalog-results-status">{{ products|length }} {{ 'producto' if products|length == 1 else 'productos' }}{% if catalog_query %} para «{{ catalog_query }}»{% endif %}</p>
-    <a class="catalog-stock-filter" href="{{ url_for('web.catalog', q=catalog_query or none, category=catalog_category or none, available=none if available_only else '1', _anchor='catalog-results') }}">{{ 'Mostrar también los no disponibles' if available_only else 'Ver solo disponibles' }}</a>
-  </div>
-  {% if products %}
-  <ul class="store-product-grid" aria-label="Productos publicados">
-    {% for product in products %}<li class="store-product-card" id="producto-{{ product.id }}" data-product-card>{{ product_media(product) }}<div class="store-card-body"><span class="store-category">{{ product.category or 'General' }}</span><h3>{{ product.name }}</h3>{{ product_available(product) }}{{ product_price(product) }}{% if product.description %}<details><summary>Ver descripción<span class="sr-only"> de {{ product.name }}</span></summary><p>{{ product.description }}</p></details>{% endif %}</div></li>{% endfor %}
-  </ul>
-  {% else %}
-  <div class="store-empty"><h2>No encontramos coincidencias</h2><p>Prueba otro nombre, cambia la categoría o limpia los filtros para ver todos los productos.</p></div>
-  {% endif %}
-</section>
 {% else %}
-<section class="store-empty" id="catalog-results"><h2>Estamos preparando el catálogo</h2><p>El taller todavía no ha publicado productos. Puedes consultar el estado de tu reparación con su código.</p><a class="button primary" href="{{ url_for('web.track') }}">Consultar reparación</a></section>
+<section class="store-empty" id="catalog-results"><h1>Estamos preparando el catálogo</h1><p>El taller todavía no ha publicado productos. Puedes consultar el estado de tu reparación con su código.</p><a class="button primary" href="{{ url_for('web.track') }}">Consultar reparación</a></section>
 {% endif %}
 {% endblock %}

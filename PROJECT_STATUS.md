@@ -1,5 +1,16 @@
 # Estado de GestorTech
 
+## Catálogo móvil y bandeja de reparaciones · 22 de noviembre de 2026
+
+- El catálogo muestra los filtros y las fichas debajo del buscador en pantallas de hasta 900 px. **Ver destacados** abre el carrusel al final de la lista. **Consultar reparación** sigue disponible desde la navegación pública.
+- Flask añade una versión por contenido a las URLs de CSS y JavaScript. PythonAnywhere mantiene el mapeo de archivos estáticos. La verificación de ese mapeo se realiza al desplegar el cambio.
+- La bandeja privada de **Reparaciones** permite buscar por equipo o código y filtrar por estado y, para administración, por técnico. Incluye accesos a **Pendientes** y **Listas para entregar** y pagina de 20 en 20. Cada técnico ve sus órdenes asignadas.
+- En Python 3.12 pasaron 167 pruebas y 77 subpruebas. Las pruebas de navegador usaron Microsoft Edge, Flask y SQLite con datos ficticios. Se verificaron el catálogo a 390 y 1440 px con JavaScript activo y desactivado, el seguimiento público, el avance y la pausa del carrusel, la búsqueda y paginación de reparaciones y el alcance de cada rol.
+
+El [manual de usuario](docs/manual-usuario.md#buscar-una-reparación) explica el recorrido. La [guía de PythonAnywhere](docs/despliegue_pythonanywhere.md#4-configurar-la-app-web) incluye la comprobación de los recursos versionados después de recargar.
+
+Las siguientes mejoras acordadas quedan para entregas posteriores. Incluyen los accesos de reparación e historial de inventario, la ficha pública con búsqueda de repuestos por modelo, la solicitud guiada, las cotizaciones, los avances y la guía de entrega, la reposición y las mejoras del asistente para consultas, propuestas e importaciones.
+
 **Catálogo e inventario · 22 de noviembre de 2026.** La búsqueda pública combina texto, categoría y disponibilidad mediante una URL compartible. El panel abre el inventario con existencias bajas y conserva la vista tras operar sobre un producto. Se probaron 163 casos y 77 subpruebas con SQLite temporal. En Edge se verificaron búsqueda, filtros y recuperación de resultados a 375 y 1440 px, con JavaScript activo y desactivado. El carrusel utiliza desplazamiento nativo y controles con teclado siguiendo la [guía de Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance/blob/main/skills/modern-web-guidance/guides/ui-components/carousel.md).
 
 **Corrección de importación con IA.** El CSV de ejemplo con seis productos reproducía un error `json_validate_failed` de Groq que dejaba la vista previa en modo manual. El adaptador pide ahora un esquema de respuesta estricto en modelos compatibles. La prueba con Groq real generó las seis descripciones en una vista previa editable de una base temporal.

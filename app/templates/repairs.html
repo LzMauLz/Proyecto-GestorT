@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Reparaciones · GestorTech{% endblock %}
+{% block content %}
+{% set administrator = current_user()['role'] == 'admin' %}
+<section class="page-heading">
+  <div>
+    <h1>Reparaciones</h1>
+    <p>{{ 'Consulta las órdenes del taller y revisa su estado.' if administrator else 'Consulta las órdenes asignadas a tu cuenta.' }}</p>
+  </div>
+  <a class="button primary" href="{{ url_for('web.repair_new') }}">Registrar reparación</a>
+</section>
+
+<nav class="button-row repair-views" aria-label="Vistas de reparaciones">
+  <a class="button {{ 'primary' if not filters.status else 'quiet' }}" href="{{ url_for('web.repairs', q=filters.q, technician=filters.technician) }}" {% if not filters.status %}aria-current="true"{% endif %}>Todas</a>
+  <a class="button {{ 'primary' if filters.status == 'pending' else 'quiet' }}" href="{{ url_for('web.repairs', view='pending', q=filters.q, technician=filters.technician) }}" {% if filters.status == 'pending' %}aria-current="true"{% endif %}>Pendientes</a>
+  <a class="button {{ 'primary' if filters.status == ready_status else 'quiet' }}" href="{{ url_for('web.repairs', view='ready', q=filters.q, technician=filters.technician) }}" {% if filters.status == ready_status %}aria-current="true"{% endif %}>Listas para entregar</a>
+</nav>
+
+<form class="form-panel inventory-search" method="get" action="{{ url_for('web.repairs') }}" role="search" aria-label="Buscar reparaciones">
+  <div>
+    <label for="repair-query">Equipo o código</label>
+    <input id="repair-query" name="q" type="search" maxlength="160" value="{{ filters.q or '' }}">
+  </div>
+  <div>
+    <label for="repair-state">Estado</label>
+    <select id="repair-state" name="status">
+      <option value="">Todos los estados</option>
+      <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pendientes</option>
+      {% for status in statuses %}<option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>{% endfor %}
+    </select>
+  </div>
+  {% if administrator %}
+  <div>
+    <label for="repair-technician">Técnico</label>
+    <select id="repair-technician" name="technician">
+      <option value="">Todos los técnicos</option>
+      {% for technician in technicians %}<option value="{{ technician.id }}" {% if filters.technician == technician.id %}selected{% endif %}>{{ technician.name }}{% if not technician.active %} (inactivo){% endif %}</option>{% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <div class="button-row">
+    <button class="button primary" type="submit">Buscar</button>
+    {% if filters.q or filters.status or filters.technician %}<a class="button quiet" href="{{ url_for('web.repairs') }}">Limpiar filtros</a>{% endif %}
+  </div>
+</form>
+
+{% if repairs %}
+<p class="inventory-results">{% if total == 1 %}Mostrando 1 reparación{% else %}Mostrando {{ offset + 1 }}–{{ offset + repairs|length }} de {{ total }} reparaciones{% endif %}</p>
+<p class="table-hint" id="repairs-table-help">Si la tabla no cabe en pantalla, enfócala y usa las flechas para desplazarte.</p>
+<div class="table-wrap" role="region" aria-label="Órdenes de reparación" aria-describedby="repairs-table-help" tabindex="0">
+  <table>
+    <thead><tr><th scope="col">Equipo</th><th scope="col">Estado</th><th scope="col">Código</th>{% if administrator %}<th scope="col">Técnico</th>{% endif %}<th scope="col">Último cambio</th></tr></thead>
+    <tbody>
+      {% for repair in repairs %}
+      <tr>
+        <td><a class="row-link" href="{{ url_for('web.repair_detail', repair_id=repair.id) }}" aria-label="Abrir reparación de {{ repair.device }}">{{ repair.device }}</a></td>
+        <td><span class="status-chip">{{ repair.status }}</span></td>
+        <td><code>{{ repair.tracking_code }}</code></td>
+        {% if administrator %}<td>{{ repair.technician or 'Revisar asignación' }}</td>{% endif %}
+        <td><time datetime="{{ repair.updated_at }}">{{ repair.updated_at }}</time></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if last_page > 1 %}
+<nav class="inventory-pagination" aria-label="Páginas de reparaciones">
+  {% if page > 1 %}<a class="button quiet" href="{{ url_for('web.repairs', page=page-1, **filters) }}">Anterior</a>{% endif %}
+  <span aria-current="page">Página {{ page }} de {{ last_page }}</span>
+  {% if page < last_page %}<a class="button quiet" href="{{ url_for('web.repairs', page=page+1, **filters) }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<div class="empty-state">
+  {% if filters.q or filters.status or filters.technician %}
+  <h2>No hay reparaciones que coincidan</h2>
+  {% else %}
+  <h2>{{ 'Todavía no hay reparaciones' if administrator else 'Todavía no tienes reparaciones asignadas' }}</h2>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

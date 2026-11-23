@@ -8,6 +8,8 @@ Usa la [demo pública](https://gestortech.pythonanywhere.com/). Para prácticas 
 
 Abre el [catálogo](https://gestortech.pythonanywhere.com/catalog). Escribe el nombre o una característica del producto y pulsa **Buscar** o Intro. Puedes elegir una categoría y pulsar **Ver solo disponibles**. Copia la dirección si quieres compartir esos resultados. **Limpiar filtros** muestra el catálogo completo. Abre **Ver descripción** en una ficha para leer más sobre el producto.
 
+En el celular, encontrarás los filtros y los productos debajo del buscador. Pulsa **Ver destacados** para saltar al carrusel. Usa **Consultar reparación** en la navegación superior para entrar al formulario de seguimiento.
+
 ![Tienda pública y acceso a consulta de reparación](images/manual/01-tienda-publica.png)
 
 ### Consultar una reparación
@@ -24,6 +26,13 @@ Abre el [catálogo](https://gestortech.pythonanywhere.com/catalog). Escribe el n
 Inicia sesión desde [Acceso del personal](https://gestortech.pythonanywhere.com/login) con la cuenta que creó el administrador. No compartas tu contraseña. Si no puedes ingresar, contacta a la persona administradora.
 
 ![Acceso del personal](images/manual/02-acceso-personal.png)
+
+### Buscar una reparación
+
+1. Abre **Reparaciones** en el menú del taller.
+2. Escribe el equipo o el código de seguimiento. Puedes filtrar por estado. Administración también puede elegir un técnico.
+3. Usa **Pendientes** para ver las órdenes en proceso o **Listas para entregar** para ver las que ya pueden retirarse. También puedes cambiar de página con los filtros activos.
+4. Pulsa el nombre del equipo para consultar el historial y registrar un avance. Si atiendes como técnico, verás las órdenes asignadas a tu cuenta.
 
 ### Administrador
 
@@ -44,7 +53,7 @@ Inicia sesión desde [Acceso del personal](https://gestortech.pythonanywhere.com
 
 ### Técnico
 
-- Entra al **Panel** para ver las reparaciones asignadas a tu cuenta.
+- Entra a **Reparaciones** para buscar entre las órdenes asignadas a tu cuenta. El **Panel** sigue mostrando las más recientes.
 - Abre una reparación y guarda el siguiente estado permitido.
 - Usa el avance público únicamente para información destinada al cliente.
 - La publicación de productos, la gestión de existencias y la aprobación de propuestas de catálogo corresponden al administrador.
